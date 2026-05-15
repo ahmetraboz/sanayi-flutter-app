@@ -170,9 +170,11 @@ class _HeroSection extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 15, color: AppColors.gray500, height: 1.5),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          const _DiagnosisCard(),
+          const SizedBox(height: 24),
           _HeroCta(),
-          const SizedBox(height: 28),
+          const SizedBox(height: 24),
           _TrustRow(),
           if (onNext != null) ...[
             const SizedBox(height: 28),
@@ -815,6 +817,268 @@ class _AuthPage extends StatelessWidget {
     );
   }
 }
+
+// ── Diagnosis Card ────────────────────────────────────────────────────────────
+
+class _DiagnosisCard extends StatefulWidget {
+  const _DiagnosisCard();
+
+  @override
+  State<_DiagnosisCard> createState() => _DiagnosisCardState();
+}
+
+class _DiagnosisCardState extends State<_DiagnosisCard> with TickerProviderStateMixin {
+  late final AnimationController _scanCtrl;
+  late final AnimationController _pulseCtrl;
+  late final AnimationController _bounceCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _scanCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 3))..repeat();
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 700))..repeat(reverse: true);
+    _bounceCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1400))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _scanCtrl.dispose();
+    _pulseCtrl.dispose();
+    _bounceCtrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.6)),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        children: [
+          _buildTopBar(),
+          const SizedBox(height: 12),
+          _buildScanArea(),
+          const SizedBox(height: 12),
+          _buildServiceCards(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFFDCFCE7), Color(0xFFECFDF5)]),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFBBF7D0)),
+          ),
+          child: const Icon(Icons.memory_outlined, size: 22, color: AppColors.primary600),
+        ),
+        const SizedBox(width: 10),
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Akıllı Teşhis', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.gray900)),
+              Text('Araç durumu analiz ediliyor...', style: TextStyle(fontSize: 11, color: AppColors.gray500, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+        AnimatedBuilder(
+          animation: _pulseCtrl,
+          builder: (_, __) => Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(99),
+              border: Border.all(color: const Color(0xFFBBF7D0)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: Color.fromRGBO(34, 197, 94, _pulseCtrl.value.clamp(0.4, 1.0)),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Text('CANLI', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF15803D), letterSpacing: 1)),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScanArea() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 130,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFFF9FAFB), Color(0xFFF3F4F6)],
+          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Icon(Icons.local_shipping_outlined, size: 72, color: Colors.grey.withValues(alpha: 0.22)),
+            AnimatedBuilder(
+              animation: _scanCtrl,
+              builder: (_, __) => Positioned(
+                top: _scanCtrl.value * 130,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary600,
+                    boxShadow: [BoxShadow(color: const Color(0xFF4ADE80).withValues(alpha: 0.8), blurRadius: 12, spreadRadius: 2)],
+                  ),
+                ),
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _bounceCtrl,
+              builder: (_, __) => Positioned(
+                top: 22 + _bounceCtrl.value * 5,
+                left: 36,
+                child: _FaultDot(color: const Color(0xFFEF4444), bg: const Color(0xFFFEE2E2), border: const Color(0xFFFECACA)),
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _bounceCtrl,
+              builder: (_, __) => Positioned(
+                bottom: 22 + _bounceCtrl.value * 5,
+                right: 44,
+                child: _FaultDot(color: const Color(0xFFF59E0B), bg: const Color(0xFFFEF3C7), border: const Color(0xFFFDE68A)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildServiceCards() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(11),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.gray100),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8)],
+          ),
+          child: Row(
+            children: [
+              CircleAvatar(radius: 17, backgroundColor: AppColors.primary600.withValues(alpha: 0.1), child: const Text('ÖS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppColors.primary600))),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Özel Örnek Servis', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+                    Row(
+                      children: [
+                        Icon(Icons.star, size: 11, color: Color(0xFFFBBF24)),
+                        SizedBox(width: 3),
+                        Text('4.9 (120 Yorum)', style: TextStyle(fontSize: 10, color: AppColors.gray500, fontWeight: FontWeight.w600)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  const Text('₺2,450', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: AppColors.primary600)),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(5), border: Border.all(color: const Color(0xFFBBF7D0))),
+                    child: const Text('YENİ TEKLİF', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: AppColors.primary600, letterSpacing: 0.4)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Opacity(
+          opacity: 0.55,
+          child: Container(
+            padding: const EdgeInsets.all(11),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.gray100.withValues(alpha: 0.5)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(radius: 17, backgroundColor: AppColors.gray200, child: const Icon(Icons.store_outlined, size: 14, color: AppColors.gray400)),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Garaj İstanbul', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+                      Text('Teklif Hazırlanıyor...', style: TextStyle(fontSize: 10, color: AppColors.gray400, fontStyle: FontStyle.italic, fontWeight: FontWeight.w600)),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Container(height: 12, width: 48, decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(4))),
+                    const SizedBox(height: 5),
+                    Container(height: 9, width: 34, decoration: BoxDecoration(color: AppColors.gray100, borderRadius: BorderRadius.circular(4))),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FaultDot extends StatelessWidget {
+  final Color color;
+  final Color bg;
+  final Color border;
+  const _FaultDot({required this.color, required this.bg, required this.border});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 18,
+      height: 18,
+      decoration: BoxDecoration(color: bg, shape: BoxShape.circle, border: Border.all(color: border)),
+      child: Center(child: Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle))),
+    );
+  }
+}
+
+// ── Page Background ───────────────────────────────────────────────────────────
 
 class _PageBackground extends StatelessWidget {
   final Color color;
