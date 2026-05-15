@@ -174,19 +174,6 @@ class _HeroSection extends StatelessWidget {
           const _DiagnosisCard(),
           const SizedBox(height: 24),
           _TrustRow(),
-          if (onNext != null) ...[
-            const SizedBox(height: 28),
-            GestureDetector(
-              onTap: onNext,
-              child: const Column(
-                children: [
-                  Text('Daha fazla bilgi', style: TextStyle(fontSize: 13, color: AppColors.gray400, fontWeight: FontWeight.w500)),
-                  SizedBox(height: 4),
-                  Icon(Icons.keyboard_arrow_down, color: AppColors.gray400, size: 22),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
