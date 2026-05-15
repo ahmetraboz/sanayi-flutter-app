@@ -173,8 +173,6 @@ class _HeroSection extends StatelessWidget {
           const SizedBox(height: 24),
           const _DiagnosisCard(),
           const SizedBox(height: 24),
-          _HeroCta(),
-          const SizedBox(height: 24),
           _TrustRow(),
           if (onNext != null) ...[
             const SizedBox(height: 28),
@@ -927,7 +925,7 @@ class _DiagnosisCardState extends State<_DiagnosisCard> with TickerProviderState
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        height: 130,
+        height: 160,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topCenter,
@@ -939,11 +937,11 @@ class _DiagnosisCardState extends State<_DiagnosisCard> with TickerProviderState
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Icon(Icons.local_shipping_outlined, size: 72, color: Colors.grey.withValues(alpha: 0.22)),
+            Icon(Icons.local_shipping_outlined, size: 110, color: Colors.grey.withValues(alpha: 0.22)),
             AnimatedBuilder(
               animation: _scanCtrl,
               builder: (_, __) => Positioned(
-                top: _scanCtrl.value * 130,
+                top: _scanCtrl.value * 160,
                 left: 0,
                 right: 0,
                 child: Container(
