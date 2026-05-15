@@ -28,63 +28,99 @@ class _LandingScreenState extends State<LandingScreen> {
     );
   }
 
+  void _skipToLast() {
+    _pageController.animateToPage(
+      _pageCount - 1,
+      duration: const Duration(milliseconds: 400),
+      curve: Curves.easeInOut,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLastPage = _currentPage == _pageCount - 1;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            _buildTopBar(),
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (i) => setState(() => _currentPage = i),
-                children: [
-                  SingleChildScrollView(child: _HeroSection(onNext: _nextPage)),
-                  SingleChildScrollView(child: const _HowItWorksSection()),
-                  SingleChildScrollView(child: const _FeaturesSection()),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: const [
-                        _TestimonialsSection(),
-                        SizedBox(height: 24),
-                      ],
-                    ),
+            Column(
+              children: [
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (i) => setState(() => _currentPage = i),
+                    children: [
+                      SingleChildScrollView(child: _HeroSection(onNext: _nextPage)),
+                      SingleChildScrollView(child: const _HowItWorksSection()),
+                      SingleChildScrollView(child: const _FeaturesSection()),
+                      SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            const _TestimonialsSection(),
+                            _buildAuthButtons(context),
+                            const SizedBox(height: 32),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                _buildPageIndicator(),
+              ],
             ),
-            _buildPageIndicator(),
+            if (!isLastPage)
+              Positioned(
+                top: 12,
+                right: 16,
+                child: TextButton(
+                  onPressed: _skipToLast,
+                  child: const Text('Atla', style: TextStyle(color: AppColors.gray400, fontSize: 14, fontWeight: FontWeight.w500)),
+                ),
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTopBar() {
+  Widget _buildAuthButtons(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+      child: Column(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
-              borderRadius: BorderRadius.circular(8),
+          GestureDetector(
+            onTap: () => context.push('/register'),
+            child: Container(
+              width: double.infinity,
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+              ),
+              child: const Center(
+                child: Text('Ücretsiz Üye Ol', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
             ),
-            child: const Icon(Icons.build_outlined, size: 18, color: Colors.white),
           ),
-          const SizedBox(width: 10),
-          const Text('Sanayi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.gray900)),
-          const Spacer(),
-          TextButton(
-            onPressed: () => context.push('/login'),
-            child: const Text('Giriş Yap', style: TextStyle(color: AppColors.primary600, fontWeight: FontWeight.w600, fontSize: 14)),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () => context.push('/login'),
+            child: Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.gray200),
+              ),
+              child: const Center(
+                child: Text('Giriş Yap', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray700)),
+              ),
+            ),
           ),
-          const SizedBox(width: 8),
-          _NavButton(label: 'Üye Ol', onTap: () => context.push('/register')),
         ],
       ),
     );
@@ -120,28 +156,6 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 }
 
-// ── Nav Button ────────────────────────────────────────────────────────────────
-
-class _NavButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _NavButton({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white)),
-      ),
-    );
-  }
-}
 
 // ── Hero Section ──────────────────────────────────────────────────────────────
 
