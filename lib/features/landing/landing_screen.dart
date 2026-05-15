@@ -2,58 +2,121 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
 
-class LandingScreen extends StatelessWidget {
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
+
+  @override
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen> {
+  final _pageController = PageController();
+  int _currentPage = 0;
+
+  static const _pageCount = 4;
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _nextPage() {
+    _pageController.nextPage(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            floating: true,
-            backgroundColor: Colors.white,
-            elevation: 0,
-            titleSpacing: 0,
-            title: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildTopBar(),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
                 children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
-                      borderRadius: BorderRadius.circular(8),
+                  SingleChildScrollView(child: _HeroSection(onNext: _nextPage)),
+                  SingleChildScrollView(child: const _HowItWorksSection()),
+                  SingleChildScrollView(child: const _FeaturesSection()),
+                  SingleChildScrollView(
+                    child: Column(
+                      children: const [
+                        _TestimonialsSection(),
+                        _FaqSection(),
+                        _CtaSection(),
+                        SizedBox(height: 24),
+                      ],
                     ),
-                    child: const Icon(Icons.build_outlined, size: 18, color: Colors.white),
                   ),
-                  const SizedBox(width: 10),
-                  const Text('Sanayi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.gray900)),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () => context.push('/login'),
-                    child: const Text('Giriş Yap', style: TextStyle(color: AppColors.primary600, fontWeight: FontWeight.w600, fontSize: 14)),
-                  ),
-                  const SizedBox(width: 8),
-                  _NavButton(label: 'Üye Ol', onTap: () => context.push('/register')),
                 ],
               ),
             ),
+            _buildPageIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.build_outlined, size: 18, color: Colors.white),
           ),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              const _HeroSection(),
-              const _HowItWorksSection(),
-              const _FeaturesSection(),
-              const _TestimonialsSection(),
-              const _FaqSection(),
-              const _CtaSection(),
-              const SizedBox(height: 32),
-            ]),
+          const SizedBox(width: 10),
+          const Text('Sanayi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.gray900)),
+          const Spacer(),
+          TextButton(
+            onPressed: () => context.push('/login'),
+            child: const Text('Giriş Yap', style: TextStyle(color: AppColors.primary600, fontWeight: FontWeight.w600, fontSize: 14)),
           ),
+          const SizedBox(width: 8),
+          _NavButton(label: 'Üye Ol', onTap: () => context.push('/register')),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPageIndicator() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(_pageCount, (i) {
+          final active = i == _currentPage;
+          return GestureDetector(
+            onTap: () => _pageController.animateToPage(
+              i,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            ),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              width: active ? 20 : 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: active ? AppColors.primary600 : AppColors.gray200,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -85,7 +148,8 @@ class _NavButton extends StatelessWidget {
 // ── Hero Section ──────────────────────────────────────────────────────────────
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection();
+  final VoidCallback? onNext;
+  const _HeroSection({this.onNext});
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +162,7 @@ class _HeroSection extends StatelessWidget {
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5), Colors.white],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 40, 24, 48),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
       child: Column(
         children: [
           Container(
@@ -124,8 +188,21 @@ class _HeroSection extends StatelessWidget {
           ),
           const SizedBox(height: 32),
           _HeroCta(),
-          const SizedBox(height: 36),
+          const SizedBox(height: 28),
           _TrustRow(),
+          if (onNext != null) ...[
+            const SizedBox(height: 28),
+            GestureDetector(
+              onTap: onNext,
+              child: const Column(
+                children: [
+                  Text('Daha fazla bilgi', style: TextStyle(fontSize: 13, color: AppColors.gray400, fontWeight: FontWeight.w500)),
+                  SizedBox(height: 4),
+                  Icon(Icons.keyboard_arrow_down, color: AppColors.gray400, size: 22),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
