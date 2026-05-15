@@ -50,15 +50,27 @@ class _LandingScreenState extends State<LandingScreen> {
             controller: _pageController,
             onPageChanged: (i) => setState(() => _currentPage = i),
             children: [
-              SingleChildScrollView(child: _HeroSection(onNext: _nextPage, topPadding: top)),
-              SingleChildScrollView(child: const _HowItWorksSection()),
-              SingleChildScrollView(child: const _FeaturesSection()),
-              const SingleChildScrollView(
-                child: Column(
-                  children: [
-                    _TestimonialsSection(),
-                    SizedBox(height: 24),
-                  ],
+              _PageBackground(
+                color: const Color(0xFFECFDF5),
+                child: SingleChildScrollView(child: _HeroSection(onNext: _nextPage, topPadding: top)),
+              ),
+              _PageBackground(
+                color: AppColors.gray50,
+                child: SingleChildScrollView(child: const _HowItWorksSection()),
+              ),
+              _PageBackground(
+                color: Colors.white,
+                child: SingleChildScrollView(child: const _FeaturesSection()),
+              ),
+              _PageBackground(
+                color: AppColors.gray50,
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: const [
+                      _TestimonialsSection(),
+                      SizedBox(height: 24),
+                    ],
+                  ),
                 ),
               ),
               _AuthPage(
@@ -800,6 +812,20 @@ class _AuthPage extends StatelessWidget {
           const Spacer(),
         ],
       ),
+    );
+  }
+}
+
+class _PageBackground extends StatelessWidget {
+  final Color color;
+  final Widget child;
+  const _PageBackground({required this.color, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: color,
+      child: SizedBox.expand(child: child),
     );
   }
 }
