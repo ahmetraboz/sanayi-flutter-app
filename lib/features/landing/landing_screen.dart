@@ -39,58 +39,59 @@ class _LandingScreenState extends State<LandingScreen> {
   @override
   Widget build(BuildContext context) {
     final isLastPage = _currentPage == _pageCount - 1;
+    final top = MediaQuery.of(context).padding.top;
+    final bottom = MediaQuery.of(context).padding.bottom;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (i) => setState(() => _currentPage = i),
-                    children: [
-                      SingleChildScrollView(child: _HeroSection(onNext: _nextPage)),
-                      SingleChildScrollView(child: const _HowItWorksSection()),
-                      SingleChildScrollView(child: const _FeaturesSection()),
-                      const SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            _TestimonialsSection(),
-                            SizedBox(height: 24),
-                          ],
-                        ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  onPageChanged: (i) => setState(() => _currentPage = i),
+                  children: [
+                    SingleChildScrollView(child: _HeroSection(onNext: _nextPage, topPadding: top)),
+                    SingleChildScrollView(child: const _HowItWorksSection()),
+                    SingleChildScrollView(child: const _FeaturesSection()),
+                    const SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          _TestimonialsSection(),
+                          SizedBox(height: 24),
+                        ],
                       ),
-                      _AuthPage(
-                        onLogin: () => context.push('/login'),
-                        onRegister: () => context.push('/register'),
-                      ),
-                    ],
-                  ),
-                ),
-                _buildPageIndicator(),
-              ],
-            ),
-            if (!isLastPage)
-              Positioned(
-                top: 12,
-                right: 16,
-                child: TextButton(
-                  onPressed: _skipToLast,
-                  child: const Text('Atla', style: TextStyle(color: AppColors.gray400, fontSize: 14, fontWeight: FontWeight.w500)),
+                    ),
+                    _AuthPage(
+                      onLogin: () => context.push('/login'),
+                      onRegister: () => context.push('/register'),
+                      bottomPadding: bottom,
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
+              _buildPageIndicator(bottom),
+            ],
+          ),
+          if (!isLastPage)
+            Positioned(
+              top: top + 8,
+              right: 16,
+              child: TextButton(
+                onPressed: _skipToLast,
+                child: const Text('Atla', style: TextStyle(color: AppColors.gray400, fontSize: 14, fontWeight: FontWeight.w500)),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildPageIndicator() {
+  Widget _buildPageIndicator(double bottomPadding) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+      padding: EdgeInsets.only(top: 12, bottom: 12 + bottomPadding),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(_pageCount, (i) {
@@ -123,7 +124,8 @@ class _LandingScreenState extends State<LandingScreen> {
 
 class _HeroSection extends StatelessWidget {
   final VoidCallback? onNext;
-  const _HeroSection({this.onNext});
+  final double topPadding;
+  const _HeroSection({this.onNext, this.topPadding = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +138,7 @@ class _HeroSection extends StatelessWidget {
           colors: [Color(0xFFF0FDF4), Color(0xFFECFDF5), Colors.white],
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 24, 24, 32),
+      padding: EdgeInsets.fromLTRB(24, 24 + topPadding, 24, 32),
       child: Column(
         children: [
           Container(
@@ -732,8 +734,9 @@ class _CtaSection extends StatelessWidget {
 class _AuthPage extends StatelessWidget {
   final VoidCallback onLogin;
   final VoidCallback onRegister;
+  final double bottomPadding;
 
-  const _AuthPage({required this.onLogin, required this.onRegister});
+  const _AuthPage({required this.onLogin, required this.onRegister, this.bottomPadding = 0});
 
   @override
   Widget build(BuildContext context) {
@@ -797,7 +800,7 @@ class _AuthPage extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8 + bottomPadding),
           const Spacer(),
         ],
       ),
