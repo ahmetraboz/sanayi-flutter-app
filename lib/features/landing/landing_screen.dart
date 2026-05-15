@@ -46,33 +46,26 @@ class _LandingScreenState extends State<LandingScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          Column(
+          PageView(
+            controller: _pageController,
+            onPageChanged: (i) => setState(() => _currentPage = i),
             children: [
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  onPageChanged: (i) => setState(() => _currentPage = i),
+              SingleChildScrollView(child: _HeroSection(onNext: _nextPage, topPadding: top)),
+              SingleChildScrollView(child: const _HowItWorksSection()),
+              SingleChildScrollView(child: const _FeaturesSection()),
+              const SingleChildScrollView(
+                child: Column(
                   children: [
-                    SingleChildScrollView(child: _HeroSection(onNext: _nextPage, topPadding: top)),
-                    SingleChildScrollView(child: const _HowItWorksSection()),
-                    SingleChildScrollView(child: const _FeaturesSection()),
-                    const SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          _TestimonialsSection(),
-                          SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
-                    _AuthPage(
-                      onLogin: () => context.push('/login'),
-                      onRegister: () => context.push('/register'),
-                      bottomPadding: bottom,
-                    ),
+                    _TestimonialsSection(),
+                    SizedBox(height: 24),
                   ],
                 ),
               ),
-              _buildPageIndicator(bottom),
+              _AuthPage(
+                onLogin: () => context.push('/login'),
+                onRegister: () => context.push('/register'),
+                bottomPadding: bottom,
+              ),
             ],
           ),
           if (!isLastPage)
@@ -84,37 +77,40 @@ class _LandingScreenState extends State<LandingScreen> {
                 child: const Text('Atla', style: TextStyle(color: AppColors.gray400, fontSize: 14, fontWeight: FontWeight.w500)),
               ),
             ),
+          Positioned(
+            bottom: bottom + 16,
+            left: 0,
+            right: 0,
+            child: _buildPageIndicator(),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildPageIndicator(double bottomPadding) {
-    return Padding(
-      padding: EdgeInsets.only(top: 12, bottom: 12 + bottomPadding),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(_pageCount, (i) {
-          final active = i == _currentPage;
-          return GestureDetector(
-            onTap: () => _pageController.animateToPage(
-              i,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+  Widget _buildPageIndicator() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(_pageCount, (i) {
+        final active = i == _currentPage;
+        return GestureDetector(
+          onTap: () => _pageController.animateToPage(
+            i,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+            width: active ? 20 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: active ? AppColors.primary600 : AppColors.gray200,
+              borderRadius: BorderRadius.circular(4),
             ),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              width: active ? 20 : 8,
-              height: 8,
-              decoration: BoxDecoration(
-                color: active ? AppColors.primary600 : AppColors.gray200,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          );
-        }),
-      ),
+          ),
+        );
+      }),
     );
   }
 }
