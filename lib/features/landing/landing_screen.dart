@@ -48,8 +48,6 @@ class _LandingScreenState extends State<LandingScreen> {
                     child: Column(
                       children: const [
                         _TestimonialsSection(),
-                        _FaqSection(),
-                        _CtaSection(),
                         SizedBox(height: 24),
                       ],
                     ),
