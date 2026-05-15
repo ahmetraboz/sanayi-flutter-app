@@ -13,7 +13,7 @@ class _LandingScreenState extends State<LandingScreen> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  static const _pageCount = 4;
+  static const _pageCount = 5;
 
   @override
   void dispose() {
@@ -55,14 +55,17 @@ class _LandingScreenState extends State<LandingScreen> {
                       SingleChildScrollView(child: _HeroSection(onNext: _nextPage)),
                       SingleChildScrollView(child: const _HowItWorksSection()),
                       SingleChildScrollView(child: const _FeaturesSection()),
-                      SingleChildScrollView(
+                      const SingleChildScrollView(
                         child: Column(
                           children: [
-                            const _TestimonialsSection(),
-                            _buildAuthButtons(context),
-                            const SizedBox(height: 32),
+                            _TestimonialsSection(),
+                            SizedBox(height: 24),
                           ],
                         ),
+                      ),
+                      _AuthPage(
+                        onLogin: () => context.push('/login'),
+                        onRegister: () => context.push('/register'),
                       ),
                     ],
                   ),
@@ -81,47 +84,6 @@ class _LandingScreenState extends State<LandingScreen> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildAuthButtons(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-      child: Column(
-        children: [
-          GestureDetector(
-            onTap: () => context.push('/register'),
-            child: Container(
-              width: double.infinity,
-              height: 54,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
-                borderRadius: BorderRadius.circular(14),
-                boxShadow: [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
-              ),
-              child: const Center(
-                child: Text('Ücretsiz Üye Ol', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => context.push('/login'),
-            child: Container(
-              width: double.infinity,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.gray200),
-              ),
-              child: const Center(
-                child: Text('Giriş Yap', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray700)),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -759,6 +721,84 @@ class _CtaSection extends StatelessWidget {
             onTap: () => context.push('/servisler'),
             child: const Text('Servislere Göz At →', style: TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600)),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Auth Page ─────────────────────────────────────────────────────────────────
+
+class _AuthPage extends StatelessWidget {
+  final VoidCallback onLogin;
+  final VoidCallback onRegister;
+
+  const _AuthPage({required this.onLogin, required this.onRegister});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+            ),
+            child: const Icon(Icons.build_outlined, size: 36, color: Colors.white),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Hemen Başlayın',
+            style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.gray900),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Ücretsiz hesap oluşturun ve ilk talebinizi dakikalar içinde yayınlayın.',
+            style: TextStyle(fontSize: 14, color: AppColors.gray500, height: 1.5),
+            textAlign: TextAlign.center,
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: onRegister,
+            child: Container(
+              width: double.infinity,
+              height: 54,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
+              ),
+              child: const Center(
+                child: Text('Ücretsiz Üye Ol', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: onLogin,
+            child: Container(
+              width: double.infinity,
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.gray200),
+              ),
+              child: const Center(
+                child: Text('Giriş Yap', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray700)),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Spacer(),
         ],
       ),
     );
