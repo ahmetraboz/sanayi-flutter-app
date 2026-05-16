@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
 import 'customer_dashboard_notifier.dart';
-import 'widgets/active_jobs_section.dart';
-import 'widgets/quick_actions.dart';
-import 'widgets/recent_activity_section.dart';
+import 'widgets/action_banner.dart';
 import 'widgets/stat_cards.dart';
 import 'widgets/welcome_banner.dart';
 
@@ -35,7 +33,7 @@ class CustomerDashboardScreen extends ConsumerWidget {
         onRefresh: notifier.loadAll,
         child: CustomScrollView(
           slivers: [
-            SliverAppBar(
+            const SliverAppBar(
               backgroundColor: AppColors.gray50,
               floating: true,
               snap: true,
@@ -75,44 +73,26 @@ class CustomerDashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              sliver: const SliverToBoxAdapter(child: WelcomeBanner()),
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+              sliver: SliverToBoxAdapter(child: WelcomeBanner()),
             ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            if (state.stats != null)
+            if (state.stats != null) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverToBoxAdapter(
                   child: StatCardsGrid(stats: state.stats!),
                 ),
               ),
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(
-                child: ActiveJobsSection(jobs: state.activeJobs),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            // Recent activity — always shown (empty state has CTA button)
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    RecentActivitySection(requests: state.recentRequests),
-                    const SizedBox(height: 12),
-                    RecentBidsSection(bids: state.recentBids),
-                  ],
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverToBoxAdapter(
+                  child: ActionBanner(stats: state.stats!),
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            const SliverPadding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(child: QuickActions()),
-            ),
+            ],
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
           ],
         ),
