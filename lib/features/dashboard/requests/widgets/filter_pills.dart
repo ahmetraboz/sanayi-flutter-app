@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/theme.dart';
 
-typedef _Filter = ({String? value, String label, IconData icon});
+typedef _Filter = ({String? value, String label, IconData icon, Color color});
 
 const _kFilters = <_Filter>[
-  (value: null, label: 'Tümü', icon: Icons.list),
-  (value: 'open', label: 'Açık', icon: Icons.radio_button_unchecked),
-  (value: 'in_progress', label: 'Devam Eden', icon: Icons.build_outlined),
-  (
-    value: 'pending_review',
-    label: 'Değerlendirme',
-    icon: Icons.star_border_outlined,
-  ),
-  (value: 'completed', label: 'Tamamlandı', icon: Icons.check_circle_outline),
+  (value: null, label: 'Tüm Talepler', icon: Icons.list_alt_outlined, color: Color(0xFF6B7280)),
+  (value: 'open', label: 'Açık', icon: Icons.radio_button_unchecked, color: Color(0xFF3B82F6)),
+  (value: 'accepted', label: 'Devam Ediyor', icon: Icons.build_outlined, color: Color(0xFFD97706)),
+  (value: 'pending_review', label: 'Değerlendirme Bekliyor', icon: Icons.star_border_outlined, color: Color(0xFF8B5CF6)),
+  (value: 'completed', label: 'Tamamlandı', icon: Icons.check_circle_outline, color: Color(0xFF059669)),
 ];
 
 class FilterPills extends StatelessWidget {
@@ -25,56 +21,173 @@ class FilterPills extends StatelessWidget {
     required this.onChanged,
   });
 
+  _Filter get _active => _kFilters.firstWhere(
+        (f) => f.value == activeFilter,
+        orElse: () => _kFilters.first,
+      );
+
+  void _showSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilterSheet(
+        activeFilter: activeFilter,
+        onChanged: (val) {
+          Navigator.of(context).pop();
+          onChanged(val);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    final active = _active;
+    final isFiltered = activeFilter != null;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
-        children:
-            _kFilters.map((f) {
-              final active = activeFilter == f.value;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => onChanged(f.value),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: active ? AppColors.primary600 : Colors.white,
-                      borderRadius: BorderRadius.circular(9999),
-                      border: Border.all(
-                        color:
-                            active ? AppColors.primary600 : AppColors.gray200,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          f.icon,
-                          size: 15,
-                          color: active ? Colors.white : AppColors.gray500,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          f.label,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: active ? Colors.white : AppColors.gray700,
-                          ),
-                        ),
-                      ],
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (isFiltered) ...[
+            GestureDetector(
+              onTap: () => onChanged(null),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.gray200),
+                ),
+                child: const Icon(Icons.close_rounded, size: 16, color: AppColors.gray400),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
+          GestureDetector(
+            onTap: () => _showSheet(context),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: isFiltered ? active.color.withValues(alpha: 0.08) : Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isFiltered ? active.color.withValues(alpha: 0.4) : AppColors.gray200,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 16,
+                    color: isFiltered ? active.color : AppColors.gray500,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    isFiltered ? active.label : 'Filtrele',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: isFiltered ? active.color : AppColors.gray600,
                     ),
                   ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 16,
+                    color: isFiltered ? active.color : AppColors.gray400,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterSheet extends StatelessWidget {
+  final String? activeFilter;
+  final ValueChanged<String?> onChanged;
+
+  const _FilterSheet({required this.activeFilter, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.gray200,
+              borderRadius: BorderRadius.circular(99),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
+                  'Durum Filtrele',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.gray900,
+                  ),
                 ),
-              );
-            }).toList(),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          ..._kFilters.map((f) {
+            final isActive = activeFilter == f.value;
+            return InkWell(
+              onTap: () => onChanged(f.value),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: f.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(f.icon, size: 18, color: f.color),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        f.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                          color: isActive ? f.color : AppColors.gray700,
+                        ),
+                      ),
+                    ),
+                    if (isActive)
+                      Icon(Icons.check_rounded, size: 18, color: f.color),
+                  ],
+                ),
+              ),
+            );
+          }),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 16),
+        ],
       ),
     );
   }

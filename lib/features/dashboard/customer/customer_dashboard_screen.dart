@@ -74,7 +74,7 @@ class CustomerDashboardScreen extends ConsumerWidget {
                 ),
               ),
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 0),
+              padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
               sliver: SliverToBoxAdapter(child: WelcomeBanner()),
             ),
             if (state.stats != null) ...[

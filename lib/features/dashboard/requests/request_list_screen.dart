@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/shared_pagination.dart';
 import 'request_list_notifier.dart';
 import 'widgets/filter_pills.dart';
@@ -16,43 +18,43 @@ class RequestListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Talepler',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: AppColors.gray900,
-          ),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            PageHeader(
+              title: 'Taleplerim',
+              action: PageHeaderAction(
+                icon: Icons.add,
+                label: 'Yeni Talep',
+                onTap: () => context.push('/dashboard/requests/new'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ColoredBox(
+              color: AppColors.gray50,
+              child: FilterPills(
+                activeFilter: state.activeFilter,
+                onChanged: notifier.onFilterChanged,
+              ),
+            ),
+            Expanded(
+              child: RefreshIndicator(
+                color: AppColors.primary600,
+                onRefresh: notifier.fetchRequests,
+                child: _buildBody(state, notifier),
+              ),
+            ),
+            SharedPagination(
+              currentPage: state.currentPage,
+              totalPages: state.totalPages,
+              total: state.total,
+              onPrevious: state.currentPage > 1 ? notifier.previousPage : null,
+              onNext:
+                  state.currentPage < state.totalPages ? notifier.nextPage : null,
+            ),
+          ],
         ),
-      ),
-      body: Column(
-        children: [
-          ColoredBox(
-            color: Colors.white,
-            child: FilterPills(
-              activeFilter: state.activeFilter,
-              onChanged: notifier.onFilterChanged,
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              color: AppColors.primary600,
-              onRefresh: notifier.fetchRequests,
-              child: _buildBody(state, notifier),
-            ),
-          ),
-          SharedPagination(
-            currentPage: state.currentPage,
-            totalPages: state.totalPages,
-            total: state.total,
-            onPrevious: state.currentPage > 1 ? notifier.previousPage : null,
-            onNext:
-                state.currentPage < state.totalPages ? notifier.nextPage : null,
-          ),
-        ],
       ),
     );
   }

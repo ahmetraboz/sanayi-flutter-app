@@ -27,9 +27,9 @@ class CustomerShell extends StatelessWidget {
             label: 'Anasayfa',
           ),
           NavigationDestination(
-            icon: Icon(Icons.search_outlined),
-            selectedIcon: Icon(Icons.search, color: AppColors.primary600),
-            label: 'Keşfet',
+            icon: Icon(Icons.store_outlined),
+            selectedIcon: Icon(Icons.store, color: AppColors.primary600),
+            label: 'Servisler',
           ),
           NavigationDestination(
             icon: Icon(Icons.description_outlined),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/page_header.dart';
 import 'models/vehicle_detail.dart';
 import 'vehicles_list_notifier.dart';
 import 'widgets/vehicle_form_sheet.dart';
@@ -16,21 +17,23 @@ class VehiclesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Araçlarım',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.gray900),
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            PageHeader(
+              title: 'Araçlarım',
+              action: PageHeaderAction(
+                icon: Icons.add,
+                label: 'Araç Ekle',
+                onTap: () => _showVehicleForm(context),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(child: _buildBody(context, state, notifier)),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.primary600),
-            onPressed: () => _showVehicleForm(context),
-          ),
-        ],
       ),
-      body: _buildBody(context, state, notifier),
     );
   }
 

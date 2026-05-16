@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/page_header.dart';
 import '../../services/widgets/provider_card.dart';
 import '../../services/widgets/provider_detail_sheet.dart';
 import '../../../core/constants/turkey_cities.dart';
@@ -19,7 +20,23 @@ class WorkplacesScreen extends ConsumerWidget {
       backgroundColor: AppColors.gray50,
       body: CustomScrollView(
         slivers: [
-          _buildHeroSection(context, state, notifier),
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+              child: const PageHeader(title: 'Servisler', subtitle: 'Bölgenizdeki onaylı servisleri bulun'),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: _CitySearchField(
+                selectedCity: state.selectedCity,
+                onSelected: (city) {
+                  if (city != null) notifier.selectCity(city);
+                },
+              ),
+            ),
+          ),
           if (state.selectedCity == null)
             _buildEmptyCityState()
           else if (state.loading)
@@ -35,56 +52,7 @@ class WorkplacesScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeroSection(BuildContext context, WorkplacesState state, WorkplacesNotifier notifier) {
-    return SliverToBoxAdapter(
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF059669), Color(0xFF065F46)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.location_on, color: Color(0xFF6EE7B7), size: 20),
-                const SizedBox(width: 8),
-                Text(
-                  'Konum Bazlı Arama',
-                  style: TextStyle(color: const Color(0xFFA7F3D0).withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'İş Yerleri',
-              style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'İlinizde kayıtlı servis sağlayıcıları bulun ve talep gönderin',
-              style: TextStyle(color: const Color(0xFFA7F3D0).withValues(alpha: 0.8), fontSize: 14),
-            ),
-            const SizedBox(height: 24),
-            _CitySearchField(
-              selectedCity: state.selectedCity,
-              onSelected: (city) {
-                if (city != null) notifier.selectCity(city);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyCityState() {
+Widget _buildEmptyCityState() {
     return SliverFillRemaining(
       hasScrollBody: false,
       child: Center(
@@ -229,24 +197,30 @@ class _CitySearchFieldState extends State<_CitySearchField> {
       },
       fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
         _focusNode = focusNode;
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-          ),
-          child: TextField(
-            controller: ctrl,
-            focusNode: focusNode,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
-            decoration: InputDecoration(
-              hintText: 'Şehir ara...',
-              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              prefixIcon: Icon(Icons.location_city, color: Colors.white.withValues(alpha: 0.6), size: 20),
-              suffixIcon: Icon(Icons.keyboard_arrow_down, color: Colors.white.withValues(alpha: 0.8), size: 20),
+        return TextField(
+          controller: ctrl,
+          focusNode: focusNode,
+          style: const TextStyle(color: AppColors.gray900, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: 'Şehir ara...',
+            hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 14),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.gray200),
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.gray200),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: AppColors.primary600),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            prefixIcon: const Icon(Icons.location_city, color: AppColors.gray400, size: 20),
+            suffixIcon: const Icon(Icons.keyboard_arrow_down, color: AppColors.gray400, size: 20),
           ),
         );
       },
@@ -255,6 +229,8 @@ class _CitySearchFieldState extends State<_CitySearchField> {
         child: Material(
           elevation: 4,
           color: Colors.white,
+          surfaceTintColor: Colors.white,
+          shadowColor: Colors.black12,
           borderRadius: BorderRadius.circular(12),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxHeight: 220),

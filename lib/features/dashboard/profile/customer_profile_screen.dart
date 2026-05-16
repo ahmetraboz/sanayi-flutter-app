@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_notifier.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/page_header.dart';
 import 'customer_profile_notifier.dart';
 
 class CustomerProfileScreen extends ConsumerStatefulWidget {
@@ -80,39 +81,41 @@ class _CustomerProfileScreenState extends ConsumerState<CustomerProfileScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            const Text(
-              'Profilim',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: AppColors.gray900,
+          PageHeader(
+            title: 'Profilim',
+            action: GestureDetector(
+              onTap: () => _showLogoutConfirm(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                decoration: BoxDecoration(
+                  color: AppColors.red50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.red100),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.logout, size: 15, color: AppColors.red700),
+                    SizedBox(width: 5),
+                    Text(
+                      'Çıkış',
+                      style: TextStyle(
+                        color: AppColors.red700,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const Text(
-              'Kişisel bilgilerinizi güncelleyin',
-              style: TextStyle(
-                fontSize: 12,
-                color: AppColors.gray500,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: AppColors.red700),
-            onPressed: () => _showLogoutConfirm(context),
-            tooltip: 'Çıkış Yap',
           ),
-        ],
-      ),
-      body:
+          Expanded(
+            child:
           authState.isLoading
               ? const Center(
                 child: CircularProgressIndicator(color: AppColors.primary600),
@@ -382,6 +385,10 @@ class _CustomerProfileScreenState extends ConsumerState<CustomerProfileScreen> {
                   ],
                 ),
               ),
+          ),
+        ],
+        ),
+      ),
     );
   }
 
