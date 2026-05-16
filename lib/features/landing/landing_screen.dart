@@ -292,16 +292,10 @@ class _TrustDivider extends StatelessWidget {
 
 // ── How It Works ─────────────────────────────────────────────────────────────
 
-class _HowItWorksSection extends StatefulWidget {
+class _HowItWorksSection extends StatelessWidget {
   const _HowItWorksSection();
-  @override
-  State<_HowItWorksSection> createState() => _HowItWorksSectionState();
-}
 
-class _HowItWorksSectionState extends State<_HowItWorksSection> {
-  bool _showOwner = true;
-
-  static const _ownerSteps = [
+  static const _steps = [
     (icon: Icons.person_add_outlined, title: 'Ücretsiz Hesap Aç', desc: 'Ad, e-posta ve telefon ile 1 dakikada kayıt ol. Kredi kartı gerekmez.'),
     (icon: Icons.directions_car_outlined, title: 'Aracını Ekle', desc: 'Marka, model ve yıl bilgilerini girerek aracını profiline ekle.'),
     (icon: Icons.camera_alt_outlined, title: 'Talep Oluştur', desc: 'Yapılacak işi açıkla, fotoğraf yükle. Detay ne kadar fazlaysa teklif o kadar isabetli.'),
@@ -309,18 +303,8 @@ class _HowItWorksSectionState extends State<_HowItWorksSection> {
     (icon: Icons.star_outline, title: 'Seç ve Değerlendir', desc: 'En uygun teklifi kabul et. İş bittikten sonra servise yıldız ve yorum bırak.'),
   ];
 
-  static const _providerSteps = [
-    (icon: Icons.storefront_outlined, title: 'İşletme Hesabı Aç', desc: 'Firma adı, vergi numarası, adres ve iletişim bilgilerini gir.'),
-    (icon: Icons.shield_outlined, title: 'Admin Onayını Bekle', desc: 'Ekibimiz başvuruyu inceler. Onaylanan servisler "Doğrulanmış" rozeti kazanır.'),
-    (icon: Icons.visibility_outlined, title: 'Açık Talepleri Gör', desc: 'Platformdaki tüm açık talepleri gör. Araç bilgisi, yapılacak iş ve fotoğrafları incele.'),
-    (icon: Icons.attach_money_outlined, title: 'Teklif Ver', desc: 'Teklif fiyatını ve açıklamanı gir. Gerekirse müşteriden ek bilgi iste.'),
-    (icon: Icons.emoji_events_outlined, title: 'İşi Al, İtibar Kazan', desc: 'Teklif kabul edildiğinde bildirim al, işi tamamla, değerlendirmelerle sıralamanda yüksel.'),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final steps = _showOwner ? _ownerSteps : _providerSteps;
-
     return Container(
       color: AppColors.gray50,
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 48),
@@ -329,55 +313,14 @@ class _HowItWorksSectionState extends State<_HowItWorksSection> {
           const Text('NASIL ÇALIŞIR?', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary600, letterSpacing: 1.2)),
           const SizedBox(height: 8),
           const Text('Birkaç adımda başlayın', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.gray900)),
-          const SizedBox(height: 20),
-          Container(
-            decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(10)),
-            padding: const EdgeInsets.all(3),
-            child: Row(
-              children: [
-                _TabBtn(label: 'Araç Sahibiyim', active: _showOwner, onTap: () => setState(() => _showOwner = true)),
-                _TabBtn(label: 'Servis Sahibiyim', active: !_showOwner, onTap: () => setState(() => _showOwner = false)),
-              ],
-            ),
-          ),
           const SizedBox(height: 28),
-          ...steps.asMap().entries.map((e) => _StepItem(index: e.key, step: e.value, total: steps.length)),
+          ..._steps.asMap().entries.map((e) => _StepItem(index: e.key, step: e.value, total: _steps.length)),
         ],
       ),
     );
   }
 }
 
-class _TabBtn extends StatelessWidget {
-  final String label;
-  final bool active;
-  final VoidCallback onTap;
-  const _TabBtn({required this.label, required this.active, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          height: 38,
-          decoration: BoxDecoration(
-            color: active ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: active ? [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 4)] : null,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: active ? AppColors.gray900 : AppColors.gray500),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class _StepItem extends StatelessWidget {
   final int index;

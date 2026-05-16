@@ -40,7 +40,6 @@ class UserModel {
   String get firstName => name.split(' ').first;
 
   String get redirectPath => switch (role) {
-        'provider' => '/provider',
         'admin' => '/admin',
         _ => '/dashboard',
       };

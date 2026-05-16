@@ -51,12 +51,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  String _redirectPath(String role) => switch (role) {
-        'provider' => '/provider',
-        'admin' => '/admin',
-        _ => '/dashboard',
-      };
-
   @override
   Widget build(BuildContext context) {
     final isTablet = MediaQuery.sizeOf(context).width >= 768;
