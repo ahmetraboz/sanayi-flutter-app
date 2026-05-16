@@ -149,15 +149,6 @@ class _HeroSection extends StatelessWidget {
       padding: EdgeInsets.fromLTRB(24, 24 + topPadding, 24, 32),
       child: Column(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFDCFCE7),
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: const Color(0xFFBBF7D0)),
-            ),
-            child: const Text('🚗  Araç sahipleri için ücretsiz', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF15803D))),
-          ),
           const SizedBox(height: 20),
           const Text(
             'Aracınız için\nEn İyi Servisi Bulun',
@@ -836,6 +827,7 @@ class _DiagnosisCardState extends State<_DiagnosisCard> with TickerProviderState
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.85),
@@ -913,6 +905,7 @@ class _DiagnosisCardState extends State<_DiagnosisCard> with TickerProviderState
       borderRadius: BorderRadius.circular(16),
       child: Container(
         height: 160,
+        width: double.infinity,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             begin: Alignment.topCenter,

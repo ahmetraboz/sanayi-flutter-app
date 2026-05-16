@@ -33,6 +33,10 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
   int? _selectedMakeId;
   String? _selectedModel;
 
+  List<String> _carImages = [];
+  bool _imageLoading = false;
+  int _imageIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -40,16 +44,51 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     _modelController = TextEditingController(text: widget.vehicle?.model ?? '');
     _yearController = TextEditingController(text: widget.vehicle?.year?.toString() ?? '');
     _plateController = TextEditingController(text: widget.vehicle?.licensePlate ?? '');
+    _yearController.addListener(_onYearChanged);
+  }
+
+  String _lastFetchedYear = '';
+
+  void _onYearChanged() {
+    final year = _yearController.text.trim();
+    if (year == _lastFetchedYear) return;
+    if (year.length == 4 || year.isEmpty) {
+      _lastFetchedYear = year;
+      _fetchCarImage();
+    }
   }
 
   @override
   void dispose() {
+    _yearController.removeListener(_onYearChanged);
     _brandController.dispose();
     _modelController.dispose();
     _yearController.dispose();
     _plateController.dispose();
     _vinController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchCarImage() async {
+    final brand = _brandController.text.trim();
+    final model = _selectedModel ?? _modelController.text.trim();
+    if (brand.isEmpty || model.isEmpty) {
+      setState(() { _carImages = []; _imageIndex = 0; });
+      return;
+    }
+    final year = _yearController.text.trim();
+    _lastFetchedYear = year;
+    setState(() { _imageLoading = true; _imageIndex = 0; });
+    try {
+      final params = <String, String>{'make': brand, 'model': model};
+      if (year.isNotEmpty) params['year'] = year;
+      final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParameters: params);
+      final data = res.data as Map<String, dynamic>;
+      final images = (data['images'] as List?)?.cast<String>() ?? [];
+      if (mounted) setState(() { _carImages = images; _imageLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _carImages = []; _imageLoading = false; });
+    }
   }
 
   Future<void> _lookupVin() async {
@@ -76,6 +115,7 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
         _selectedMakeId = null;
         _selectedModel = model;
       });
+      _fetchCarImage();
     } catch (e) {
       setState(() { _vinLoading = false; _vinError = 'VIN tanımlanamadı, lütfen tekrar deneyin.'; });
     }
@@ -199,6 +239,7 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
                 onChanged: (v) {
                   setState(() => _selectedModel = v);
                   _modelController.text = v ?? '';
+                  if (v != null) _fetchCarImage();
                 },
               )
             else
@@ -209,6 +250,15 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
                 validator: (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
                 textInputAction: TextInputAction.next,
               ),
+            if (_imageLoading || _carImages.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _CarImagePreview(
+                images: _carImages,
+                loading: _imageLoading,
+                currentIndex: _imageIndex,
+                onPageChanged: (i) => setState(() => _imageIndex = i),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [
@@ -565,5 +615,148 @@ class _UpperCaseFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue next) {
     return next.copyWith(text: next.text.toUpperCase());
+  }
+}
+
+// ─── Car Image Preview ────────────────────────────────────────────────────────
+
+class _CarImagePreview extends StatelessWidget {
+  final List<String> images;
+  final bool loading;
+  final int currentIndex;
+  final ValueChanged<int> onPageChanged;
+
+  const _CarImagePreview({
+    required this.images,
+    required this.loading,
+    required this.currentIndex,
+    required this.onPageChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 200,
+        color: AppColors.gray100,
+        child: loading
+            ? _buildSkeleton()
+            : images.isEmpty
+                ? _buildPlaceholder()
+                : _buildCarousel(),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton() {
+    return const _ShimmerBox();
+  }
+
+  Widget _buildPlaceholder() {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300),
+          SizedBox(height: 8),
+          Text('Görsel bulunamadı', style: TextStyle(fontSize: 12, color: AppColors.gray400)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCarousel() {
+    final controller = PageController();
+    return Stack(
+      children: [
+        PageView.builder(
+          controller: controller,
+          itemCount: images.length,
+          onPageChanged: onPageChanged,
+          itemBuilder: (context, i) => Image.network(
+            images[i],
+            fit: BoxFit.cover,
+            width: double.infinity,
+            loadingBuilder: (_, child, progress) =>
+                progress == null ? child : const _ShimmerBox(),
+            errorBuilder: (_, __, ___) => const Center(
+              child: Icon(Icons.broken_image_outlined, size: 40, color: AppColors.gray300),
+            ),
+          ),
+        ),
+        if (images.length > 1)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                images.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: i == currentIndex ? 16 : 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: i == currentIndex ? Colors.white : Colors.white54,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        if (images.length > 1)
+          Positioned(
+            top: 8,
+            right: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(99),
+              ),
+              child: Text(
+                '${currentIndex + 1}/${images.length}',
+                style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ShimmerBox extends StatefulWidget {
+  const _ShimmerBox();
+
+  @override
+  State<_ShimmerBox> createState() => _ShimmerBoxState();
+}
+
+class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _anim;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat(reverse: true);
+    _anim = Tween<double>(begin: 0.4, end: 0.9).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _anim,
+      builder: (_, __) => Container(color: Color.fromRGBO(209, 213, 219, _anim.value)),
+    );
   }
 }
