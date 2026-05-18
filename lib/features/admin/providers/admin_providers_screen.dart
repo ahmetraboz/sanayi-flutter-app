@@ -158,9 +158,9 @@ class _ProviderCard extends StatelessWidget {
                         const Icon(Icons.location_on_outlined, size: 13, color: AppColors.gray400),
                         const SizedBox(width: 3),
                         Text(
-                          provider.district != null
-                              ? '${provider.district}, ${provider.city}'
-                              : provider.city,
+                          [provider.district, provider.city]
+                              .whereType<String>()
+                              .join(', '),
                           style: const TextStyle(fontSize: 12, color: AppColors.gray500),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

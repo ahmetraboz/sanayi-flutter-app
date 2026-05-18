@@ -1,7 +1,7 @@
 class ProviderModel {
   final int id;
   final String companyName;
-  final String city;
+  final String? city;
   final String? district;
   final String? logoUrl;
   final bool isVerified;
@@ -17,7 +17,7 @@ class ProviderModel {
   const ProviderModel({
     required this.id,
     required this.companyName,
-    required this.city,
+    this.city,
     this.district,
     this.logoUrl,
     required this.isVerified,
@@ -34,7 +34,7 @@ class ProviderModel {
   factory ProviderModel.fromJson(Map<String, dynamic> json) => ProviderModel(
         id: json['id'] as int,
         companyName: json['companyName'] as String,
-        city: json['city'] as String,
+        city: json['city'] as String?,
         district: json['district'] as String?,
         logoUrl: json['logoUrl'] as String?,
         isVerified: json['isVerified'] as bool? ?? false,

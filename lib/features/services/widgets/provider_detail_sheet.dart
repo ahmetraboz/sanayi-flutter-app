@@ -159,7 +159,7 @@ class ProviderDetailSheet extends ConsumerWidget {
             Text(p.description!, style: const TextStyle(fontSize: 14, color: AppColors.gray600, height: 1.5)),
             const SizedBox(height: 16),
           ],
-          if (p.city.isNotEmpty) ...[
+          if ((p.city ?? '').isNotEmpty) ...[
             Row(
               children: [
                 const Icon(Icons.location_on_outlined, size: 18, color: AppColors.gray400),

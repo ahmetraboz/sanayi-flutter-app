@@ -9,7 +9,7 @@ import '../../features/dashboard/requests/request_list_screen.dart';
 import '../../features/dashboard/shell/customer_shell.dart';
 import '../../features/dashboard/vehicles/vehicle_detail_screen.dart';
 import '../../features/dashboard/vehicles/vehicles_screen.dart';
-import '../../features/dashboard/workplaces/workplaces_screen.dart';
+import '../../features/services/service_directory_screen.dart';
 
 final customerShellRoute = ShellRoute(
   builder: (context, state, child) => CustomerShell(child: child),
@@ -56,7 +56,7 @@ final customerShellRoute = ShellRoute(
     ),
     GoRoute(
       path: '/dashboard/workplaces',
-      builder: (context, state) => const WorkplacesScreen(),
+      builder: (context, state) => const ServiceDirectoryScreen(asTab: true),
     ),
     GoRoute(
       path: '/dashboard/profile',

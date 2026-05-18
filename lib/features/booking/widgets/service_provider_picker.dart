@@ -155,7 +155,7 @@ class _ProviderTile extends StatelessWidget {
                       color: selected ? AppColors.primary600 : AppColors.gray900,
                     ),
                   ),
-                  if (provider.city.isNotEmpty) ...[
+                  if ((provider.city ?? '').isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
                       [provider.city, provider.district].whereType<String>().join(', '),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/widgets/app_select_field.dart';
+import '../../shared/widgets/page_header.dart';
 import 'service_directory_notifier.dart';
 import 'widgets/provider_card.dart';
 import 'widgets/provider_detail_sheet.dart';
@@ -15,12 +16,43 @@ const _kSortOptions = [
 ];
 
 class ServiceDirectoryScreen extends ConsumerWidget {
-  const ServiceDirectoryScreen({super.key});
+  final bool asTab;
+
+  const ServiceDirectoryScreen({super.key, this.asTab = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(serviceDirectoryProvider);
     final notifier = ref.read(serviceDirectoryProvider.notifier);
+
+    final hasActiveFilters =
+        state.selectedCity != null || state.search.isNotEmpty || state.minRating != null;
+
+    if (asTab) {
+      return Scaffold(
+        backgroundColor: AppColors.gray50,
+        body: Column(
+          children: [
+            SafeArea(
+              bottom: false,
+              child: PageHeader(
+                title: 'Servisler',
+                subtitle: 'Bölgenizdeki onaylı servisleri bulun',
+                action: hasActiveFilters
+                    ? TextButton(
+                        onPressed: notifier.clearFilters,
+                        child: const Text('Temizle',
+                            style: TextStyle(color: AppColors.primary600, fontSize: 13)),
+                      )
+                    : null,
+              ),
+            ),
+            _FilterBar(state: state, notifier: notifier),
+            Expanded(child: _buildContent(context, ref, state, notifier)),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
@@ -34,7 +66,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
             : null,
         title: const Text('Servisler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
         actions: [
-          if (state.selectedCity != null || state.search.isNotEmpty || state.minRating != null)
+          if (hasActiveFilters)
             TextButton(
               onPressed: notifier.clearFilters,
               child: const Text('Temizle', style: TextStyle(color: AppColors.primary600, fontSize: 13)),
@@ -126,7 +158,14 @@ class ServiceDirectoryScreen extends ConsumerWidget {
         provider: provider,
         onRequestTap: () {
           Navigator.of(context).pop();
-          context.push('/book', extra: {'serviceId': provider.id, 'city': provider.city});
+          if (asTab) {
+            context.push('/dashboard/requests/new', extra: {
+              'serviceId': provider.id,
+              'serviceName': provider.companyName,
+            });
+          } else {
+            context.push('/book', extra: {'serviceId': provider.id, 'city': provider.city});
+          }
         },
       ),
     );
