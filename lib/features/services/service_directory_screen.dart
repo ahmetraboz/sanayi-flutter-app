@@ -2,17 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
-import '../../shared/widgets/app_select_field.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../core/constants/turkey_cities.dart';
 import 'service_directory_notifier.dart';
 import 'widgets/provider_card.dart';
 import 'widgets/provider_detail_sheet.dart';
-import '../../core/constants/turkey_cities.dart';
 
 const _kSortOptions = [
-  (value: 'rating', label: 'Puana Göre'),
-  (value: 'reviews', label: 'Değerlendirmeye Göre'),
-  (value: 'jobs', label: 'İş Sayısına Göre'),
+  (value: 'rating', label: 'En Yüksek Puan'),
+  (value: 'reviews', label: 'En Fazla Değerlendirme'),
+  (value: 'jobs', label: 'En Fazla İş'),
 ];
 
 class ServiceDirectoryScreen extends ConsumerWidget {
@@ -25,8 +24,9 @@ class ServiceDirectoryScreen extends ConsumerWidget {
     final state = ref.watch(serviceDirectoryProvider);
     final notifier = ref.read(serviceDirectoryProvider.notifier);
 
-    final hasActiveFilters =
-        state.selectedCity != null || state.search.isNotEmpty || state.minRating != null;
+    final activeFilterCount = (state.selectedCity != null ? 1 : 0) +
+        (state.minRating != null ? 1 : 0) +
+        (state.sortBy != 'rating' ? 1 : 0);
 
     if (asTab) {
       return Scaffold(
@@ -38,16 +38,13 @@ class ServiceDirectoryScreen extends ConsumerWidget {
               child: PageHeader(
                 title: 'Servisler',
                 subtitle: 'Bölgenizdeki onaylı servisleri bulun',
-                action: hasActiveFilters
-                    ? TextButton(
-                        onPressed: notifier.clearFilters,
-                        child: const Text('Temizle',
-                            style: TextStyle(color: AppColors.primary600, fontSize: 13)),
-                      )
-                    : null,
               ),
             ),
-            _FilterBar(state: state, notifier: notifier),
+            _SearchBar(
+              state: state,
+              notifier: notifier,
+              activeFilterCount: activeFilterCount,
+            ),
             Expanded(child: _buildContent(context, ref, state, notifier)),
           ],
         ),
@@ -64,18 +61,16 @@ class ServiceDirectoryScreen extends ConsumerWidget {
                 onPressed: () => context.pop(),
               )
             : null,
-        title: const Text('Servisler', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        actions: [
-          if (hasActiveFilters)
-            TextButton(
-              onPressed: notifier.clearFilters,
-              child: const Text('Temizle', style: TextStyle(color: AppColors.primary600, fontSize: 13)),
-            ),
-        ],
+        title: const Text('Servisler',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
       ),
       body: Column(
         children: [
-          _FilterBar(state: state, notifier: notifier),
+          _SearchBar(
+            state: state,
+            notifier: notifier,
+            activeFilterCount: activeFilterCount,
+          ),
           Expanded(child: _buildContent(context, ref, state, notifier)),
         ],
       ),
@@ -100,7 +95,9 @@ class ServiceDirectoryScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(state.error!, style: const TextStyle(color: AppColors.gray500)),
             const SizedBox(height: 12),
-            TextButton(onPressed: notifier.fetchProviders, child: const Text('Tekrar Dene')),
+            TextButton(
+                onPressed: notifier.fetchProviders,
+                child: const Text('Tekrar Dene')),
           ],
         ),
       );
@@ -112,7 +109,8 @@ class ServiceDirectoryScreen extends ConsumerWidget {
           children: [
             Icon(Icons.business_outlined, size: 48, color: AppColors.gray300),
             SizedBox(height: 12),
-            Text('Servis bulunamadı', style: TextStyle(color: AppColors.gray500, fontSize: 15)),
+            Text('Servis bulunamadı',
+                style: TextStyle(color: AppColors.gray500, fontSize: 15)),
           ],
         ),
       );
@@ -152,19 +150,21 @@ class ServiceDirectoryScreen extends ConsumerWidget {
   void _showDetail(BuildContext context, provider) {
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => ProviderDetailSheet(
         provider: provider,
         onRequestTap: () {
-          Navigator.of(context).pop();
+          Navigator.of(context, rootNavigator: true).pop();
           if (asTab) {
             context.push('/dashboard/requests/new', extra: {
               'serviceId': provider.id,
               'serviceName': provider.companyName,
             });
           } else {
-            context.push('/book', extra: {'serviceId': provider.id, 'city': provider.city});
+            context.push('/book',
+                extra: {'serviceId': provider.id, 'city': provider.city});
           }
         },
       ),
@@ -172,286 +172,499 @@ class ServiceDirectoryScreen extends ConsumerWidget {
   }
 }
 
-// ── Filter Bar ───────────────────────────────────────────────────────────────
+// ── Search Bar ───────────────────────────────────────────────────────────────
 
-class _FilterBar extends StatelessWidget {
+class _SearchBar extends StatelessWidget {
   final ServiceDirectoryState state;
   final ServiceDirectoryNotifier notifier;
+  final int activeFilterCount;
 
-  const _FilterBar({required this.state, required this.notifier});
+  const _SearchBar({
+    required this.state,
+    required this.notifier,
+    required this.activeFilterCount,
+  });
+
+  void _openFilters(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _FilterSheet(
+        state: state,
+        notifier: notifier,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Row(
         children: [
-          TextField(
-            onChanged: notifier.onSearchChanged,
-            decoration: InputDecoration(
-              hintText: 'Servis ara...',
-              prefixIcon: const Icon(Icons.search, size: 20, color: AppColors.gray400),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              filled: true,
-              fillColor: AppColors.gray50,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.gray200)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.gray200)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary600)),
-              hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 14),
+          Expanded(
+            child: TextField(
+              onChanged: notifier.onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Servis ara...',
+                prefixIcon:
+                    const Icon(Icons.search, size: 20, color: AppColors.gray400),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                filled: true,
+                fillColor: AppColors.gray50,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppColors.gray200)),
+                enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppColors.gray200)),
+                focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: AppColors.primary600)),
+                hintStyle:
+                    const TextStyle(color: AppColors.gray400, fontSize: 14),
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(child: _CityDropdown(value: state.selectedCity, onChanged: notifier.onCityChanged)),
-              const SizedBox(width: 8),
-              Expanded(child: _SortDropdown(value: state.sortBy, onChanged: notifier.onSortChanged)),
-            ],
+          const SizedBox(width: 10),
+          GestureDetector(
+            onTap: () => _openFilters(context),
+            child: Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: activeFilterCount > 0
+                    ? AppColors.primary600.withValues(alpha: 0.08)
+                    : AppColors.gray50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: activeFilterCount > 0
+                      ? AppColors.primary600
+                      : AppColors.gray200,
+                ),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 20,
+                    color: activeFilterCount > 0
+                        ? AppColors.primary600
+                        : AppColors.gray500,
+                  ),
+                  if (activeFilterCount > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primary600,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Center(
+                          child: Text(
+                            '$activeFilterCount',
+                            style: const TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 8),
-          _RatingFilterChips(state: state, notifier: notifier),
         ],
       ),
     );
   }
 }
 
-class _CityDropdown extends StatefulWidget {
-  final String? value;
-  final ValueChanged<String?> onChanged;
+// ── Filter Sheet ─────────────────────────────────────────────────────────────
 
-  const _CityDropdown({required this.value, required this.onChanged});
-
-  @override
-  State<_CityDropdown> createState() => _CityDropdownState();
-}
-
-class _CityDropdownState extends State<_CityDropdown> {
-  FocusNode? _focusNode;
-
-  @override
-  Widget build(BuildContext context) {
-    return _DropdownContainer(
-      child: Autocomplete<String>(
-        key: ValueKey(widget.value),
-        initialValue: TextEditingValue(text: widget.value ?? ''),
-        optionsBuilder: (textValue) {
-          if (textValue.text.isEmpty) return kTurkeyCities;
-          return kTurkeyCities.where(
-            (c) => c.toLowerCase().contains(textValue.text.toLowerCase()),
-          );
-        },
-        fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-          _focusNode = focusNode;
-          return TextField(
-            controller: ctrl,
-            focusNode: focusNode,
-            style: const TextStyle(color: AppColors.gray700, fontSize: 13),
-            decoration: const InputDecoration(
-              hintText: 'Tüm Şehirler',
-              hintStyle: TextStyle(fontSize: 13, color: AppColors.gray400),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              isCollapsed: false,
-            ),
-            onChanged: (v) {
-              if (v.isEmpty) widget.onChanged(null);
-            },
-          );
-        },
-        optionsViewBuilder: (context, onSelected, options) => Align(
-          alignment: Alignment.topLeft,
-          child: Material(
-            elevation: 4,
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 220),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: options.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.gray100),
-                itemBuilder: (context, i) {
-                  final city = options.elementAt(i);
-                  return InkWell(
-                    onTap: () => onSelected(city),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                      child: Text(city, style: const TextStyle(fontSize: 13, color: AppColors.gray900)),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        onSelected: (city) {
-          widget.onChanged(city);
-          _focusNode?.unfocus();
-        },
-      ),
-    );
-  }
-}
-
-class _SortDropdown extends StatefulWidget {
-  final String value;
-  final ValueChanged<String> onChanged;
-
-  const _SortDropdown({required this.value, required this.onChanged});
-
-  @override
-  State<_SortDropdown> createState() => _SortDropdownState();
-}
-
-class _SortDropdownState extends State<_SortDropdown> {
-  FocusNode? _focusNode;
-
-  String _labelForValue(String v) =>
-      _kSortOptions.firstWhere((o) => o.value == v, orElse: () => _kSortOptions.first).label;
-
-  @override
-  Widget build(BuildContext context) {
-    final labels = _kSortOptions.map((o) => o.label).toList();
-    final currentLabel = _labelForValue(widget.value);
-
-    return _DropdownContainer(
-      child: Autocomplete<String>(
-        key: ValueKey(widget.value),
-        initialValue: TextEditingValue(text: currentLabel),
-        optionsBuilder: (textValue) {
-          if (textValue.text.isEmpty) return labels;
-          return labels.where(
-            (l) => l.toLowerCase().contains(textValue.text.toLowerCase()),
-          );
-        },
-        fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-          _focusNode = focusNode;
-          return TextField(
-            controller: ctrl,
-            focusNode: focusNode,
-            style: const TextStyle(color: AppColors.gray700, fontSize: 13),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-              isCollapsed: false,
-            ),
-          );
-        },
-        optionsViewBuilder: (context, onSelected, options) => Align(
-          alignment: Alignment.topLeft,
-          child: Material(
-            elevation: 4,
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 160),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: options.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.gray100),
-                itemBuilder: (context, i) {
-                  final label = options.elementAt(i);
-                  return InkWell(
-                    onTap: () => onSelected(label),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                      child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.gray900)),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-        onSelected: (label) {
-          final opt = _kSortOptions.firstWhere((o) => o.label == label, orElse: () => _kSortOptions.first);
-          widget.onChanged(opt.value);
-          _focusNode?.unfocus();
-        },
-      ),
-    );
-  }
-}
-
-class _DropdownContainer extends StatelessWidget {
-  final Widget child;
-  const _DropdownContainer({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.gray50,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.gray200),
-      ),
-      child: child,
-    );
-  }
-}
-
-// ── Rating Filter Chips ──────────────────────────────────────────────────────
-
-class _RatingFilterChips extends StatelessWidget {
+class _FilterSheet extends StatefulWidget {
   final ServiceDirectoryState state;
   final ServiceDirectoryNotifier notifier;
 
-  const _RatingFilterChips({required this.state, required this.notifier});
+  const _FilterSheet({required this.state, required this.notifier});
+
+  @override
+  State<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends State<_FilterSheet> {
+  late String? _city;
+  late String? _sortBy;
+  late double? _minRating;
+
+  @override
+  void initState() {
+    super.initState();
+    _city = widget.state.selectedCity;
+    _sortBy = widget.state.sortBy == 'rating' ? null : widget.state.sortBy;
+    _minRating = widget.state.minRating;
+  }
+
+  void _apply() {
+    widget.notifier.onCityChanged(_city);
+    widget.notifier.onSortChanged(_sortBy ?? 'rating');
+    widget.notifier.onMinRatingChanged(_minRating);
+    Navigator.of(context).pop();
+  }
+
+  void _clear() {
+    widget.notifier.clearFilters();
+    Navigator.of(context).pop();
+  }
 
   @override
   Widget build(BuildContext context) {
-    const options = <({String label, double? value})>[
-      (label: 'Tümü', value: null),
-      (label: '3+', value: 3.0),
-      (label: '4+', value: 4.0),
-      (label: '4.5+', value: 4.5),
-    ];
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final hasActive = _city != null || _sortBy != null || _minRating != null;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: options.map((o) {
-          final selected = state.minRating == o.value;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => notifier.onMinRatingChanged(o.value),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                decoration: BoxDecoration(
-                  color: selected ? AppColors.primary600 : AppColors.gray50,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: selected ? AppColors.primary600 : AppColors.gray200),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (o.value != null) ...[
-                      const Icon(Icons.star_rounded, size: 14, color: Color(0xFFFBBF24)),
-                      const SizedBox(width: 4),
-                    ],
-                    Text(
-                      o.label,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: selected ? Colors.white : AppColors.gray600,
-                      ),
-                    ),
-                  ],
-                ),
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+                color: AppColors.gray200,
+                borderRadius: BorderRadius.circular(99)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Filtreler',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gray900)),
+                if (hasActive)
+                  GestureDetector(
+                    onTap: _clear,
+                    child: const Text('Temizle',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.gray500)),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.gray100),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel('Şehir'),
+                  const SizedBox(height: 10),
+                  _CityPicker(
+                    value: _city,
+                    onChanged: (v) => setState(() => _city = v),
+                  ),
+                  const SizedBox(height: 20),
+                  _sectionLabel('Sıralama'),
+                  const SizedBox(height: 10),
+                  _OptionGroup<String>(
+                    options: _kSortOptions.map((o) => (value: o.value, label: o.label)).toList(),
+                    selected: _sortBy,
+                    onChanged: (v) => setState(() => _sortBy = v),
+                  ),
+
+                  const SizedBox(height: 20),
+                  _sectionLabel('Minimum Puan'),
+                  const SizedBox(height: 10),
+                  _RatingPicker(
+                    value: _minRating,
+                    onChanged: (v) => setState(() => _minRating = v),
+                  ),
+                ],
               ),
             ),
-          );
-        }).toList(),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _apply,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppColors.gray200,
+                  disabledForegroundColor: AppColors.gray400,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Uygula',
+                    style: TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _sectionLabel(String label) => Text(
+        label,
+        style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.gray500,
+            letterSpacing: 0.3),
+      );
+}
+
+// ── City Picker ───────────────────────────────────────────────────────────────
+
+class _CityPicker extends StatefulWidget {
+  final String? value;
+  final ValueChanged<String?> onChanged;
+
+  const _CityPicker({required this.value, required this.onChanged});
+
+  @override
+  State<_CityPicker> createState() => _CityPickerState();
+}
+
+class _CityPickerState extends State<_CityPicker> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.value ?? '');
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Autocomplete<String>(
+      initialValue: TextEditingValue(text: widget.value ?? ''),
+      optionsBuilder: (tv) {
+        if (tv.text.isEmpty) return kTurkeyCities;
+        return kTurkeyCities
+            .where((c) => c.toLowerCase().contains(tv.text.toLowerCase()));
+      },
+      fieldViewBuilder: (context, ctrl, focusNode, _) => TextField(
+        controller: ctrl,
+        focusNode: focusNode,
+        style: const TextStyle(color: AppColors.gray700, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: 'Şehir seçin...',
+          hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 14),
+          prefixIcon:
+              const Icon(Icons.location_on_outlined, size: 18, color: AppColors.gray400),
+          suffixIcon: ctrl.text.isNotEmpty
+              ? IconButton(
+                  icon: const Icon(Icons.close, size: 16, color: AppColors.gray400),
+                  onPressed: () {
+                    ctrl.clear();
+                    widget.onChanged(null);
+                  },
+                )
+              : null,
+          filled: true,
+          fillColor: AppColors.gray50,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.gray200)),
+          enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.gray200)),
+          focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: AppColors.primary600)),
+        ),
+        onChanged: (v) {
+          if (v.isEmpty) widget.onChanged(null);
+        },
+      ),
+      optionsViewBuilder: (context, onSelected, options) => Align(
+        alignment: Alignment.topLeft,
+        child: Material(
+          elevation: 4,
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 200),
+            child: ListView.separated(
+              shrinkWrap: true,
+              padding: EdgeInsets.zero,
+              itemCount: options.length,
+              separatorBuilder: (context, i) =>
+                  const Divider(height: 1, color: AppColors.gray100),
+              itemBuilder: (context, i) {
+                final city = options.elementAt(i);
+                return InkWell(
+                  onTap: () => onSelected(city),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 11),
+                    child: Text(city,
+                        style: const TextStyle(
+                            fontSize: 13, color: AppColors.gray900)),
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+      onSelected: widget.onChanged,
+    );
+  }
+}
+
+// ── Generic Option Group ──────────────────────────────────────────────────────
+
+class _OptionGroup<T> extends StatelessWidget {
+  final List<({T value, String label})> options;
+  final T? selected;
+  final ValueChanged<T?> onChanged;
+
+  const _OptionGroup({
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: options.map((o) {
+        final isSelected = o.value == selected;
+        return GestureDetector(
+          onTap: () => onChanged(isSelected ? null : o.value),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary600.withValues(alpha: 0.08)
+                  : AppColors.gray50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary600
+                    : AppColors.gray200,
+              ),
+            ),
+            child: Text(
+              o.label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight:
+                    isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? AppColors.primary600
+                    : AppColors.gray600,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+// ── Rating Picker ─────────────────────────────────────────────────────────────
+
+class _RatingPicker extends StatelessWidget {
+  final double? value;
+  final ValueChanged<double?> onChanged;
+
+  const _RatingPicker({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    const options = <({double? value, String label})>[
+      (value: null, label: 'Tümü'),
+      (value: 3.0, label: '3+'),
+      (value: 4.0, label: '4+'),
+      (value: 4.5, label: '4.5+'),
+    ];
+
+    return Wrap(
+      spacing: 8,
+      children: options.map((o) {
+        final isSelected = value == o.value;
+        return GestureDetector(
+          onTap: () => onChanged(o.value),
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.primary600.withValues(alpha: 0.08)
+                  : AppColors.gray50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primary600
+                    : AppColors.gray200,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (o.value != null) ...[
+                  const Icon(Icons.star_rounded,
+                      size: 14, color: Color(0xFFFBBF24)),
+                  const SizedBox(width: 4),
+                ],
+                Text(
+                  o.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected
+                        ? AppColors.primary600
+                        : AppColors.gray600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
@@ -476,8 +689,15 @@ class _LoadMoreButton extends StatelessWidget {
         ),
         child: Center(
           child: loading
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : const Text('Daha fazla', style: TextStyle(fontSize: 13, color: AppColors.primary600, fontWeight: FontWeight.w500)),
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2))
+              : const Text('Daha fazla',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.primary600,
+                      fontWeight: FontWeight.w500)),
         ),
       ),
     );
