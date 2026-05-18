@@ -75,7 +75,9 @@ class CarApiService {
           if (year != null) 'year': year,
         })
         .then((r) {
-          final url = r.data['url'] as String?;
+          final primary = r.data['primaryImageUrl'] as String?;
+          final images = r.data['images'] as List?;
+          final url = primary ?? (images?.isNotEmpty == true ? images!.first as String? : null);
           if (url != null && url.isNotEmpty) _imageCache[key] = url;
           return url ?? '';
         })

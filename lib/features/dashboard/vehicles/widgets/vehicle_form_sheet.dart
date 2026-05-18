@@ -23,7 +23,15 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
   late final TextEditingController _modelController;
   late final TextEditingController _yearController;
   late final TextEditingController _plateController;
+  late final TextEditingController _engineController;
+  late final TextEditingController _colorController;
+  late final TextEditingController _mileageController;
   final TextEditingController _vinController = TextEditingController();
+
+  String? _fuelType;
+  String? _transmissionType;
+  String? _driveType;
+  String? _bodyType;
 
   bool _isSubmitting = false;
   bool _showVin = false;
@@ -44,6 +52,13 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     _modelController = TextEditingController(text: widget.vehicle?.model ?? '');
     _yearController = TextEditingController(text: widget.vehicle?.year?.toString() ?? '');
     _plateController = TextEditingController(text: widget.vehicle?.licensePlate ?? '');
+    _engineController = TextEditingController(text: widget.vehicle?.engineDisplacement ?? '');
+    _colorController = TextEditingController(text: widget.vehicle?.color ?? '');
+    _mileageController = TextEditingController();
+    _fuelType = widget.vehicle?.fuelType;
+    _transmissionType = widget.vehicle?.transmissionType;
+    _driveType = widget.vehicle?.driveType;
+    _bodyType = widget.vehicle?.bodyType;
     _yearController.addListener(_onYearChanged);
   }
 
@@ -65,6 +80,9 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     _modelController.dispose();
     _yearController.dispose();
     _plateController.dispose();
+    _engineController.dispose();
+    _colorController.dispose();
+    _mileageController.dispose();
     _vinController.dispose();
     super.dispose();
   }
@@ -82,7 +100,7 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     try {
       final params = <String, String>{'make': brand, 'model': model};
       if (year.isNotEmpty) params['year'] = year;
-      final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParameters: params);
+final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParameters: params);
       final data = res.data as Map<String, dynamic>;
       final images = (data['images'] as List?)?.cast<String>() ?? [];
       if (mounted) setState(() { _carImages = images; _imageLoading = false; });
@@ -131,6 +149,13 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
       'model': _modelController.text.trim(),
       if (_yearController.text.trim().isNotEmpty) 'year': int.tryParse(_yearController.text.trim()),
       if (_plateController.text.trim().isNotEmpty) 'licensePlate': _plateController.text.trim().toUpperCase(),
+      if (_fuelType != null) 'fuelType': _fuelType,
+      if (_transmissionType != null) 'transmissionType': _transmissionType,
+      if (_driveType != null) 'driveType': _driveType,
+      if (_bodyType != null) 'bodyType': _bodyType,
+      if (_engineController.text.trim().isNotEmpty) 'engineDisplacement': _engineController.text.trim(),
+      if (_colorController.text.trim().isNotEmpty) 'color': _colorController.text.trim(),
+      if (_mileageController.text.trim().isNotEmpty) 'mileage': int.tryParse(_mileageController.text.trim()),
     };
 
     try {
@@ -172,9 +197,11 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
     return Padding(
       padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
+        bottom: bottomInset > 0 ? bottomInset : bottomPad + 100,
         left: 20,
         right: 20,
         top: 24,
@@ -283,6 +310,87 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            const _SectionLabel('Teknik Detaylar (Opsiyonel)'),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _DropdownField(
+                    hint: 'Yakıt Tipi',
+                    value: _fuelType,
+                    items: const ['benzin', 'dizel', 'lpg', 'hibrit', 'elektrik'],
+                    labels: const ['Benzin', 'Dizel', 'LPG', 'Hibrit', 'Elektrik'],
+                    onChanged: (v) => setState(() => _fuelType = v),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DropdownField(
+                    hint: 'Şanzıman',
+                    value: _transmissionType,
+                    items: const ['manuel', 'otomatik', 'yariOtomatik'],
+                    labels: const ['Manuel', 'Otomatik', 'Yarı Otomatik'],
+                    onChanged: (v) => setState(() => _transmissionType = v),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _engineController,
+                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+                    decoration: _inputDecoration('Motor Hacmi (Örn: 1.6)'),
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _DropdownField(
+                    hint: 'Çekiş',
+                    value: _driveType,
+                    items: const ['fwd', 'rwd', 'awd', '4wd'],
+                    labels: const ['Önden Çekiş', 'Arkadan İtiş', 'AWD', '4x4'],
+                    onChanged: (v) => setState(() => _driveType = v),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _DropdownField(
+                    hint: 'Kasa Tipi',
+                    value: _bodyType,
+                    items: const ['sedan', 'hatchback', 'suv', 'coupe', 'station', 'pickup', 'minivan'],
+                    labels: const ['Sedan', 'Hatchback', 'SUV', 'Coupe', 'Station Wagon', 'Pickup', 'Minivan'],
+                    onChanged: (v) => setState(() => _bodyType = v),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    controller: _colorController,
+                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+                    decoration: _inputDecoration('Renk'),
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _mileageController,
+              style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+              decoration: _inputDecoration('Kilometre').copyWith(suffixText: 'km'),
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -757,6 +865,140 @@ class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderState
     return AnimatedBuilder(
       animation: _anim,
       builder: (_, __) => Container(color: Color.fromRGBO(209, 213, 219, _anim.value)),
+    );
+  }
+}
+
+// ── Section Label ─────────────────────────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+        color: AppColors.gray400,
+        letterSpacing: 0.8,
+      ),
+    );
+  }
+}
+
+// ── Dropdown Field (bottom sheet picker) ─────────────────────────────────────
+
+class _DropdownField extends StatelessWidget {
+  final String hint;
+  final String? value;
+  final List<String> items;
+  final List<String> labels;
+  final ValueChanged<String?> onChanged;
+
+  const _DropdownField({
+    required this.hint,
+    required this.value,
+    required this.items,
+    required this.labels,
+    required this.onChanged,
+  });
+
+  String? get _selectedLabel {
+    if (value == null) return null;
+    final i = items.indexOf(value!);
+    return i >= 0 ? labels[i] : null;
+  }
+
+  void _open(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(99)),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(hint, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+                  if (value != null)
+                    GestureDetector(
+                      onTap: () { onChanged(null); Navigator.pop(sheetCtx); },
+                      child: const Text('Temizle', style: TextStyle(fontSize: 13, color: AppColors.gray500)),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 1, color: AppColors.gray100),
+            ...List.generate(items.length, (i) => InkWell(
+              onTap: () { onChanged(items[i]); Navigator.pop(sheetCtx); },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                child: Row(
+                  children: [
+                    Expanded(child: Text(labels[i], style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: value == items[i] ? FontWeight.w600 : FontWeight.w400,
+                      color: value == items[i] ? AppColors.primary600 : AppColors.gray700,
+                    ))),
+                    if (value == items[i])
+                      const Icon(Icons.check_rounded, size: 18, color: AppColors.primary600),
+                  ],
+                ),
+              ),
+            )),
+            SizedBox(height: bottomPad + 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = _selectedLabel;
+    return GestureDetector(
+      onTap: () => _open(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: selected != null ? AppColors.primary600 : AppColors.gray200),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                selected ?? hint,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: selected != null ? AppColors.gray900 : AppColors.gray400,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Icon(Icons.keyboard_arrow_down_rounded, size: 18,
+                color: selected != null ? AppColors.primary600 : AppColors.gray400),
+          ],
+        ),
+      ),
     );
   }
 }

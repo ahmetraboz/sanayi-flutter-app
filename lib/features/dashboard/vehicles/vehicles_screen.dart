@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/services/car_api_service.dart';
 import '../../../shared/widgets/page_header.dart';
 import 'models/vehicle_detail.dart';
 import 'vehicles_list_notifier.dart';
@@ -110,7 +111,7 @@ class VehiclesScreen extends ConsumerWidget {
       color: AppColors.primary600,
       onRefresh: notifier.load,
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
         itemCount: state.vehicles.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
@@ -176,7 +177,7 @@ class VehiclesScreen extends ConsumerWidget {
   }
 }
 
-class _VehicleCard extends StatelessWidget {
+class _VehicleCard extends ConsumerWidget {
   final VehicleDetail vehicle;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -188,7 +189,9 @@ class _VehicleCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final carApi = ref.read(carApiServiceProvider);
+
     return InkWell(
       onTap: () => context.push('/dashboard/vehicles/${vehicle.id}'),
       borderRadius: BorderRadius.circular(16),
@@ -212,7 +215,26 @@ class _VehicleCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  const Center(child: Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300)),
+                  FutureBuilder<String?>(
+                    future: carApi.getVehicleImage(vehicle.brand, vehicle.model, vehicle.year),
+                    builder: (context, snapshot) {
+                      final url = snapshot.data;
+                      if (url != null && url.isNotEmpty) {
+                        return ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          child: Image.network(
+                            url,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300),
+                            ),
+                          ),
+                        );
+                      }
+                      return const Center(child: Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300));
+                    },
+                  ),
                   if (vehicle.year != null)
                     Positioned(
                       top: 12,
