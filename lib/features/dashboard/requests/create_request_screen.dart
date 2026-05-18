@@ -10,6 +10,7 @@ import '../../booking/booking_repository.dart';
 import '../../booking/widgets/damage_analysis_widget.dart';
 import '../../booking/models/booking_form_data.dart';
 import '../vehicles/widgets/vehicle_form_sheet.dart';
+import '../../../shared/widgets/date_picker_sheet.dart';
 import 'create_request_providers.dart';
 
 const _categories = [
@@ -80,6 +81,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   bool _uploadingImage = false;
   bool _hasDamage = false;
   List<DamageReport> _damageReports = [];
+  String? _preferredDateFrom;
+  String? _preferredDateTo;
 
   // Step 3
   int? _vehicleId;
@@ -179,6 +182,8 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         'targetCity': _selectedCity,
         'targetServiceIds': _selectedServiceIds,
         if (_imageUrl != null) 'imageUrl': _imageUrl,
+        if (_preferredDateFrom != null) 'preferredDateFrom': _preferredDateFrom,
+        if (_preferredDateTo != null) 'preferredDateTo': _preferredDateTo,
         if (widget.preselectedServiceId != null) 'targetProviderId': widget.preselectedServiceId,
         if (_damageReports.isNotEmpty)
           'damageReports': _damageReports.map((r) => r.toJson()).toList(),
@@ -507,6 +512,53 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           _fieldLabel('Fotoğraf (Opsiyonel)'),
           const SizedBox(height: 8),
           _buildPhotoUpload(),
+          const SizedBox(height: 16),
+          const Divider(color: AppColors.gray100),
+          const SizedBox(height: 16),
+
+          // Preferred Date Range
+          _fieldLabel('Tercih Ettiğiniz Tarih Aralığı (Opsiyonel)'),
+          const SizedBox(height: 4),
+          const Text(
+            'Hangi tarihler arasında servis almak istediğinizi belirtin.',
+            style: TextStyle(fontSize: 12, color: AppColors.gray500),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(child: _buildDateField(
+                label: 'Başlangıç',
+                value: _preferredDateFrom,
+                onTap: () => _pickDate(
+                  title: 'Başlangıç Tarihi',
+                  initial: _preferredDateFrom,
+                  onSelected: (d) => setState(() {
+                    _preferredDateFrom = d;
+                    if (_preferredDateTo != null && _preferredDateTo!.compareTo(d) < 0) {
+                      _preferredDateTo = null;
+                    }
+                  }),
+                ),
+                onClear: _preferredDateFrom != null
+                    ? () => setState(() => _preferredDateFrom = null)
+                    : null,
+              )),
+              const SizedBox(width: 10),
+              Expanded(child: _buildDateField(
+                label: 'Bitiş',
+                value: _preferredDateTo,
+                onTap: () => _pickDate(
+                  title: 'Bitiş Tarihi',
+                  initial: _preferredDateTo,
+                  highlightFrom: _preferredDateFrom,
+                  onSelected: (d) => setState(() => _preferredDateTo = d),
+                ),
+                onClear: _preferredDateTo != null
+                    ? () => setState(() => _preferredDateTo = null)
+                    : null,
+              )),
+            ],
+          ),
           const SizedBox(height: 16),
           const Divider(color: AppColors.gray100),
           const SizedBox(height: 12),
@@ -933,6 +985,75 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           const SizedBox(height: 16),
           child,
         ],
+      ),
+    );
+  }
+
+  void _pickDate({
+    required String title,
+    required void Function(String) onSelected,
+    String? initial,
+    String? highlightFrom,
+  }) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => DatePickerSheet(
+        title: title,
+        initialDate: initial,
+        highlightFrom: highlightFrom,
+        onSelected: onSelected,
+      ),
+    );
+  }
+
+  Widget _buildDateField({
+    required String label,
+    required String? value,
+    required VoidCallback onTap,
+    VoidCallback? onClear,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          color: AppColors.gray50,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: value != null ? AppColors.primary600 : AppColors.gray200,
+            width: value != null ? 1.5 : 1,
+          ),
+        ),
+        child: Row(children: [
+          Icon(Icons.calendar_today_outlined, size: 16,
+              color: value != null ? AppColors.primary600 : AppColors.gray400),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value != null ? formatDateTr(value) : label,
+              style: TextStyle(
+                fontSize: 13,
+                color: value != null ? AppColors.gray900 : AppColors.gray400,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (onClear != null)
+            GestureDetector(
+              onTap: onClear,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.only(left: 4),
+                child: Icon(Icons.close, size: 14, color: AppColors.gray400),
+              ),
+            ),
+        ]),
       ),
     );
   }

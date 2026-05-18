@@ -72,6 +72,15 @@ class CustomerBidsNotifier extends StateNotifier<CustomerBidsState> {
       throw e is DioException ? e.message ?? 'Hata' : 'Teklif reddedilemedi';
     }
   }
+
+  Future<void> proposeDate(int bidId, String date) async {
+    try {
+      await _api.post('/api/bids/$bidId/propose-date', data: {'date': date});
+      await load();
+    } catch (e) {
+      throw e is DioException ? e.message ?? 'Hata' : 'Tarih önerilemedi';
+    }
+  }
 }
 
 final customerBidsProvider =

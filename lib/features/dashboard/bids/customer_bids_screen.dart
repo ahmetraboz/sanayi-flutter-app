@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/date_picker_sheet.dart';
 import 'customer_bids_notifier.dart';
 import 'models/customer_bid_item.dart';
 
@@ -213,6 +214,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
             bid: filteredBids[index],
             onAccept: () => _handleAccept(notifier, filteredBids[index].id),
             onReject: () => _handleReject(notifier, filteredBids[index].id),
+            onProposeDate: (date) => _handleProposeDate(notifier, filteredBids[index].id, date),
           );
         },
       ),
@@ -307,21 +309,72 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
         );
     }
   }
+
+  Future<void> _handleProposeDate(CustomerBidsNotifier notifier, int bidId, String date) async {
+    try {
+      await notifier.proposeDate(bidId, date);
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tarih öneriniz gönderildi'),
+            backgroundColor: AppColors.green700,
+          ),
+        );
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.red700,
+          ),
+        );
+    }
+  }
 }
 
-class _BidCard extends StatelessWidget {
+class _BidCard extends StatefulWidget {
   final CustomerBidItem bid;
   final VoidCallback onAccept;
   final VoidCallback onReject;
+  final Future<void> Function(String date) onProposeDate;
 
   const _BidCard({
     required this.bid,
     required this.onAccept,
     required this.onReject,
+    required this.onProposeDate,
   });
 
   @override
+  State<_BidCard> createState() => _BidCardState();
+}
+
+class _BidCardState extends State<_BidCard> {
+  bool _proposing = false;
+
+  void _openProposeDateSheet() {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => DatePickerSheet(
+        title: 'Farklı Tarih Öner',
+        initialDate: widget.bid.proposedDate,
+        onSelected: (date) async {
+          setState(() => _proposing = true);
+          await widget.onProposeDate(date);
+          if (mounted) setState(() => _proposing = false);
+        },
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final bid = widget.bid;
     final isPending = bid.status == 'pending';
     final isAccepted = bid.status == 'accepted';
     final isRejected = bid.status == 'rejected';
@@ -397,6 +450,26 @@ class _BidCard extends StatelessWidget {
               ],
             ),
           ),
+
+          // Proposed date banner
+          if (bid.proposedDate != null)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                border: Border(bottom: BorderSide(color: AppColors.emerald200)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.event_available_outlined, size: 16, color: AppColors.green700),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Usta bu tarihe uygun: ${formatDateTr(bid.proposedDate)}',
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.green700),
+                  ),
+                ),
+              ]),
+            ),
 
           // Body
           Padding(
@@ -505,34 +578,60 @@ class _BidCard extends StatelessWidget {
           if (isPending) ...[
             const Divider(height: 1, color: AppColors.gray100),
             Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: onReject,
-                      icon: const Icon(Icons.close, size: 18),
-                      label: const Text('Reddet'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.gray600,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: widget.onReject,
+                          icon: const Icon(Icons.close, size: 18),
+                          label: const Text('Reddet'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.gray600,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: widget.onAccept,
+                          icon: const Icon(Icons.check, size: 18),
+                          label: const Text('Kabul Et'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary600,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: onAccept,
-                      icon: const Icon(Icons.check, size: 18),
-                      label: const Text('Kabul Et'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary600,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _proposing ? null : _openProposeDateSheet,
+                      icon: _proposing
+                          ? const SizedBox(
+                              width: 14, height: 14,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600),
+                            )
+                          : const Icon(Icons.event_outlined, size: 16),
+                      label: Text(bid.proposedDate != null ? 'Farklı Tarih Öner' : 'Tarih Öner'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary600,
+                        side: const BorderSide(color: AppColors.primary600),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

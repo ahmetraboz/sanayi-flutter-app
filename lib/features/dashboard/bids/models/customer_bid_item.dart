@@ -8,6 +8,7 @@ class CustomerBidItem {
   final DateTime createdAt;
   final String? description;
   final String? estimatedDuration;
+  final String? proposedDate;
 
   const CustomerBidItem({
     required this.id,
@@ -19,6 +20,7 @@ class CustomerBidItem {
     required this.createdAt,
     this.description,
     this.estimatedDuration,
+    this.proposedDate,
   });
 
   factory CustomerBidItem.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class CustomerBidItem {
           DateTime.now(),
       description: json['description'] as String?,
       estimatedDuration: json['estimatedDuration'] as String?,
+      proposedDate: json['proposedDate'] as String?,
     );
   }
 }
