@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/date_picker_sheet.dart';
+import '../../../shared/widgets/skeleton.dart';
 import 'customer_bids_notifier.dart';
 import 'models/customer_bid_item.dart';
 
@@ -155,12 +156,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
     List<CustomerBidItem> filteredBids,
   ) {
     if (state.loading && state.bids.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: AppColors.primary600,
-        ),
-      );
+      return const _BidListSkeleton();
     }
 
     if (state.error != null && state.bids.isEmpty) {
@@ -721,6 +717,53 @@ class _BidCardState extends State<_BidCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BidListSkeleton extends StatelessWidget {
+  const _BidListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      itemCount: 5,
+      itemBuilder: (_, __) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const SkeletonBox(width: 40, height: 40, radius: 10),
+                const SizedBox(width: 12),
+                const Expanded(child: SkeletonBox(height: 14, radius: 5)),
+                const SizedBox(width: 12),
+                const SkeletonBox(width: 70, height: 24, radius: 8),
+              ],
+            ),
+            const SizedBox(height: 10),
+            const SkeletonBox(height: 12, radius: 4),
+            const SizedBox(height: 5),
+            const SkeletonBox(height: 12, width: 200, radius: 4),
+            const SizedBox(height: 12),
+            const Row(
+              children: [
+                SkeletonBox(width: 80, height: 22, radius: 6),
+                SizedBox(width: 8),
+                SkeletonBox(width: 70, height: 22, radius: 6),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

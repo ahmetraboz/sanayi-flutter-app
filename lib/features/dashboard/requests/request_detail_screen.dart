@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/app_select_field.dart';
+import '../../../shared/widgets/skeleton.dart';
 import 'request_detail_notifier.dart';
 import 'widgets/bid_card.dart';
 import 'widgets/request_info_card.dart';
@@ -48,7 +49,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
 
   Widget _buildBody(BuildContext context, RequestDetailState state, RequestDetailNotifier notifier) {
     if (state.loading && state.request == null) {
-      return const Center(child: CircularProgressIndicator(color: AppColors.primary600, strokeWidth: 2));
+      return const _RequestDetailSkeleton();
     }
 
     if (state.error != null && state.request == null) {
@@ -765,4 +766,64 @@ class _ReviewFormState extends State<_ReviewForm> {
     5 => 'Mükemmel',
     _ => '',
   };
+}
+
+class _RequestDetailSkeleton extends StatelessWidget {
+  const _RequestDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Expanded(child: SkeletonBox(height: 22, radius: 6)),
+              SizedBox(width: 12),
+              SkeletonBox(width: 70, height: 28, radius: 8),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const SkeletonBox(height: 13, radius: 4),
+          const SizedBox(height: 6),
+          const SkeletonBox(height: 13, radius: 4),
+          const SizedBox(height: 6),
+          const SkeletonBox(height: 13, width: 200, radius: 4),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              children: List.generate(4, (i) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: const Row(
+                  children: [
+                    SkeletonBox(width: 70, height: 12, radius: 4),
+                    SizedBox(width: 16),
+                    Expanded(child: SkeletonBox(height: 12, radius: 4)),
+                  ],
+                ),
+              )),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Row(
+            children: [
+              SkeletonBox(width: 110, height: 28, radius: 8),
+              SizedBox(width: 8),
+              SkeletonBox(width: 70, height: 28, radius: 8),
+              SizedBox(width: 8),
+              SkeletonBox(width: 80, height: 28, radius: 8),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }

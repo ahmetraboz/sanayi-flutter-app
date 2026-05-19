@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/services/car_api_service.dart';
+import '../../../shared/widgets/skeleton.dart';
 import 'vehicle_detail_notifier.dart';
 import 'models/vehicle_detail.dart';
 
@@ -108,12 +109,7 @@ class VehicleDetailScreen extends ConsumerWidget {
     VehicleDetailNotifier notifier,
   ) {
     if (state.loading && state.vehicle == null) {
-      return const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.primary600,
-          strokeWidth: 2,
-        ),
-      );
+      return const _VehicleDetailSkeleton();
     }
 
     if (state.error != null && state.vehicle == null) {
@@ -662,6 +658,67 @@ class _CarPlaceholder extends StatelessWidget {
       color: AppColors.gray100,
       child: const Center(
         child: Icon(Icons.directions_car_outlined, size: 64, color: AppColors.gray300),
+      ),
+    );
+  }
+}
+
+class _VehicleDetailSkeleton extends StatelessWidget {
+  const _VehicleDetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: const Row(
+              children: [
+                SkeletonBox(width: 60, height: 60, radius: 14),
+                SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonBox(height: 16, radius: 5),
+                      SizedBox(height: 8),
+                      SkeletonBox(height: 13, width: 100, radius: 4),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
+            ),
+            child: Column(
+              children: List.generate(6, (i) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: const Row(
+                  children: [
+                    SkeletonBox(width: 80, height: 12, radius: 4),
+                    SizedBox(width: 16),
+                    Expanded(child: SkeletonBox(height: 12, radius: 4)),
+                  ],
+                ),
+              )),
+            ),
+          ),
+        ],
       ),
     );
   }

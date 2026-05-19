@@ -4,6 +4,7 @@ import '../../../core/theme/theme.dart';
 import 'notifications_notifier.dart';
 import '../../../../shared/models/notification_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
+import '../../../shared/widgets/skeleton.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -61,9 +62,7 @@ class NotificationsScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, NotificationsState state, NotificationsNotifier notifier) {
     if (state.loading && state.notifications.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary600),
-      );
+      return const _NotificationsSkeleton();
     }
 
     if (state.error != null && state.notifications.isEmpty) {
@@ -301,6 +300,46 @@ class _NotificationCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NotificationsSkeleton extends StatelessWidget {
+  const _NotificationsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      itemCount: 6,
+      itemBuilder: (_, __) => Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SkeletonBox(width: 40, height: 40, radius: 20),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SkeletonBox(height: 13, radius: 5),
+                  SizedBox(height: 6),
+                  SkeletonBox(height: 12, radius: 4),
+                  SizedBox(height: 5),
+                  SkeletonBox(height: 11, width: 80, radius: 4),
                 ],
               ),
             ),

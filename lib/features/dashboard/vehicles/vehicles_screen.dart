@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/services/car_api_service.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/skeleton.dart';
 import 'models/vehicle_detail.dart';
 import 'vehicles_list_notifier.dart';
 import 'widgets/vehicle_form_sheet.dart';
@@ -40,7 +41,7 @@ class VehiclesScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, VehiclesListState state, VehiclesListNotifier notifier) {
     if (state.loading && state.vehicles.isEmpty) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600));
+      return const _VehicleListSkeleton();
     }
 
     if (state.error != null && state.vehicles.isEmpty) {
@@ -332,6 +333,47 @@ class _VehicleCard extends ConsumerWidget {
           ],
         ),
         child: Icon(icon, size: 18, color: color),
+      ),
+    );
+  }
+}
+
+class _VehicleListSkeleton extends StatelessWidget {
+  const _VehicleListSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      itemCount: 4,
+      itemBuilder: (_, __) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Row(
+          children: [
+            const SkeletonBox(width: 52, height: 52, radius: 14),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  SkeletonBox(height: 15, radius: 5),
+                  SizedBox(height: 7),
+                  SkeletonBox(height: 12, width: 140, radius: 4),
+                  SizedBox(height: 6),
+                  SkeletonBox(height: 11, width: 90, radius: 4),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const SkeletonBox(width: 24, height: 24, radius: 6),
+          ],
+        ),
       ),
     );
   }

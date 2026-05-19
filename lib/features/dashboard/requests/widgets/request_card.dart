@@ -27,6 +27,27 @@ const _statusConfig = <String, _StatusConfig>{
     borderColor: Color(0xFFBFDBFE),
     icon: Icons.radio_button_unchecked,
   ),
+  'bidding': _StatusConfig(
+    label: 'Teklifte',
+    textColor: Color(0xFF7C3AED),
+    bgColor: Color(0xFFF5F3FF),
+    borderColor: Color(0xFFDDD6FE),
+    icon: Icons.gavel_outlined,
+  ),
+  'info_requested': _StatusConfig(
+    label: 'Bilgi Bekleniyor',
+    textColor: Color(0xFFD97706),
+    bgColor: Color(0xFFFEF3C7),
+    borderColor: Color(0xFFFDE68A),
+    icon: Icons.help_outline,
+  ),
+  'info_provided': _StatusConfig(
+    label: 'Bilgi Gönderildi',
+    textColor: Color(0xFF0891B2),
+    bgColor: Color(0xFFECFEFF),
+    borderColor: Color(0xFFA5F3FC),
+    icon: Icons.check_circle_outline,
+  ),
   'accepted': _StatusConfig(
     label: 'Kabul Edildi',
     textColor: Color(0xFF059669),

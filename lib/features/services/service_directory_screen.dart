@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../core/constants/turkey_cities.dart';
+import '../../shared/widgets/skeleton.dart';
 import '../../core/constants/service_areas.dart';
 import 'service_directory_notifier.dart';
 import 'widgets/provider_card.dart';
@@ -86,7 +87,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
     ServiceDirectoryNotifier notifier,
   ) {
     if (state.loading) {
-      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+      return const _ServiceDirectorySkeleton();
     }
     if (state.error != null) {
       return Center(
@@ -762,6 +763,68 @@ class _LoadMoreButton extends StatelessWidget {
                       fontSize: 13,
                       color: AppColors.primary600,
                       fontWeight: FontWeight.w500)),
+        ),
+      ),
+    );
+  }
+}
+
+class _ServiceDirectorySkeleton extends StatelessWidget {
+  const _ServiceDirectorySkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 0.72,
+      ),
+      itemCount: 6,
+      itemBuilder: (_, __) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE5E7EB)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SkeletonBox(height: 120, radius: 0),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    SkeletonBox(height: 13, radius: 4),
+                    SizedBox(height: 6),
+                    SkeletonBox(height: 11, width: 80, radius: 3),
+                    SizedBox(height: 8),
+                    Row(
+                      children: [
+                        SkeletonBox(width: 50, height: 18, radius: 5),
+                        SizedBox(width: 6),
+                        SkeletonBox(width: 40, height: 18, radius: 5),
+                      ],
+                    ),
+                    Spacer(),
+                    Row(
+                      children: [
+                        SkeletonBox(width: 30, height: 11, radius: 3),
+                        SizedBox(width: 8),
+                        SkeletonBox(width: 25, height: 11, radius: 3),
+                        SizedBox(width: 8),
+                        SkeletonBox(width: 25, height: 11, radius: 3),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -20,6 +20,8 @@ class RequestDetail {
   final double? aiConfidence;
   final dynamic damageReports;
   final DateTime createdAt;
+  final DateTime? preferredDateFrom;
+  final DateTime? preferredDateTo;
 
   const RequestDetail({
     required this.id,
@@ -43,6 +45,8 @@ class RequestDetail {
     this.aiConfidence,
     this.damageReports,
     required this.createdAt,
+    this.preferredDateFrom,
+    this.preferredDateTo,
   });
 
   factory RequestDetail.fromJson(Map<String, dynamic> json) => RequestDetail(
@@ -67,6 +71,12 @@ class RequestDetail {
     aiConfidence: (json['aiConfidence'] as num?)?.toDouble(),
     damageReports: json['damageReports'],
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    preferredDateFrom: json['preferredDateFrom'] != null
+        ? DateTime.tryParse(json['preferredDateFrom'] as String)
+        : null,
+    preferredDateTo: json['preferredDateTo'] != null
+        ? DateTime.tryParse(json['preferredDateTo'] as String)
+        : null,
   );
 }
 
