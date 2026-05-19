@@ -13,7 +13,7 @@ class NotificationApiService {
 
   Future<List<NotificationModel>> getNotifications() async {
     final response = await _client.get('/api/notifications');
-    final data = response.data as List;
+    final data = (response.data['data'] as List? ?? []);
     return data.map((json) => NotificationModel.fromJson(json as Map<String, dynamic>)).toList();
   }
 

@@ -3,29 +3,26 @@ import '../../../../core/theme/theme.dart';
 
 typedef _Filter = ({String? value, String label, IconData icon, Color color});
 
-const _kFilters = <_Filter>[
-  (value: null, label: 'Tüm Talepler', icon: Icons.list_alt_outlined, color: Color(0xFF6B7280)),
-  (value: 'open', label: 'Açık', icon: Icons.access_time_outlined, color: Color(0xFF3B82F6)),
-  (value: 'info_requested', label: 'Yanıt Gerekiyor', icon: Icons.help_outline_rounded, color: Color(0xFFF59E0B)),
-  (value: 'accepted', label: 'Devam Ediyor', icon: Icons.build_outlined, color: Color(0xFFD97706)),
-  (value: 'pending_review', label: 'Değerlendir', icon: Icons.star_border_outlined, color: Color(0xFF8B5CF6)),
-  (value: 'completed', label: 'Tamamlandı', icon: Icons.check_circle_outline, color: Color(0xFF059669)),
+const _kBidFilters = <_Filter>[
+  (value: null, label: 'Tüm Teklifler', icon: Icons.list_alt_outlined, color: Color(0xFF6B7280)),
+  (value: 'pending', label: 'Bekleyen', icon: Icons.access_time_outlined, color: Color(0xFFF59E0B)),
+  (value: 'accepted', label: 'Kabul Edildi', icon: Icons.check_circle_outline, color: Color(0xFF059669)),
   (value: 'rejected', label: 'Reddedildi', icon: Icons.cancel_outlined, color: Color(0xFFEF4444)),
 ];
 
-class FilterPills extends StatelessWidget {
+class BidFilterPills extends StatelessWidget {
   final String? activeFilter;
   final ValueChanged<String?> onChanged;
 
-  const FilterPills({
+  const BidFilterPills({
     super.key,
     required this.activeFilter,
     required this.onChanged,
   });
 
-  _Filter get _active => _kFilters.firstWhere(
+  _Filter get _active => _kBidFilters.firstWhere(
         (f) => f.value == activeFilter,
-        orElse: () => _kFilters.first,
+        orElse: () => _kBidFilters.first,
       );
 
   void _showSheet(BuildContext context) {
@@ -34,7 +31,7 @@ class FilterPills extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useRootNavigator: true,
-      builder: (_) => _FilterSheet(
+      builder: (_) => _BidFilterSheet(
         activeFilter: activeFilter,
         onChanged: (val) {
           Navigator.of(context).pop();
@@ -113,11 +110,11 @@ class FilterPills extends StatelessWidget {
   }
 }
 
-class _FilterSheet extends StatelessWidget {
+class _BidFilterSheet extends StatelessWidget {
   final String? activeFilter;
   final ValueChanged<String?> onChanged;
 
-  const _FilterSheet({required this.activeFilter, required this.onChanged});
+  const _BidFilterSheet({required this.activeFilter, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -129,22 +126,22 @@ class _FilterSheet extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.gray200,
-                borderRadius: BorderRadius.circular(99),
-              ),
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.gray200,
+              borderRadius: BorderRadius.circular(99),
             ),
-            const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
+          ),
+          const SizedBox(height: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                Text(
                   'Durum Filtrele',
                   style: TextStyle(
                     fontSize: 16,
@@ -152,47 +149,48 @@ class _FilterSheet extends StatelessWidget {
                     color: AppColors.gray900,
                   ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 12),
-            ..._kFilters.map((f) {
-              final isActive = activeFilter == f.value;
-              return InkWell(
-                onTap: () => onChanged(f.value),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: f.color.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Icon(f.icon, size: 18, color: f.color),
+          ),
+          const SizedBox(height: 12),
+          ..._kBidFilters.map((f) {
+            final isActive = activeFilter == f.value;
+            return InkWell(
+              onTap: () => onChanged(f.value),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: f.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          f.label,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                            color: isActive ? f.color : AppColors.gray700,
-                          ),
+                      child: Icon(f.icon, size: 18, color: f.color),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        f.label,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                          color: isActive ? f.color : AppColors.gray700,
                         ),
                       ),
-                      if (isActive)
-                        Icon(Icons.check_rounded, size: 18, color: f.color),
-                    ],
-                  ),
+                    ),
+                    if (isActive)
+                      Icon(Icons.check_rounded, size: 18, color: f.color),
+                  ],
                 ),
-              );
-            }),
-            SizedBox(height: bottomPad + 12),
-          ],
-        ),
+              ),
+            );
+          }),
+          SizedBox(height: bottomPad + 12),
+        ],
+      ),
     );
   }
 }

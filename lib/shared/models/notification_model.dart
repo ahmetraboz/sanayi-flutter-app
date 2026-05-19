@@ -5,6 +5,7 @@ class NotificationModel {
   final String message;
   final String type;
   final bool isRead;
+  final String? link;
   final DateTime createdAt;
 
   const NotificationModel({
@@ -14,6 +15,7 @@ class NotificationModel {
     required this.message,
     required this.type,
     required this.isRead,
+    this.link,
     required this.createdAt,
   });
 
@@ -24,6 +26,7 @@ class NotificationModel {
     message: json['message'] as String,
     type: json['type'] as String,
     isRead: json['isRead'] as bool? ?? false,
+    link: json['link'] as String?,
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
   );
 

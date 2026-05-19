@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 import '../../core/theme/theme.dart';
+import '../../shared/models/provider_model.dart';
 import '../../shared/widgets/page_header.dart';
+import '../../shared/widgets/header_actions.dart';
 import '../../core/constants/turkey_cities.dart';
 import '../../shared/widgets/skeleton.dart';
 import '../../core/constants/service_areas.dart';
@@ -16,13 +20,20 @@ const _kSortOptions = [
   (value: 'jobs', label: 'En Fazla İş'),
 ];
 
-class ServiceDirectoryScreen extends ConsumerWidget {
+class ServiceDirectoryScreen extends ConsumerStatefulWidget {
   final bool asTab;
 
   const ServiceDirectoryScreen({super.key, this.asTab = false});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ServiceDirectoryScreen> createState() => _ServiceDirectoryScreenState();
+}
+
+class _ServiceDirectoryScreenState extends ConsumerState<ServiceDirectoryScreen> {
+  int _activeTab = 0;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(serviceDirectoryProvider);
     final notifier = ref.read(serviceDirectoryProvider.notifier);
 
@@ -31,7 +42,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
         (state.sortBy != 'rating' ? 1 : 0) +
         (state.selectedServiceArea != null ? 1 : 0);
 
-    if (asTab) {
+    if (widget.asTab) {
       return Scaffold(
         backgroundColor: AppColors.gray50,
         body: Column(
@@ -41,14 +52,27 @@ class ServiceDirectoryScreen extends ConsumerWidget {
               child: PageHeader(
                 title: 'Servisler',
                 subtitle: 'Bölgenizdeki onaylı servisleri bulun',
+                action: const HeaderActions(),
               ),
             ),
-            _SearchBar(
-              state: state,
-              notifier: notifier,
-              activeFilterCount: activeFilterCount,
+            _TabToggle(
+              activeTab: _activeTab,
+              onChanged: (i) => setState(() => _activeTab = i),
             ),
-            Expanded(child: _buildContent(context, ref, state, notifier)),
+            if (_activeTab == 0)
+              _SearchBar(
+                state: state,
+                notifier: notifier,
+                activeFilterCount: activeFilterCount,
+              ),
+            Expanded(
+              child: _activeTab == 0
+                  ? _buildContent(context, state, notifier)
+                  : _MapView(
+                      providers: state.providers,
+                      onTap: (p) => _showDetail(context, p),
+                    ),
+            ),
           ],
         ),
       );
@@ -74,7 +98,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
             notifier: notifier,
             activeFilterCount: activeFilterCount,
           ),
-          Expanded(child: _buildContent(context, ref, state, notifier)),
+          Expanded(child: _buildContent(context, state, notifier)),
         ],
       ),
     );
@@ -82,7 +106,6 @@ class ServiceDirectoryScreen extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
-    WidgetRef ref,
     ServiceDirectoryState state,
     ServiceDirectoryNotifier notifier,
   ) {
@@ -150,7 +173,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
     );
   }
 
-  void _showDetail(BuildContext context, provider) {
+  void _showDetail(BuildContext context, ProviderModel provider) {
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -160,7 +183,7 @@ class ServiceDirectoryScreen extends ConsumerWidget {
         provider: provider,
         onRequestTap: () {
           Navigator.of(context, rootNavigator: true).pop();
-          if (asTab) {
+          if (widget.asTab) {
             context.push('/dashboard/requests/new', extra: {
               'serviceId': provider.id,
               'serviceName': provider.companyName,
@@ -173,6 +196,251 @@ class ServiceDirectoryScreen extends ConsumerWidget {
           }
         },
       ),
+    );
+  }
+}
+
+// ── Tab Toggle ────────────────────────────────────────────────────────────────
+
+class _TabToggle extends StatelessWidget {
+  final int activeTab;
+  final ValueChanged<int> onChanged;
+
+  const _TabToggle({required this.activeTab, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Container(
+        height: 38,
+        decoration: BoxDecoration(
+          color: AppColors.gray100,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            _Tab(label: 'Liste', icon: Icons.list_alt_outlined, active: activeTab == 0, onTap: () => onChanged(0)),
+            _Tab(label: 'Harita', icon: Icons.map_outlined, active: activeTab == 1, onTap: () => onChanged(1)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Tab extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _Tab({required this.label, required this.icon, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          margin: const EdgeInsets.all(3),
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: active
+                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 4, offset: const Offset(0, 1))]
+                : [],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 15, color: active ? AppColors.primary600 : AppColors.gray500),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  color: active ? AppColors.primary600 : AppColors.gray500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Map View ─────────────────────────────────────────────────────────────────
+
+class _MapView extends StatefulWidget {
+  final List<ProviderModel> providers;
+  final void Function(ProviderModel) onTap;
+
+  const _MapView({required this.providers, required this.onTap});
+
+  @override
+  State<_MapView> createState() => _MapViewState();
+}
+
+class _MapViewState extends State<_MapView> {
+  ProviderModel? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final withCoords = widget.providers
+        .where((p) =>
+            p.latitude != null &&
+            p.longitude != null &&
+            double.tryParse(p.latitude!) != null &&
+            double.tryParse(p.longitude!) != null)
+        .toList();
+
+    return Stack(
+      children: [
+        FlutterMap(
+          options: MapOptions(
+            initialCenter: withCoords.isNotEmpty
+                ? LatLng(
+                    double.parse(withCoords.first.latitude!),
+                    double.parse(withCoords.first.longitude!),
+                  )
+                : const LatLng(39.9334, 32.8597),
+            initialZoom: withCoords.length == 1 ? 14.0 : 6.0,
+            onTap: (_, __) => setState(() => _selected = null),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.bozappz.sanayi',
+            ),
+            MarkerLayer(
+              markers: withCoords.map((p) {
+                final isSelected = _selected?.id == p.id;
+                return Marker(
+                  point: LatLng(
+                    double.parse(p.latitude!),
+                    double.parse(p.longitude!),
+                  ),
+                  width: 40,
+                  height: 40,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selected = p),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary600 : Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary600,
+                          width: isSelected ? 0 : 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary600.withValues(alpha: 0.3),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.storefront_rounded,
+                        size: 20,
+                        color: isSelected ? Colors.white : AppColors.primary600,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+        if (withCoords.isEmpty)
+          Center(
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12)],
+              ),
+              child: const Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.location_off_outlined, size: 40, color: AppColors.gray300),
+                  SizedBox(height: 12),
+                  Text('Konum bilgisi olan servis bulunamadı',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: AppColors.gray500, fontSize: 14)),
+                ],
+              ),
+            ),
+          ),
+        if (_selected != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 16,
+            child: GestureDetector(
+              onTap: () => widget.onTap(_selected!),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 4)),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.success50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(Icons.storefront_rounded, color: AppColors.primary600, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _selected!.companyName,
+                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (_selected!.city != null)
+                            Text(
+                              [_selected!.district, _selected!.city].whereType<String>().join(', '),
+                              style: const TextStyle(fontSize: 12, color: AppColors.gray500),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary600,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Text('Detay', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

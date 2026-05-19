@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/services/car_api_service.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/header_actions.dart';
 import '../../../shared/widgets/skeleton.dart';
 import 'models/vehicle_detail.dart';
 import 'vehicles_list_notifier.dart';
@@ -19,17 +20,24 @@ class VehiclesScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 56,
+        ),
+        child: FloatingActionButton(
+          onPressed: () => _showVehicleForm(context),
+          backgroundColor: AppColors.primary600,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             PageHeader(
               title: 'Araçlarım',
-              action: PageHeaderAction(
-                icon: Icons.add,
-                label: 'Araç Ekle',
-                onTap: () => _showVehicleForm(context),
-              ),
+              action: const HeaderActions(),
             ),
             const SizedBox(height: 16),
             Expanded(child: _buildBody(context, state, notifier)),

@@ -54,6 +54,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       customerShellRoute,
+      ...customerStandaloneRoutes,
       adminShellRoute,
     ],
   );

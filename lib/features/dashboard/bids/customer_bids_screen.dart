@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import 'package:go_router/go_router.dart';
 import '../../../shared/widgets/date_picker_sheet.dart';
+import '../../../shared/widgets/header_actions.dart';
 import '../../../shared/widgets/skeleton.dart';
 import 'customer_bids_notifier.dart';
 import 'models/customer_bid_item.dart';
+import 'widgets/bid_filter_pills.dart';
 
 class CustomerBidsScreen extends ConsumerStatefulWidget {
   const CustomerBidsScreen({super.key});
@@ -15,7 +17,7 @@ class CustomerBidsScreen extends ConsumerStatefulWidget {
 }
 
 class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
-  String _activeFilter = 'all';
+  String? _activeFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
     final notifier = ref.read(customerBidsProvider.notifier);
 
     final filteredBids =
-        _activeFilter == 'all'
+        _activeFilter == null
             ? state.bids
             : state.bids.where((b) => b.status == _activeFilter).toList();
 
@@ -53,99 +55,22 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add, color: AppColors.primary600),
-            onPressed: () => context.push('/dashboard/requests/new'),
-          ),
+        actions: const [
+          HeaderActions(),
+          SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  _buildFilterChip('Tümü', 'all', state.bids.length),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'Bekleyen',
-                    'pending',
-                    state.bids.where((b) => b.status == 'pending').length,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'Kabul Edildi',
-                    'accepted',
-                    state.bids.where((b) => b.status == 'accepted').length,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildFilterChip(
-                    'Reddedildi',
-                    'rejected',
-                    state.bids.where((b) => b.status == 'rejected').length,
-                  ),
-                ],
-              ),
+          ColoredBox(
+            color: AppColors.gray50,
+            child: BidFilterPills(
+              activeFilter: _activeFilter,
+              onChanged: (val) => setState(() => _activeFilter = val),
             ),
           ),
           Expanded(child: _buildBody(state, notifier, filteredBids)),
         ],
-      ),
-    );
-  }
-
-  Widget _buildFilterChip(String label, String key, int count) {
-    final isActive = _activeFilter == key;
-    return InkWell(
-      onTap: () => setState(() => _activeFilter = key),
-      borderRadius: BorderRadius.circular(20),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isActive ? AppColors.gray900 : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isActive ? AppColors.gray900 : AppColors.gray200,
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                color: isActive ? Colors.white : AppColors.gray600,
-              ),
-            ),
-            if (count > 0) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color:
-                      isActive
-                          ? Colors.white.withValues(alpha: 0.2)
-                          : AppColors.gray100,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  count.toString(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: isActive ? Colors.white : AppColors.gray500,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
@@ -192,7 +117,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
         title: 'Bu filtrede teklif bulunmuyor',
         description: 'Filtreyi değiştirerek diğer teklifleri görebilirsiniz.',
         action: TextButton(
-          onPressed: () => setState(() => _activeFilter = 'all'),
+          onPressed: () => setState(() => _activeFilter = null),
           child: const Text('Tüm teklifleri göster'),
         ),
       );

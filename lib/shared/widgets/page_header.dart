@@ -5,12 +5,14 @@ class PageHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? action;
+  final bool showBack;
 
   const PageHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.action,
+    this.showBack = false,
   });
 
   @override
@@ -20,6 +22,22 @@ class PageHeader extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          if (showBack) ...[
+            GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gray200),
+                ),
+                child: const Icon(Icons.arrow_back_ios_new_rounded, size: 16, color: AppColors.gray700),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

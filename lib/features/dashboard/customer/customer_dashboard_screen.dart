@@ -1,11 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/skeleton.dart';
 import 'customer_dashboard_notifier.dart';
+import 'models/dashboard_models.dart';
 import 'widgets/action_banner.dart';
 import 'widgets/stat_cards.dart';
 import 'widgets/welcome_banner.dart';
+
+class _NewRequestBanner extends StatelessWidget {
+  const _NewRequestBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/dashboard/requests/new'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [AppColors.primary600, AppColors.primaryTeal],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.add_circle_outline, color: Colors.white, size: 28),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Yeni Talep Oluştur',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Aracınız için servis teklifi alın',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class CustomerDashboardScreen extends ConsumerWidget {
   const CustomerDashboardScreen({super.key});
@@ -46,19 +101,12 @@ class CustomerDashboardScreen extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(
-                          Icons.error_outline,
-                          size: 18,
-                          color: AppColors.red700,
-                        ),
+                        const Icon(Icons.error_outline, size: 18, color: AppColors.red700),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             state.error!,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.red700,
-                            ),
+                            style: const TextStyle(fontSize: 13, color: AppColors.red700),
                           ),
                         ),
                       ],
@@ -70,8 +118,13 @@ class CustomerDashboardScreen extends ConsumerWidget {
               padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
               sliver: SliverToBoxAdapter(child: WelcomeBanner()),
             ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverToBoxAdapter(child: _NewRequestBanner()),
+            ),
             if (state.stats != null) ...[
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: SliverToBoxAdapter(
@@ -86,13 +139,285 @@ class CustomerDashboardScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            if (state.recentRequests.isNotEmpty) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Son Taleplerim',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/dashboard/requests'),
+                        child: const Row(
+                          children: [
+                            Text('Tümü', style: TextStyle(fontSize: 13, color: AppColors.primary600, fontWeight: FontWeight.w500)),
+                            SizedBox(width: 2),
+                            Icon(Icons.arrow_forward, size: 14, color: AppColors.primary600),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final req = state.recentRequests[index];
+                      return _RecentRequestRow(request: req);
+                    },
+                    childCount: state.recentRequests.length,
+                  ),
+                ),
+              ),
+            ],
+            if (state.recentBids.isNotEmpty) ...[
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Son Gelen Teklifler',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                      ),
+                      GestureDetector(
+                        onTap: () => context.go('/dashboard/bids'),
+                        child: const Row(
+                          children: [
+                            Text('Tümü', style: TextStyle(fontSize: 13, color: AppColors.primary600, fontWeight: FontWeight.w500)),
+                            SizedBox(width: 2),
+                            Icon(Icons.arrow_forward, size: 14, color: AppColors.primary600),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 10)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final bid = state.recentBids[index];
+                      return _RecentBidRow(bid: bid);
+                    },
+                    childCount: state.recentBids.length,
+                  ),
+                ),
+              ),
+            ],
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
           ],
         ),
       ),
     );
   }
 }
+
+// ─── Recent Request Row ───────────────────────────────────────────────────────
+
+class _RecentRequestRow extends StatelessWidget {
+  final RecentRequest request;
+  const _RecentRequestRow({required this.request});
+
+  static const _statusLabels = {
+    'open': 'Açık',
+    'bidding': 'Teklifte',
+    'info_requested': 'Bilgi Bekleniyor',
+    'info_provided': 'Bilgi Gönderildi',
+    'accepted': 'Kabul Edildi',
+    'in_progress': 'Devam Ediyor',
+    'pending_review': 'İncelemede',
+    'completed': 'Tamamlandı',
+    'cancelled': 'İptal Edildi',
+  };
+
+  static const _statusColors = {
+    'open': Color(0xFF16A34A),
+    'bidding': Color(0xFF7C3AED),
+    'info_requested': Color(0xFFD97706),
+    'info_provided': Color(0xFF0891B2),
+    'accepted': Color(0xFF059669),
+    'in_progress': Color(0xFF2563EB),
+    'pending_review': Color(0xFFD97706),
+    'completed': Color(0xFF16A34A),
+    'cancelled': Color(0xFF6B7280),
+  };
+
+  static const _statusBgColors = {
+    'open': Color(0xFFF0FDF4),
+    'bidding': Color(0xFFF5F3FF),
+    'info_requested': Color(0xFFFEF3C7),
+    'info_provided': Color(0xFFECFEFF),
+    'accepted': Color(0xFFECFDF5),
+    'in_progress': Color(0xFFEFF6FF),
+    'pending_review': Color(0xFFFEF3C7),
+    'completed': Color(0xFFF0FDF4),
+    'cancelled': Color(0xFFF3F4F6),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final label = _statusLabels[request.status] ?? request.status;
+    final color = _statusColors[request.status] ?? AppColors.gray500;
+    final bg = _statusBgColors[request.status] ?? AppColors.gray100;
+    final dateStr = DateFormat('d MMM', 'tr').format(request.createdAt);
+
+    return GestureDetector(
+      onTap: () => context.push('/dashboard/requests/${request.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.gray200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.gray100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.build_outlined, size: 18, color: AppColors.gray500),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    request.title,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray900),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${request.vehicleBrand} ${request.vehicleModel} · $dateStr',
+                    style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+              child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Recent Bid Row ───────────────────────────────────────────────────────────
+
+class _RecentBidRow extends StatelessWidget {
+  final RecentBid bid;
+  const _RecentBidRow({required this.bid});
+
+  @override
+  Widget build(BuildContext context) {
+    final priceStr = bid.price != null
+        ? NumberFormat('#,##0', 'tr').format(bid.price) + ' ₺'
+        : '-';
+    final isPending = bid.status == 'pending';
+
+    return GestureDetector(
+      onTap: () => context.push('/dashboard/requests/${bid.requestId}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppColors.gray200),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.gray100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.storefront_outlined, size: 18, color: AppColors.gray500),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bid.serviceCompanyName,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray900),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    bid.requestTitle,
+                    style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  priceStr,
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                ),
+                const SizedBox(height: 3),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isPending ? AppColors.amber50 : AppColors.gray100,
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  child: Text(
+                    isPending ? 'Bekliyor' : bid.status,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: isPending ? AppColors.amber700 : AppColors.gray500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 class _DashboardSkeleton extends StatelessWidget {
   const _DashboardSkeleton();
@@ -107,53 +432,35 @@ class _DashboardSkeleton extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE5E7EB)),
-                ),
-                child: const Row(
-                  children: [
-                    SkeletonBox(width: 52, height: 52, radius: 26),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SkeletonBox(height: 14, width: 120, radius: 5),
-                          SizedBox(height: 7),
-                          SkeletonBox(height: 12, width: 160, radius: 4),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 4),
               Row(
                 children: const [
                   Expanded(child: _StatCardSkeleton()),
-                  SizedBox(width: 12),
+                  SizedBox(width: 10),
                   Expanded(child: _StatCardSkeleton()),
-                  SizedBox(width: 12),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: const [
+                  Expanded(child: _StatCardSkeleton()),
+                  SizedBox(width: 10),
                   Expanded(child: _StatCardSkeleton()),
                 ],
               ),
               const SizedBox(height: 16),
               Container(
-                height: 90,
+                height: 80,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE5E7EB),
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              const SizedBox(height: 16),
-              const SkeletonBox(height: 16, width: 120, radius: 5),
+              const SizedBox(height: 24),
+              const SkeletonBox(height: 16, width: 130, radius: 5),
               const SizedBox(height: 12),
               ...List.generate(3, (_) => Container(
-                margin: const EdgeInsets.only(bottom: 10),
+                margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: Colors.white,

@@ -34,8 +34,8 @@ class CustomerShell extends StatelessWidget {
   int _indexFromPath(String path) {
     if (path.startsWith('/dashboard/workplaces')) return 1;
     if (path.startsWith('/dashboard/requests')) return 2;
-    if (path.startsWith('/dashboard/vehicles')) return 3;
-    if (path.startsWith('/dashboard/profile')) return 4;
+    if (path.startsWith('/dashboard/bids')) return 3;
+    if (path.startsWith('/dashboard/vehicles')) return 4;
     return 0;
   }
 
@@ -44,8 +44,8 @@ class CustomerShell extends StatelessWidget {
       '/dashboard',
       '/dashboard/workplaces',
       '/dashboard/requests',
+      '/dashboard/bids',
       '/dashboard/vehicles',
-      '/dashboard/profile',
     ];
     context.go(paths[i]);
   }
@@ -67,7 +67,7 @@ class _FloatingNavBar extends StatelessWidget {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      margin: EdgeInsets.fromLTRB(20, 8, 20, bottomPad + 12),
+      margin: EdgeInsets.fromLTRB(12, 8, 12, bottomPad + 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
@@ -85,7 +85,7 @@ class _FloatingNavBar extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
@@ -111,16 +111,16 @@ class _FloatingNavBar extends StatelessWidget {
               onTap: () => onTap(2),
             ),
             _NavItem(
-              icon: Icons.directions_car_outlined,
-              selectedIcon: Icons.directions_car_rounded,
-              label: 'Araçlar',
+              icon: Icons.gavel_outlined,
+              selectedIcon: Icons.gavel_rounded,
+              label: 'Teklifler',
               isSelected: selectedIndex == 3,
               onTap: () => onTap(3),
             ),
             _NavItem(
-              icon: Icons.person_outline_rounded,
-              selectedIcon: Icons.person_rounded,
-              label: 'Profil',
+              icon: Icons.directions_car_outlined,
+              selectedIcon: Icons.directions_car_rounded,
+              label: 'Araçlar',
               isSelected: selectedIndex == 4,
               onTap: () => onTap(4),
             ),
@@ -158,7 +158,7 @@ class _NavItem extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         curve: Curves.easeInOut,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary600.withValues(alpha: 0.08) : Colors.transparent,
           borderRadius: BorderRadius.circular(18),
@@ -168,14 +168,14 @@ class _NavItem extends StatelessWidget {
           children: [
             Icon(
               isSelected ? selectedIcon : icon,
-              size: 22,
+              size: 21,
               color: color,
             ),
             const SizedBox(height: 3),
             Text(
               label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: color,
               ),

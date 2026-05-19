@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../../core/auth/auth_notifier.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../shared/widgets/header_actions.dart';
 
 class WelcomeBanner extends ConsumerWidget {
   const WelcomeBanner({super.key});
@@ -40,32 +40,7 @@ class WelcomeBanner extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(width: 12),
-        GestureDetector(
-          onTap: () => context.push('/dashboard/requests/new'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-            decoration: BoxDecoration(
-              color: AppColors.primary600,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.add, size: 16, color: Colors.white),
-                SizedBox(width: 5),
-                Text(
-                  'Yeni Talep',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
+        const HeaderActions(),
       ],
     );
   }

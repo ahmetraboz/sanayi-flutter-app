@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/page_header.dart';
+import '../../../shared/widgets/header_actions.dart';
 import '../../../shared/widgets/shared_pagination.dart';
 import '../../../shared/widgets/skeleton.dart';
 import 'request_list_notifier.dart';
@@ -21,17 +22,24 @@ class RequestListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.gray50,
+      floatingActionButton: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 56,
+        ),
+        child: FloatingActionButton(
+          onPressed: () => context.push('/dashboard/requests/new'),
+          backgroundColor: AppColors.primary600,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
             PageHeader(
               title: 'Taleplerim',
-              action: PageHeaderAction(
-                icon: Icons.add,
-                label: 'Yeni Talep',
-                onTap: () => context.push('/dashboard/requests/new'),
-              ),
+              action: const HeaderActions(),
             ),
             const SizedBox(height: 16),
             ColoredBox(

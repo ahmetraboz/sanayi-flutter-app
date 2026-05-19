@@ -87,6 +87,7 @@ class _CustomerProfileScreenState extends ConsumerState<CustomerProfileScreen> {
           children: [
           PageHeader(
             title: 'Profilim',
+            showBack: true,
             action: GestureDetector(
               onTap: () => _showLogoutConfirm(context),
               child: Container(

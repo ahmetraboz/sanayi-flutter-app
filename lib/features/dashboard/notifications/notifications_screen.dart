@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
 import 'notifications_notifier.dart';
 import '../../../../shared/models/notification_model.dart';
@@ -120,9 +121,9 @@ class NotificationsScreen extends ConsumerWidget {
       color: AppColors.primary600,
       onRefresh: notifier.load,
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         itemCount: state.notifications.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (context, index) {
           final notification = state.notifications[index];
           return _NotificationCard(
@@ -131,8 +132,9 @@ class NotificationsScreen extends ConsumerWidget {
               if (!notification.isRead) {
                 notifier.markAsRead(notification.id);
               }
-              // Here we could route to the specific item based on type
-              // e.g. if type is 'bid_received' go to request detail
+              if (notification.link != null && notification.link!.isNotEmpty) {
+                context.push(notification.link!);
+              }
             },
             onDelete: () => _showDeleteConfirm(context, notifier, notification),
           );
@@ -215,95 +217,86 @@ class _NotificationCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: notification.isRead ? Colors.white : const Color(0xFFF8FAFC), // slate-50
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: notification.isRead ? AppColors.gray200 : AppColors.info50,
-            width: notification.isRead ? 1 : 1.5,
-          ),
-          boxShadow: notification.isRead
-              ? []
-              : [BoxShadow(color: AppColors.blue600.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.gray100),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 6, offset: const Offset(0, 1)),
+          ],
         ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: iconColor, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!notification.isRead)
+                Container(width: 3, color: iconColor),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Icon(icon, color: iconColor, size: 18),
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          notification.title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.bold,
-                            color: AppColors.gray900,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    notification.title,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w700,
+                                      color: AppColors.gray900,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  timeago.format(notification.createdAt, locale: 'tr'),
+                                  style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              notification.message,
+                              style: const TextStyle(fontSize: 12, color: AppColors.gray500, height: 1.45),
+                            ),
+                          ],
                         ),
                       ),
-                      if (!notification.isRead)
-                        Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.only(top: 6, left: 8),
-                          decoration: const BoxDecoration(
-                            color: AppColors.blue600,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    notification.message,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: notification.isRead ? AppColors.gray600 : AppColors.gray700,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        timeago.format(notification.createdAt, locale: 'tr'),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.gray400,
-                        ),
-                      ),
+                      const SizedBox(width: 4),
                       InkWell(
                         onTap: onDelete,
-                        child: const Padding(
-                          padding: EdgeInsets.all(4.0),
-                          child: Icon(Icons.delete_outline, size: 18, color: AppColors.gray400),
+                        borderRadius: BorderRadius.circular(6),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Icon(Icons.close, size: 14, color: AppColors.gray300),
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/dashboard/bids/customer_bids_screen.dart';
 import '../../features/dashboard/customer/customer_dashboard_screen.dart';
@@ -60,13 +61,16 @@ final customerShellRoute = ShellRoute(
       path: '/dashboard/workplaces',
       builder: (context, state) => const ServiceDirectoryScreen(asTab: true),
     ),
-    GoRoute(
-      path: '/dashboard/profile',
-      builder: (context, state) => const CustomerProfileScreen(),
-    ),
-    GoRoute(
-      path: '/dashboard/notifications',
-      builder: (context, state) => const NotificationsScreen(),
-    ),
   ],
 );
+
+final customerStandaloneRoutes = [
+  GoRoute(
+    path: '/dashboard/profile',
+    builder: (context, state) => const CustomerProfileScreen(),
+  ),
+  GoRoute(
+    path: '/dashboard/notifications',
+    builder: (context, state) => const NotificationsScreen(),
+  ),
+];

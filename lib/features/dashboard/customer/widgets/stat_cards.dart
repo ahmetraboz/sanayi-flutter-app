@@ -9,38 +9,56 @@ class StatCardsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _StatCard(
-            icon: Icons.directions_car_outlined,
-            iconBgColor: AppColors.info50,
-            iconColor: const Color(0xFF3B82F6),
-            value: '${stats.vehicles}',
-            label: 'Kayıtlı Araç',
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.directions_car_outlined,
+                iconBgColor: AppColors.info50,
+                iconColor: const Color(0xFF3B82F6),
+                value: '${stats.vehicles}',
+                label: 'Kayıtlı Araç',
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.list_alt_outlined,
+                iconBgColor: AppColors.gray100,
+                iconColor: AppColors.gray500,
+                value: '${stats.totalRequests}',
+                label: 'Toplam Talep',
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            icon: Icons.access_time_outlined,
-            iconBgColor: AppColors.warning50,
-            iconColor: const Color(0xFFEAB308),
-            value: '${stats.openRequests}',
-            label: 'Açık Talep',
-            valueColor: const Color(0xFFCA8A04),
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _StatCard(
-            icon: Icons.move_to_inbox_outlined,
-            iconBgColor: AppColors.success50,
-            iconColor: AppColors.primary600,
-            value: '${stats.pendingBids}',
-            label: 'Gelen Teklif',
-            valueColor: AppColors.primary600,
-          ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.access_time_outlined,
+                iconBgColor: AppColors.warning50,
+                iconColor: const Color(0xFFEAB308),
+                value: '${stats.openRequests}',
+                label: 'Açık Talep',
+                valueColor: const Color(0xFFCA8A04),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.move_to_inbox_outlined,
+                iconBgColor: AppColors.success50,
+                iconColor: AppColors.primary600,
+                value: '${stats.pendingBids}',
+                label: 'Gelen Teklif',
+                valueColor: AppColors.primary600,
+              ),
+            ),
+          ],
         ),
       ],
     );
