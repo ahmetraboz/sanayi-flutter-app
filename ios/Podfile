@@ -44,4 +44,21 @@ post_install do |installer|
       end
     end
   end
+
+  env_file = File.expand_path('../../.env', __FILE__)
+  if File.exist?(env_file)
+    maps_key = File.foreach(env_file)
+      .lazy
+      .map { |l| l.strip }
+      .select { |l| l.start_with?('GOOGLE_MAPS_KEY=') }
+      .map { |l| l.sub('GOOGLE_MAPS_KEY=', '') }
+      .first
+    if maps_key && !maps_key.empty?
+      xcconfig_path = File.expand_path('../Flutter/Maps.xcconfig', __FILE__)
+      File.write(xcconfig_path, "MAPS_API_KEY=#{maps_key}\n")
+      puts "✅ Maps.xcconfig oluşturuldu"
+    end
+  else
+    puts "⚠️  .env bulunamadı — Maps.xcconfig oluşturulmadı"
+  end
 end

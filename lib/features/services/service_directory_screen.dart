@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:go_router/go_router.dart';
-import 'package:latlong2/latlong.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/models/provider_model.dart';
 import '../../shared/widgets/page_header.dart';
@@ -288,77 +287,64 @@ class _MapView extends StatefulWidget {
 
 class _MapViewState extends State<_MapView> {
   ProviderModel? _selected;
+  GoogleMapController? _mapCtrl;
+
+  static const _turkey = CameraPosition(target: LatLng(39.9334, 32.8597), zoom: 5.5);
+
+  List<ProviderModel> get _withCoords => widget.providers
+      .where((p) =>
+          p.latitude != null &&
+          p.longitude != null &&
+          double.tryParse(p.latitude!) != null &&
+          double.tryParse(p.longitude!) != null)
+      .toList();
+
+  Set<Marker> _buildMarkers() {
+    return _withCoords.map((p) {
+      final lat = double.parse(p.latitude!);
+      final lng = double.parse(p.longitude!);
+      final isSelected = _selected?.id == p.id;
+      return Marker(
+        markerId: MarkerId(p.id.toString()),
+        position: LatLng(lat, lng),
+        icon: isSelected
+            ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen)
+            : BitmapDescriptor.defaultMarkerWithHue(160),
+        onTap: () {
+          setState(() => _selected = p);
+          _mapCtrl?.animateCamera(
+            CameraUpdate.newLatLng(LatLng(lat, lng)),
+          );
+        },
+      );
+    }).toSet();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final withCoords = widget.providers
-        .where((p) =>
-            p.latitude != null &&
-            p.longitude != null &&
-            double.tryParse(p.latitude!) != null &&
-            double.tryParse(p.longitude!) != null)
-        .toList();
+    final coords = _withCoords;
+    final initialCamera = coords.isNotEmpty
+        ? CameraPosition(
+            target: LatLng(
+              double.parse(coords.first.latitude!),
+              double.parse(coords.first.longitude!),
+            ),
+            zoom: coords.length == 1 ? 14.0 : 5.5,
+          )
+        : _turkey;
 
     return Stack(
       children: [
-        FlutterMap(
-          options: MapOptions(
-            initialCenter: withCoords.isNotEmpty
-                ? LatLng(
-                    double.parse(withCoords.first.latitude!),
-                    double.parse(withCoords.first.longitude!),
-                  )
-                : const LatLng(39.9334, 32.8597),
-            initialZoom: withCoords.length == 1 ? 14.0 : 6.0,
-            onTap: (_, __) => setState(() => _selected = null),
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.bozappz.sanayi',
-            ),
-            MarkerLayer(
-              markers: withCoords.map((p) {
-                final isSelected = _selected?.id == p.id;
-                return Marker(
-                  point: LatLng(
-                    double.parse(p.latitude!),
-                    double.parse(p.longitude!),
-                  ),
-                  width: 40,
-                  height: 40,
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selected = p),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      decoration: BoxDecoration(
-                        color: isSelected ? AppColors.primary600 : Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary600,
-                          width: isSelected ? 0 : 2,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary600.withValues(alpha: 0.3),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.storefront_rounded,
-                        size: 20,
-                        color: isSelected ? Colors.white : AppColors.primary600,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
+        GoogleMap(
+          initialCameraPosition: initialCamera,
+          onMapCreated: (ctrl) => _mapCtrl = ctrl,
+          markers: _buildMarkers(),
+          onTap: (_) => setState(() => _selected = null),
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
         ),
-        if (withCoords.isEmpty)
+        if (coords.isEmpty)
           Center(
             child: Container(
               margin: const EdgeInsets.all(24),
@@ -393,7 +379,7 @@ class _MapViewState extends State<_MapView> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 16, offset: const Offset(0, 4)),
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 4)),
                   ],
                 ),
                 child: Row(
