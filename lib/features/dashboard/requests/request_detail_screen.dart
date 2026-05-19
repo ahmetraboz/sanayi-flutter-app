@@ -562,13 +562,19 @@ class _InfoSubmitFormState extends State<_InfoSubmitForm> {
                 child: ElevatedButton(
                   onPressed: widget.submitting
                       ? null
-                      : () => widget.onSubmit({
+                      : () {
+                          final mileageRaw = _mileageCtrl.text.trim();
+                          final engineRaw = _engineCtrl.text.trim();
+                          widget.onSubmit({
                             if (_fuelType != null) 'fuelType': _fuelType,
                             if (_transmission != null) 'transmissionType': _transmission,
                             if (_bodyType != null) 'bodyType': _bodyType,
-                            if (_engineCtrl.text.trim().isNotEmpty) 'engineDisplacement': _engineCtrl.text.trim(),
-                            if (_mileageCtrl.text.trim().isNotEmpty) 'mileage': _mileageCtrl.text.trim(),
-                          }),
+                            if (engineRaw.isNotEmpty && int.tryParse(engineRaw) != null)
+                              'engineDisplacement': int.parse(engineRaw),
+                            if (mileageRaw.isNotEmpty && int.tryParse(mileageRaw) != null)
+                              'mileage': int.parse(mileageRaw),
+                          });
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary600,
                     foregroundColor: Colors.white,
