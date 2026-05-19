@@ -1,8 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:latlong2/latlong.dart' as latlong2;
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/constants/service_areas.dart';
@@ -406,31 +405,26 @@ class _ProviderMap extends StatelessWidget {
     final lng = double.tryParse(provider.longitude ?? '');
     if (lat == null || lng == null) return const SizedBox.shrink();
 
-    final location = latlong2.LatLng(lat, lng);
+    final position = LatLng(lat, lng);
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: SizedBox(
         height: 160,
-        child: FlutterMap(
-          options: MapOptions(
-            initialCenter: location,
-            initialZoom: 15,
-            interactionOptions: const InteractionOptions(flags: InteractiveFlag.none),
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.bozappz.sanayi',
+        child: GoogleMap(
+          initialCameraPosition: CameraPosition(target: position, zoom: 15),
+          markers: {
+            Marker(
+              markerId: const MarkerId('provider'),
+              position: position,
             ),
-            MarkerLayer(markers: [
-              Marker(
-                point: location,
-                width: 40,
-                height: 40,
-                child: const Icon(Icons.location_on, color: Colors.red, size: 40),
-              ),
-            ]),
-          ],
+          },
+          myLocationButtonEnabled: false,
+          zoomControlsEnabled: false,
+          mapToolbarEnabled: false,
+          scrollGesturesEnabled: false,
+          zoomGesturesEnabled: false,
+          rotateGesturesEnabled: false,
+          tiltGesturesEnabled: false,
         ),
       ),
     );

@@ -10,6 +10,7 @@ import '../../core/constants/turkey_cities.dart';
 import '../../shared/widgets/skeleton.dart';
 import '../../core/constants/service_areas.dart';
 import 'service_directory_notifier.dart';
+import 'service_repository.dart';
 import 'widgets/provider_card.dart';
 import 'widgets/provider_detail_sheet.dart';
 
@@ -68,7 +69,6 @@ class _ServiceDirectoryScreenState extends ConsumerState<ServiceDirectoryScreen>
               child: _activeTab == 0
                   ? _buildContent(context, state, notifier)
                   : _MapView(
-                      providers: state.providers,
                       onTap: (p) => _showDetail(context, p),
                     ),
             ),
@@ -275,23 +275,48 @@ class _Tab extends StatelessWidget {
 
 // ── Map View ─────────────────────────────────────────────────────────────────
 
-class _MapView extends StatefulWidget {
-  final List<ProviderModel> providers;
+class _MapView extends ConsumerStatefulWidget {
   final void Function(ProviderModel) onTap;
 
-  const _MapView({required this.providers, required this.onTap});
+  const _MapView({required this.onTap});
 
   @override
-  State<_MapView> createState() => _MapViewState();
+  ConsumerState<_MapView> createState() => _MapViewState();
 }
 
-class _MapViewState extends State<_MapView> {
+class _MapViewState extends ConsumerState<_MapView> {
   ProviderModel? _selected;
   GoogleMapController? _mapCtrl;
 
+  String? _mapCity;
+  String? _mapServiceArea;
+  List<ProviderModel> _mapProviders = [];
+  bool _mapLoading = true;
+
   static const _turkey = CameraPosition(target: LatLng(39.9334, 32.8597), zoom: 5.5);
 
-  List<ProviderModel> get _withCoords => widget.providers
+  @override
+  void initState() {
+    super.initState();
+    _fetchMapProviders();
+  }
+
+  Future<void> _fetchMapProviders() async {
+    setState(() => _mapLoading = true);
+    try {
+      final result = await ref.read(serviceRepositoryProvider).fetchProviders(
+            city: _mapCity,
+            serviceArea: _mapServiceArea,
+            limit: 200,
+          );
+      if (mounted) setState(() => _mapProviders = result.providers);
+    } catch (_) {
+    } finally {
+      if (mounted) setState(() => _mapLoading = false);
+    }
+  }
+
+  List<ProviderModel> get _withCoords => _mapProviders
       .where((p) =>
           p.latitude != null &&
           p.longitude != null &&
@@ -320,6 +345,27 @@ class _MapViewState extends State<_MapView> {
     }).toSet();
   }
 
+  void _openMapFilters() {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _MapFilterSheet(
+        city: _mapCity,
+        serviceArea: _mapServiceArea,
+        onApply: (city, serviceArea) {
+          setState(() {
+            _mapCity = city;
+            _mapServiceArea = serviceArea;
+            _selected = null;
+          });
+          _fetchMapProviders();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final coords = _withCoords;
@@ -333,6 +379,8 @@ class _MapViewState extends State<_MapView> {
           )
         : _turkey;
 
+    final activeMapFilters = _mapServiceArea != null ? 1 : 0;
+
     return Stack(
       children: [
         GoogleMap(
@@ -344,7 +392,9 @@ class _MapViewState extends State<_MapView> {
           zoomControlsEnabled: false,
           mapToolbarEnabled: false,
         ),
-        if (coords.isEmpty)
+        if (_mapLoading)
+          const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600)),
+        if (!_mapLoading && coords.isEmpty)
           Center(
             child: Container(
               margin: const EdgeInsets.all(24),
@@ -366,11 +416,57 @@ class _MapViewState extends State<_MapView> {
               ),
             ),
           ),
+        Positioned(
+          top: 12,
+          right: 12,
+          child: GestureDetector(
+            onTap: _openMapFilters,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: activeMapFilters > 0
+                    ? AppColors.primary600
+                    : Colors.white.withValues(alpha: 0.92),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.12), blurRadius: 8, offset: const Offset(0, 2)),
+                ],
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    size: 20,
+                    color: activeMapFilters > 0 ? Colors.white : AppColors.gray600,
+                  ),
+                  if (activeMapFilters > 0)
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                        child: Center(
+                          child: Text(
+                            '$activeMapFilters',
+                            style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.primary600),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
         if (_selected != null)
           Positioned(
             left: 12,
             right: 12,
-            bottom: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 110,
             child: GestureDetector(
               onTap: () => widget.onTap(_selected!),
               child: Container(
@@ -427,6 +523,118 @@ class _MapViewState extends State<_MapView> {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ── Map Filter Sheet ──────────────────────────────────────────────────────────
+
+class _MapFilterSheet extends StatefulWidget {
+  final String? city;
+  final String? serviceArea;
+  final void Function(String? city, String? serviceArea) onApply;
+
+  const _MapFilterSheet({
+    required this.city,
+    required this.serviceArea,
+    required this.onApply,
+  });
+
+  @override
+  State<_MapFilterSheet> createState() => _MapFilterSheetState();
+}
+
+class _MapFilterSheetState extends State<_MapFilterSheet> {
+  late String? _serviceArea;
+
+  @override
+  void initState() {
+    super.initState();
+    _serviceArea = widget.serviceArea;
+  }
+
+  void _apply() {
+    widget.onApply(widget.city, _serviceArea);
+    Navigator.of(context).pop();
+  }
+
+  void _clear() {
+    widget.onApply(null, null);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    final hasActive = _serviceArea != null;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(99)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Harita Filtreleri',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+                if (hasActive)
+                  GestureDetector(
+                    onTap: _clear,
+                    child: const Text('Temizle',
+                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.gray500)),
+                  ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.gray100),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Hizmet Alanı',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray500, letterSpacing: 0.3)),
+                  const SizedBox(height: 10),
+                  _ServiceAreaPicker(
+                    value: _serviceArea,
+                    onChanged: (v) => setState(() => _serviceArea = v),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPad + 16),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: _apply,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 0,
+                ),
+                child: const Text('Uygula', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
