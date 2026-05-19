@@ -96,7 +96,7 @@ class RecentBid {
     requestId: json['requestId'] as int,
     requestTitle: json['requestTitle'] as String? ?? '',
     serviceCompanyName: json['serviceCompanyName'] as String? ?? '',
-    price: (json['price'] as num?)?.toDouble(),
+    price: double.tryParse(json['price']?.toString() ?? ''),
     status: json['status'] as String? ?? 'pending',
   );
 }

@@ -144,7 +144,7 @@ class BidItem {
 
   factory BidItem.fromJson(Map<String, dynamic> json) => BidItem(
     id: json['id'] as int,
-    price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    price: double.tryParse(json['price']?.toString() ?? '') ?? 0.0,
     description: json['description'] as String? ?? '',
     estimatedDuration: json['estimatedDuration'] as String? ?? '',
     status: json['status'] as String,
@@ -152,7 +152,7 @@ class BidItem {
     providerName: json['providerName'] as String?,
     city: json['city'] as String?,
     logoUrl: json['logoUrl'] as String?,
-    averageRating: (json['averageRating'] as num?)?.toDouble(),
+    averageRating: double.tryParse(json['averageRating']?.toString() ?? ''),
     reviewCount: json['reviewCount'] as int?,
     createdAt: json['createdAt'] != null
         ? DateTime.tryParse(json['createdAt'] as String)

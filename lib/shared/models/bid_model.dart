@@ -41,7 +41,7 @@ class BidModel {
     id: json['id'] as int,
     requestId: json['requestId'] as int,
     providerId: json['providerId'] as int?,
-    price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    price: double.tryParse(json['price']?.toString() ?? '') ?? 0.0,
     description: json['description'] as String? ?? '',
     estimatedDuration: json['estimatedDuration'] as String? ?? '',
     status: json['status'] as String,
@@ -51,7 +51,7 @@ class BidModel {
     companyName: json['companyName'] as String?,
     vehicleBrand: json['vehicleBrand'] as String?,
     vehicleModel: json['vehicleModel'] as String?,
-    averageRating: (json['averageRating'] as num?)?.toDouble(),
+    averageRating: double.tryParse(json['averageRating']?.toString() ?? ''),
     reviewCount: json['reviewCount'] as int?,
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
     updatedAt: json['updatedAt'] != null

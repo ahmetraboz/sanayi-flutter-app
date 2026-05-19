@@ -14,6 +14,8 @@ class CustomerDashboardRepository {
       return CustomerStats.fromJson(res.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiException(e.message ?? 'İstatistikler yüklenemedi');
+    } catch (_) {
+      throw ApiException('İstatistikler yüklenemedi');
     }
   }
 
@@ -27,6 +29,8 @@ class CustomerDashboardRepository {
           .toList();
     } on DioException catch (e) {
       throw ApiException(e.message ?? 'Aktif işler yüklenemedi');
+    } catch (_) {
+      throw ApiException('Aktif işler yüklenemedi');
     }
   }
 
@@ -43,6 +47,8 @@ class CustomerDashboardRepository {
           .toList();
     } on DioException catch (e) {
       throw ApiException(e.message ?? 'Son talepler yüklenemedi');
+    } catch (_) {
+      throw ApiException('Son talepler yüklenemedi');
     }
   }
 
@@ -59,6 +65,8 @@ class CustomerDashboardRepository {
           .toList();
     } on DioException catch (e) {
       throw ApiException(e.message ?? 'Son teklifler yüklenemedi');
+    } catch (_) {
+      throw ApiException('Son teklifler yüklenemedi');
     }
   }
 }
