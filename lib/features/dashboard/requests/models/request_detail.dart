@@ -80,6 +80,39 @@ class RequestDetail {
   );
 }
 
+class InfoRequestData {
+  final int id;
+  final bool wantsEngineDisplacement;
+  final bool wantsFuelType;
+  final bool wantsTransmissionType;
+  final bool wantsBodyType;
+  final bool wantsMileage;
+  final String? additionalNotes;
+
+  const InfoRequestData({
+    required this.id,
+    required this.wantsEngineDisplacement,
+    required this.wantsFuelType,
+    required this.wantsTransmissionType,
+    required this.wantsBodyType,
+    required this.wantsMileage,
+    this.additionalNotes,
+  });
+
+  bool get hasAnyField =>
+      wantsEngineDisplacement || wantsFuelType || wantsTransmissionType || wantsBodyType || wantsMileage;
+
+  factory InfoRequestData.fromJson(Map<String, dynamic> json) => InfoRequestData(
+    id: json['id'] as int,
+    wantsEngineDisplacement: json['engineDisplacement'] != null,
+    wantsFuelType: json['fuelType'] != null,
+    wantsTransmissionType: json['transmissionType'] != null,
+    wantsBodyType: json['bodyType'] != null,
+    wantsMileage: json['mileage'] != null,
+    additionalNotes: json['additionalNotes'] as String?,
+  );
+}
+
 class BidItem {
   final int id;
   final double price;

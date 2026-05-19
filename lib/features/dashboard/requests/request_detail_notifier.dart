@@ -15,6 +15,7 @@ class RequestDetailState {
   final int? acceptedBidId;
   final bool rejecting;
   final String? rejectError;
+  final InfoRequestData? infoRequest;
   final bool submittingInfo;
   final bool rejectingInfo;
   final bool completing;
@@ -27,6 +28,7 @@ class RequestDetailState {
     this.error,
     this.request,
     this.bids = const [],
+    this.infoRequest,
     this.accepting = false,
     this.acceptError,
     this.acceptedBidId,
@@ -56,6 +58,7 @@ class RequestDetailState {
     Object? acceptedBidId = _sentinel,
     bool? rejecting,
     Object? rejectError = _sentinel,
+    Object? infoRequest = _sentinel,
     bool? submittingInfo,
     bool? rejectingInfo,
     bool? completing,
@@ -68,6 +71,7 @@ class RequestDetailState {
       error: identical(error, _sentinel) ? this.error : error as String?,
       request: identical(request, _sentinel) ? this.request : request as RequestDetail?,
       bids: bids ?? this.bids,
+      infoRequest: identical(infoRequest, _sentinel) ? this.infoRequest : infoRequest as InfoRequestData?,
       accepting: accepting ?? this.accepting,
       acceptError: identical(acceptError, _sentinel) ? this.acceptError : acceptError as String?,
       acceptedBidId: identical(acceptedBidId, _sentinel) ? this.acceptedBidId : acceptedBidId as int?,
@@ -104,7 +108,9 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
           (data['bids'] as List? ?? [])
               .map((e) => BidItem.fromJson(e as Map<String, dynamic>))
               .toList();
-      state = state.copyWith(loading: false, request: detail, bids: bids);
+      final infoRequestRaw = data['infoRequest'] as Map<String, dynamic>?;
+      final infoRequest = infoRequestRaw != null ? InfoRequestData.fromJson(infoRequestRaw) : null;
+      state = state.copyWith(loading: false, request: detail, bids: bids, infoRequest: infoRequest);
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,

@@ -43,6 +43,8 @@ class AppColors {
 
   // Additional status colors
   static const amber50 = Color(0xFFFFFBEB);
+  static const amber100 = Color(0xFFFEF3C7);
+  static const amber200 = Color(0xFFFDE68A);
   static const amber600 = Color(0xFFD97706);
   static const amber700 = Color(0xFFB45309);
   static const violet50 = Color(0xFFF5F3FF);

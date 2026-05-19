@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/app_select_field.dart';
 import '../../../shared/widgets/skeleton.dart';
+import 'models/request_detail.dart';
 import 'request_detail_notifier.dart';
 import 'widgets/bid_card.dart';
 import 'widgets/request_info_card.dart';
@@ -103,6 +104,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
             if (state.isInfoRequested) ...[
               if (!_showInfoForm)
                 _InfoRequestedCard(
+                  infoRequest: state.infoRequest,
                   onRespond: () => setState(() => _showInfoForm = true),
                   onReject: () async {
                     final ok = await notifier.rejectInfo();
@@ -112,6 +114,7 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                 )
               else
                 _InfoSubmitForm(
+                  infoRequest: state.infoRequest,
                   submitting: state.submittingInfo,
                   onSubmit: (data) async {
                     final ok = await notifier.submitInfo(data);
@@ -305,20 +308,27 @@ class _ErrorBanner extends StatelessWidget {
 // ─── Info Requested Card ──────────────────────────────────────────────────────
 
 class _InfoRequestedCard extends StatelessWidget {
+  final InfoRequestData? infoRequest;
   final VoidCallback onRespond;
   final VoidCallback onReject;
   final bool rejectingInfo;
 
-  const _InfoRequestedCard({required this.onRespond, required this.onReject, required this.rejectingInfo});
+  const _InfoRequestedCard({
+    required this.infoRequest,
+    required this.onRespond,
+    required this.onReject,
+    required this.rejectingInfo,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final ir = infoRequest;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.amber50,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.amber50),
+        border: Border.all(color: AppColors.amber200),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,11 +341,43 @@ class _InfoRequestedCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Servis sağlayıcı aracınız hakkında ek bilgi istedi. Bilgileri gönderebilir veya talebi reddedebilirsiniz.',
-            style: TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.5),
-          ),
-          const SizedBox(height: 12),
+          if (ir?.additionalNotes != null && ir!.additionalNotes!.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.amber200),
+              ),
+              child: Text(
+                ir.additionalNotes!,
+                style: const TextStyle(fontSize: 13, color: AppColors.gray700, height: 1.5),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (ir != null && ir.hasAnyField) ...[
+            const Text('İstenen bilgiler:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.gray500)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                if (ir.wantsFuelType) _FieldChip('Yakıt Tipi'),
+                if (ir.wantsTransmissionType) _FieldChip('Şanzıman'),
+                if (ir.wantsBodyType) _FieldChip('Kasa Tipi'),
+                if (ir.wantsEngineDisplacement) _FieldChip('Motor Hacmi'),
+                if (ir.wantsMileage) _FieldChip('Kilometre'),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ] else ...[
+            const Text(
+              'Servis sağlayıcı aracınız hakkında ek bilgi istedi.',
+              style: TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Expanded(
@@ -372,6 +414,23 @@ class _InfoRequestedCard extends StatelessWidget {
   }
 }
 
+class _FieldChip extends StatelessWidget {
+  final String label;
+  const _FieldChip(this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.amber100,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppColors.amber700)),
+    );
+  }
+}
+
 // ─── Info Submit Form ─────────────────────────────────────────────────────────
 
 const _kFuelTypes = ['Benzin', 'Dizel', 'LPG', 'Hibrit', 'Elektrik'];
@@ -379,11 +438,17 @@ const _kTransmissions = ['Manuel', 'Otomatik', 'Yarı Otomatik'];
 const _kBodyTypes = ['Sedan', 'Hatchback', 'SUV', 'Station Wagon', 'Coupe', 'Cabrio', 'Pickup', 'Van'];
 
 class _InfoSubmitForm extends StatefulWidget {
+  final InfoRequestData? infoRequest;
   final bool submitting;
   final Future<void> Function(Map<String, dynamic>) onSubmit;
   final VoidCallback onCancel;
 
-  const _InfoSubmitForm({required this.submitting, required this.onSubmit, required this.onCancel});
+  const _InfoSubmitForm({
+    required this.infoRequest,
+    required this.submitting,
+    required this.onSubmit,
+    required this.onCancel,
+  });
 
   @override
   State<_InfoSubmitForm> createState() => _InfoSubmitFormState();
@@ -403,8 +468,17 @@ class _InfoSubmitFormState extends State<_InfoSubmitForm> {
     super.dispose();
   }
 
+  bool get _showFuelType => widget.infoRequest?.wantsFuelType ?? true;
+  bool get _showTransmission => widget.infoRequest?.wantsTransmissionType ?? true;
+  bool get _showBodyType => widget.infoRequest?.wantsBodyType ?? true;
+  bool get _showEngine => widget.infoRequest?.wantsEngineDisplacement ?? true;
+  bool get _showMileage => widget.infoRequest?.wantsMileage ?? true;
+
   @override
   Widget build(BuildContext context) {
+    final ir = widget.infoRequest;
+    final showDropdownRow = _showFuelType || _showTransmission;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -416,37 +490,60 @@ class _InfoSubmitFormState extends State<_InfoSubmitForm> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text('Ek Bilgileri Doldurun', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900)),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: _Dropdown(label: 'Yakıt Tipi', value: _fuelType, items: _kFuelTypes, onChanged: (v) => setState(() => _fuelType = v))),
-              const SizedBox(width: 10),
-              Expanded(child: _Dropdown(label: 'Şanzıman', value: _transmission, items: _kTransmissions, onChanged: (v) => setState(() => _transmission = v))),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _Dropdown(label: 'Kasa Tipi', value: _bodyType, items: _kBodyTypes, onChanged: (v) => setState(() => _bodyType = v)),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _engineCtrl,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  decoration: _fd('Motor Hacmi (L)'),
-                ),
+          if (ir?.additionalNotes != null && ir!.additionalNotes!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.amber50,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: _mileageCtrl,
-                  keyboardType: TextInputType.number,
-                  decoration: _fd('Kilometre'),
-                ),
-              ),
-            ],
-          ),
+              child: Text(ir.additionalNotes!, style: const TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.4)),
+            ),
+          ],
           const SizedBox(height: 14),
+          if (showDropdownRow) ...[
+            Row(
+              children: [
+                if (_showFuelType)
+                  Expanded(child: _Dropdown(label: 'Yakıt Tipi', value: _fuelType, items: _kFuelTypes, onChanged: (v) => setState(() => _fuelType = v))),
+                if (_showFuelType && _showTransmission)
+                  const SizedBox(width: 10),
+                if (_showTransmission)
+                  Expanded(child: _Dropdown(label: 'Şanzıman', value: _transmission, items: _kTransmissions, onChanged: (v) => setState(() => _transmission = v))),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+          if (_showBodyType) ...[
+            _Dropdown(label: 'Kasa Tipi', value: _bodyType, items: _kBodyTypes, onChanged: (v) => setState(() => _bodyType = v)),
+            const SizedBox(height: 10),
+          ],
+          if (_showEngine || _showMileage) ...[
+            Row(
+              children: [
+                if (_showEngine)
+                  Expanded(
+                    child: TextField(
+                      controller: _engineCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: _fd('Motor Hacmi (L)'),
+                    ),
+                  ),
+                if (_showEngine && _showMileage) const SizedBox(width: 10),
+                if (_showMileage)
+                  Expanded(
+                    child: TextField(
+                      controller: _mileageCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: _fd('Kilometre'),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+          ],
+          const SizedBox(height: 4),
           Row(
             children: [
               Expanded(
