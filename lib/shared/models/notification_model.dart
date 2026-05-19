@@ -30,6 +30,17 @@ class NotificationModel {
     createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
   );
 
+  NotificationModel copyWith({bool? isRead}) => NotificationModel(
+    id: id,
+    userId: userId,
+    title: title,
+    message: message,
+    type: type,
+    isRead: isRead ?? this.isRead,
+    link: link,
+    createdAt: createdAt,
+  );
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'userId': userId,

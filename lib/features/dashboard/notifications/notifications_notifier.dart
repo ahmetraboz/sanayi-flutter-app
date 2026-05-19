@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/services/notification_api_service.dart';
 import '../../../../shared/models/notification_model.dart';
@@ -29,9 +30,18 @@ class NotificationsState {
 
 class NotificationsNotifier extends StateNotifier<NotificationsState> {
   final NotificationApiService _api;
+  Timer? _pollTimer;
 
   NotificationsNotifier(this._api) : super(const NotificationsState()) {
     load();
+    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _poll());
+  }
+
+  Future<void> _poll() async {
+    try {
+      final list = await _api.getNotifications();
+      if (mounted) state = state.copyWith(notifications: list);
+    } catch (_) {}
   }
 
   Future<void> load() async {
@@ -40,54 +50,32 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
       final list = await _api.getNotifications();
       state = state.copyWith(loading: false, notifications: list);
     } catch (e) {
-      state = state.copyWith(
-        loading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(loading: false, error: e.toString());
     }
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> markAsRead(int id) async {
     try {
       await _api.markAsRead(id);
-      final newList = state.notifications.map((n) {
-        if (n.id == id) {
-          return NotificationModel(
-            id: n.id,
-            userId: n.userId,
-            title: n.title,
-            message: n.message,
-            type: n.type,
-            isRead: true,
-            createdAt: n.createdAt,
-          );
-        }
-        return n;
-      }).toList();
+      final newList = state.notifications
+          .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
+          .toList();
       state = state.copyWith(notifications: newList);
-    } catch (e) {
-      // Handle error implicitly or show message
-    }
+    } catch (_) {}
   }
 
   Future<void> markAllAsRead() async {
     try {
       await _api.markAllAsRead();
-      final newList = state.notifications.map((n) {
-        return NotificationModel(
-          id: n.id,
-          userId: n.userId,
-          title: n.title,
-          message: n.message,
-          type: n.type,
-          isRead: true,
-          createdAt: n.createdAt,
-        );
-      }).toList();
+      final newList = state.notifications.map((n) => n.copyWith(isRead: true)).toList();
       state = state.copyWith(notifications: newList);
-    } catch (e) {
-      // Handle error implicitly or show message
-    }
+    } catch (_) {}
   }
 
   Future<void> deleteNotification(int id) async {
@@ -101,6 +89,6 @@ class NotificationsNotifier extends StateNotifier<NotificationsState> {
   }
 }
 
-final notificationsProvider = StateNotifierProvider.autoDispose<NotificationsNotifier, NotificationsState>((ref) {
+final notificationsProvider = StateNotifierProvider<NotificationsNotifier, NotificationsState>((ref) {
   return NotificationsNotifier(ref.read(notificationApiProvider));
 });

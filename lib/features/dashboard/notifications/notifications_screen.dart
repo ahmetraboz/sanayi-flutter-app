@@ -6,6 +6,7 @@ import 'notifications_notifier.dart';
 import '../../../../shared/models/notification_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../shared/widgets/skeleton.dart';
+import '../../../shared/widgets/page_header.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -18,46 +19,29 @@ class NotificationsScreen extends ConsumerWidget {
     // timeago setup for Turkish if not globally initialized:
     timeago.setLocaleMessages('tr', timeago.TrMessages());
 
+    final unreadCount = state.notifications.where((n) => !n.isRead).length;
+
     return Scaffold(
       backgroundColor: AppColors.gray50,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
           children: [
-            const Text(
-              'Bildirimler',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-                color: AppColors.gray900,
-              ),
+            PageHeader(
+              title: 'Bildirimler',
+              subtitle: state.notifications.isNotEmpty ? '$unreadCount okunmamış' : null,
+              showBack: true,
+              action: state.notifications.any((n) => !n.isRead)
+                  ? GestureDetector(
+                      onTap: () => notifier.markAllAsRead(),
+                      child: const Icon(Icons.done_all, size: 22, color: AppColors.primary600),
+                    )
+                  : null,
             ),
-            if (state.notifications.isNotEmpty)
-              Text(
-                '${state.notifications.where((n) => !n.isRead).length} okunmamış',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.gray500,
-                  fontWeight: FontWeight.normal,
-                ),
-              ),
+            Expanded(child: _buildBody(context, state, notifier)),
           ],
         ),
-        actions: [
-          if (state.notifications.any((n) => !n.isRead))
-            TextButton.icon(
-              onPressed: () => notifier.markAllAsRead(),
-              icon: const Icon(Icons.done_all, size: 18),
-              label: const Text('Tümünü Okundu İşaretle'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary600,
-              ),
-            ),
-        ],
       ),
-      body: _buildBody(context, state, notifier),
     );
   }
 
@@ -133,6 +117,7 @@ class NotificationsScreen extends ConsumerWidget {
                 notifier.markAsRead(notification.id);
               }
               if (notification.link != null && notification.link!.isNotEmpty) {
+                context.pop();
                 context.push(notification.link!);
               }
             },
