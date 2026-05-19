@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart' as latlong2;
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/constants/service_areas.dart';
 import '../../../shared/models/provider_model.dart';
 import '../service_repository.dart';
 
@@ -153,6 +154,42 @@ class ProviderDetailSheet extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (p.serviceAreas.isNotEmpty) ...[
+            const Text('Hizmet Alanları', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray900)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: p.serviceAreas.map((key) {
+                final area = findServiceArea(key);
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: area?.bg ?? AppColors.gray100,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (area != null) ...[
+                        Icon(area.icon, size: 13, color: area.color),
+                        const SizedBox(width: 5),
+                      ],
+                      Text(
+                        area?.label ?? key,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: area?.color ?? AppColors.gray500,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
+          ],
           if (p.description != null && p.description!.isNotEmpty) ...[
             const Text('Hakkında', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.gray900)),
             const SizedBox(height: 8),

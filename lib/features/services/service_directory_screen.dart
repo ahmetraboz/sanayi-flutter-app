@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
 import '../../shared/widgets/page_header.dart';
 import '../../core/constants/turkey_cities.dart';
+import '../../core/constants/service_areas.dart';
 import 'service_directory_notifier.dart';
 import 'widgets/provider_card.dart';
 import 'widgets/provider_detail_sheet.dart';
@@ -26,7 +27,8 @@ class ServiceDirectoryScreen extends ConsumerWidget {
 
     final activeFilterCount = (state.selectedCity != null ? 1 : 0) +
         (state.minRating != null ? 1 : 0) +
-        (state.sortBy != 'rating' ? 1 : 0);
+        (state.sortBy != 'rating' ? 1 : 0) +
+        (state.selectedServiceArea != null ? 1 : 0);
 
     if (asTab) {
       return Scaffold(
@@ -161,6 +163,8 @@ class ServiceDirectoryScreen extends ConsumerWidget {
             context.push('/dashboard/requests/new', extra: {
               'serviceId': provider.id,
               'serviceName': provider.companyName,
+              'serviceCity': provider.city,
+              'serviceAreas': provider.serviceAreas,
             });
           } else {
             context.push('/book',
@@ -308,6 +312,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   late String? _city;
   late String? _sortBy;
   late double? _minRating;
+  late String? _serviceArea;
 
   @override
   void initState() {
@@ -315,12 +320,16 @@ class _FilterSheetState extends State<_FilterSheet> {
     _city = widget.state.selectedCity;
     _sortBy = widget.state.sortBy == 'rating' ? null : widget.state.sortBy;
     _minRating = widget.state.minRating;
+    _serviceArea = widget.state.selectedServiceArea;
   }
 
   void _apply() {
-    widget.notifier.onCityChanged(_city);
-    widget.notifier.onSortChanged(_sortBy ?? 'rating');
-    widget.notifier.onMinRatingChanged(_minRating);
+    widget.notifier.applyFilters(
+      city: _city,
+      serviceArea: _serviceArea,
+      sortBy: _sortBy,
+      minRating: _minRating,
+    );
     Navigator.of(context).pop();
   }
 
@@ -332,7 +341,7 @@ class _FilterSheetState extends State<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    final hasActive = _city != null || _sortBy != null || _minRating != null;
+    final hasActive = _city != null || _sortBy != null || _minRating != null || _serviceArea != null;
 
     return Container(
       decoration: const BoxDecoration(
@@ -379,6 +388,13 @@ class _FilterSheetState extends State<_FilterSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _sectionLabel('Hizmet Alanı'),
+                  const SizedBox(height: 10),
+                  _ServiceAreaPicker(
+                    value: _serviceArea,
+                    onChanged: (v) => setState(() => _serviceArea = v),
+                  ),
+                  const SizedBox(height: 20),
                   _sectionLabel('Şehir'),
                   const SizedBox(height: 10),
                   _CityPicker(
@@ -440,6 +456,54 @@ class _FilterSheetState extends State<_FilterSheet> {
             color: AppColors.gray500,
             letterSpacing: 0.3),
       );
+}
+
+// ── Service Area Picker ───────────────────────────────────────────────────────
+
+class _ServiceAreaPicker extends StatelessWidget {
+  final String? value;
+  final ValueChanged<String?> onChanged;
+
+  const _ServiceAreaPicker({required this.value, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: kServiceAreas.map((area) {
+        final isSelected = value == area.value;
+        return GestureDetector(
+          onTap: () => onChanged(isSelected ? null : area.value),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? area.bg : AppColors.gray50,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? area.color : AppColors.gray200,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(area.icon, size: 14, color: isSelected ? area.color : AppColors.gray400),
+                const SizedBox(width: 6),
+                Text(
+                  area.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                    color: isSelected ? area.color : AppColors.gray600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
 }
 
 // ── City Picker ───────────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@ class ServiceDirectoryState {
   final String? error;
   final String search;
   final String? selectedCity;
+  final String? selectedServiceArea;
   final String sortBy;
   final double? minRating;
   final int page;
@@ -22,6 +23,7 @@ class ServiceDirectoryState {
     this.error,
     this.search = '',
     this.selectedCity,
+    this.selectedServiceArea,
     this.sortBy = 'rating',
     this.minRating,
     this.page = 1,
@@ -37,6 +39,7 @@ class ServiceDirectoryState {
     String? error,
     String? search,
     Object? selectedCity = _sentinel,
+    Object? selectedServiceArea = _sentinel,
     String? sortBy,
     Object? minRating = _sentinel,
     int? page,
@@ -51,6 +54,9 @@ class ServiceDirectoryState {
         selectedCity: identical(selectedCity, _sentinel)
             ? this.selectedCity
             : selectedCity as String?,
+        selectedServiceArea: identical(selectedServiceArea, _sentinel)
+            ? this.selectedServiceArea
+            : selectedServiceArea as String?,
         sortBy: sortBy ?? this.sortBy,
         minRating: identical(minRating, _sentinel)
             ? this.minRating
@@ -89,6 +95,7 @@ class ServiceDirectoryNotifier extends StateNotifier<ServiceDirectoryState> {
     try {
       final result = await _repo.fetchProviders(
         city: state.selectedCity,
+        serviceArea: state.selectedServiceArea,
         search: state.search,
         sort: state.sortBy,
         minRating: state.minRating,
@@ -119,8 +126,23 @@ class ServiceDirectoryNotifier extends StateNotifier<ServiceDirectoryState> {
     _debounceTimer = Timer(const Duration(milliseconds: 350), fetchProviders);
   }
 
+  void applyFilters({
+    String? city,
+    String? serviceArea,
+    String? sortBy,
+    double? minRating,
+  }) {
+    state = state.copyWith(
+      selectedCity: city,
+      selectedServiceArea: serviceArea,
+      sortBy: sortBy ?? 'rating',
+      minRating: minRating,
+    );
+    fetchProviders();
+  }
+
   void onCityChanged(String? city) {
-    state = state.copyWith(selectedCity: city ?? _sentinel);
+    state = state.copyWith(selectedCity: city);
     fetchProviders();
   }
 
@@ -130,7 +152,12 @@ class ServiceDirectoryNotifier extends StateNotifier<ServiceDirectoryState> {
   }
 
   void onMinRatingChanged(double? rating) {
-    state = state.copyWith(minRating: rating ?? _sentinel);
+    state = state.copyWith(minRating: rating);
+    fetchProviders();
+  }
+
+  void onServiceAreaChanged(String? serviceArea) {
+    state = state.copyWith(selectedServiceArea: serviceArea);
     fetchProviders();
   }
 

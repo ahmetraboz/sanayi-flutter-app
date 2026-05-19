@@ -55,11 +55,15 @@ class _Urgency {
 class CreateRequestScreen extends ConsumerStatefulWidget {
   final int? preselectedServiceId;
   final String? preselectedServiceName;
+  final String? preselectedServiceCity;
+  final List<String>? preselectedServiceAreas;
 
   const CreateRequestScreen({
     super.key,
     this.preselectedServiceId,
     this.preselectedServiceName,
+    this.preselectedServiceCity,
+    this.preselectedServiceAreas,
   });
 
   @override
@@ -95,6 +99,17 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   final Map<String, String?> _errors = {};
 
+  bool get _hasPreselectedService => widget.preselectedServiceId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_hasPreselectedService) {
+      _selectedServiceIds = [widget.preselectedServiceId!];
+      _selectedCity = widget.preselectedServiceCity;
+    }
+  }
+
   @override
   void dispose() {
     _titleCtrl.dispose();
@@ -126,7 +141,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         return false;
       }
     } else if (_step == 4) {
-      if (_selectedCity == null || _selectedServiceIds.isEmpty) {
+      if (!_hasPreselectedService && (_selectedCity == null || _selectedServiceIds.isEmpty)) {
         setState(() => _errors['services'] = 'İl ve en az bir servis seçmelisiniz');
         return false;
       }
@@ -334,11 +349,40 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   // ── STEP 1: Category ─────────────────────────────────────────────────────
   Widget _buildStep1() {
+    final serviceAreas = widget.preselectedServiceAreas;
+    final hasFilter = serviceAreas != null && serviceAreas.isNotEmpty;
+    final availableCategories = hasFilter
+        ? _categories.where((c) => serviceAreas.contains(c.value)).toList()
+        : _categories;
+
     return _card(
       title: 'Sorun ne ile ilgili?',
-      subtitle: 'Aracınızdaki probleme en uygun kategoriyi seçin',
+      subtitle: hasFilter
+          ? '${widget.preselectedServiceName} bu alanlarda hizmet vermektedir'
+          : 'Aracınızdaki probleme en uygun kategoriyi seçin',
       child: Column(
         children: [
+          if (hasFilter) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEFF6FF),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.blue600.withValues(alpha: 0.25)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.info_outline, size: 15, color: AppColors.blue600),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Yalnızca bu servisin ilgilendiği kategoriler gösteriliyor.',
+                    style: const TextStyle(fontSize: 12, color: AppColors.blue800),
+                  ),
+                ),
+              ]),
+            ),
+          ],
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -346,7 +390,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 1.6,
-            children: _categories.map((cat) {
+            children: availableCategories.map((cat) {
               final selected = _category == cat.value;
               return GestureDetector(
                 onTap: () => setState(() { _category = cat.value; _errors.remove('category'); }),
@@ -753,6 +797,45 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   // ── STEP 4: Service Provider ───────────────────────────────────────────────
   Widget _buildStep4() {
+    if (_hasPreselectedService) {
+      return _card(
+        title: 'Servis Seçimi',
+        subtitle: 'Talebiniz doğrudan bu servise iletilecektir',
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: AppColors.primary600.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: AppColors.primary600.withValues(alpha: 0.3)),
+          ),
+          child: Row(children: [
+            Container(
+              width: 44, height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary600.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.store_outlined, color: AppColors.primary600, size: 22),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(
+                widget.preselectedServiceName ?? 'Seçilen Servis',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.gray900),
+              ),
+              if (widget.preselectedServiceCity != null)
+                Row(children: [
+                  const Icon(Icons.location_on_outlined, size: 13, color: AppColors.gray400),
+                  const SizedBox(width: 3),
+                  Text(widget.preselectedServiceCity!, style: const TextStyle(fontSize: 12, color: AppColors.gray500)),
+                ]),
+            ])),
+            const Icon(Icons.check_circle, color: AppColors.primary600, size: 22),
+          ]),
+        ),
+      );
+    }
+
     return _card(
       title: 'Servis Seçimi',
       subtitle: 'Talebinizi göndermek istediğiniz servisleri seçin',

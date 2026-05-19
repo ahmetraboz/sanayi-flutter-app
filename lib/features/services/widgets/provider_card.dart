@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/constants/service_areas.dart';
 import '../../../shared/models/provider_model.dart';
 
 class ProviderCard extends StatelessWidget {
@@ -99,10 +100,69 @@ class ProviderCard extends StatelessWidget {
               ),
             ],
           ),
+          if (provider.serviceAreas.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _buildServiceAreaChips(),
+          ],
           const Spacer(),
           _buildStats(),
         ],
       ),
+    );
+  }
+
+  Widget _buildServiceAreaChips() {
+    final visible = provider.serviceAreas.take(2).toList();
+    final extra = provider.serviceAreas.length - visible.length;
+    return Row(
+      children: [
+        ...visible.map((key) {
+          final area = findServiceArea(key);
+          return Flexible(
+            child: Container(
+              margin: const EdgeInsets.only(right: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: area?.bg ?? AppColors.gray100,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (area != null) ...[
+                    Icon(area.icon, size: 10, color: area.color),
+                    const SizedBox(width: 3),
+                  ],
+                  Flexible(
+                    child: Text(
+                      area?.label ?? key,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: area?.color ?? AppColors.gray500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        if (extra > 0)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppColors.gray100,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '+$extra',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.gray500),
+            ),
+          ),
+      ],
     );
   }
 

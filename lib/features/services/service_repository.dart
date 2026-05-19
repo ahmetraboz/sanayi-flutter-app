@@ -38,6 +38,7 @@ class ServiceRepository {
 
   Future<ProvidersResult> fetchProviders({
     String? city,
+    String? serviceArea,
     String? search,
     String? sort,
     double? minRating,
@@ -47,6 +48,7 @@ class ServiceRepository {
     try {
       final res = await _api.get('/api/public/providers', queryParameters: {
         if (city != null && city.isNotEmpty) 'city': city,
+        if (serviceArea != null && serviceArea.isNotEmpty) 'serviceArea': serviceArea,
         if (search != null && search.isNotEmpty) 'search': search,
         if (sort != null && sort.isNotEmpty) 'sort': sort,
         if (minRating != null) 'minRating': minRating,

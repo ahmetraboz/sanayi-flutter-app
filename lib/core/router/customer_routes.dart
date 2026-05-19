@@ -29,6 +29,8 @@ final customerShellRoute = ShellRoute(
         return CreateRequestScreen(
           preselectedServiceId: extra?['serviceId'] as int?,
           preselectedServiceName: extra?['serviceName'] as String?,
+          preselectedServiceCity: extra?['serviceCity'] as String?,
+          preselectedServiceAreas: (extra?['serviceAreas'] as List?)?.cast<String>(),
         );
       },
     ),

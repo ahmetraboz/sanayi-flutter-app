@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class ProviderModel {
   final int id;
   final String companyName;
@@ -13,6 +15,7 @@ class ProviderModel {
   final String? latitude;
   final String? longitude;
   final String? googlePlaceId;
+  final List<String> serviceAreas;
 
   const ProviderModel({
     required this.id,
@@ -29,24 +32,37 @@ class ProviderModel {
     this.latitude,
     this.longitude,
     this.googlePlaceId,
+    this.serviceAreas = const [],
   });
 
-  factory ProviderModel.fromJson(Map<String, dynamic> json) => ProviderModel(
-        id: json['id'] as int,
-        companyName: json['companyName'] as String,
-        city: json['city'] as String?,
-        district: json['district'] as String?,
-        logoUrl: json['logoUrl'] as String?,
-        isVerified: json['isVerified'] as bool? ?? false,
-        averageRating: json['averageRating'] as String?,
-        totalReviews: json['totalReviews'] as int? ?? 0,
-        totalJobs: json['totalJobs'] as int? ?? 0,
-        description: json['description'] as String?,
-        address: json['address'] as String?,
-        latitude: json['latitude'] as String?,
-        longitude: json['longitude'] as String?,
-        googlePlaceId: json['googlePlaceId'] as String?,
-      );
+  factory ProviderModel.fromJson(Map<String, dynamic> json) {
+    List<String> areas = [];
+    final raw = json['serviceAreas'];
+    if (raw is String && raw.isNotEmpty) {
+      try {
+        areas = List<String>.from(jsonDecode(raw) as List);
+      } catch (_) {}
+    } else if (raw is List) {
+      areas = List<String>.from(raw);
+    }
+    return ProviderModel(
+      id: json['id'] as int,
+      companyName: json['companyName'] as String,
+      city: json['city'] as String?,
+      district: json['district'] as String?,
+      logoUrl: json['logoUrl'] as String?,
+      isVerified: json['isVerified'] as bool? ?? false,
+      averageRating: json['averageRating'] as String?,
+      totalReviews: json['totalReviews'] as int? ?? 0,
+      totalJobs: json['totalJobs'] as int? ?? 0,
+      description: json['description'] as String?,
+      address: json['address'] as String?,
+      latitude: json['latitude'] as String?,
+      longitude: json['longitude'] as String?,
+      googlePlaceId: json['googlePlaceId'] as String?,
+      serviceAreas: areas,
+    );
+  }
 
   String get mapsUrl {
     if (latitude != null && longitude != null) {
