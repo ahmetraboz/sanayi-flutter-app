@@ -43,7 +43,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
     if (_currentStep == 2) {
       if (!_vehicleData.isValid) {
-        setState(() => _errorMessage = 'Lütfen marka, model ve yılı doldurun');
+        setState(() => _errorMessage = 'Lütfen marka ve model alanlarını doldurun');
         return;
       }
     }
@@ -254,9 +254,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           icon: Icons.directions_car_outlined,
           rows: [
             _SummaryRow('Marka / Model', '${_vehicleData.brand} ${_vehicleData.model}'),
-            _SummaryRow('Yıl', _vehicleData.year),
+            if (_vehicleData.year.isNotEmpty) _SummaryRow('Yıl', _vehicleData.year),
             if (_vehicleData.licensePlate.isNotEmpty)
               _SummaryRow('Plaka', _vehicleData.licensePlate),
+            if (_vehicleData.fuelType != null) _SummaryRow('Yakıt', _vehicleData.fuelType!),
+            if (_vehicleData.transmissionType != null)
+              _SummaryRow('Şanzıman', _vehicleData.transmissionType!),
+            if (_vehicleData.color.isNotEmpty) _SummaryRow('Renk', _vehicleData.color),
+            if (_vehicleData.mileage.isNotEmpty) _SummaryRow('Km', '${_vehicleData.mileage} km'),
           ],
         ),
         const SizedBox(height: 16),

@@ -58,6 +58,17 @@ class AuthRepository {
         final match = RegExp(r'session_token=([^;]+)').firstMatch(setCookie);
         if (match != null) await _api.saveToken(match.group(1)!);
       }
+
+      // Kayıt başarılı olduktan sonra araç bilgileri verildiyse veritabanına ekle
+      if (vehicle != null && role == 'customer') {
+        try {
+          await _api.post('/api/vehicles', data: vehicle);
+        } catch (e) {
+          // Araç ekleme hatası kaydolmayı tamamen engellemesin diye hata yakalanıp yazdırılır
+          print('Kayıt sonrası araç eklenirken hata oluştu: $e');
+        }
+      }
+
       return user;
     } on DioException catch (e) {
       throw ApiException(
