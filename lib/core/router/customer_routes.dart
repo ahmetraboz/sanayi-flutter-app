@@ -31,7 +31,10 @@ final customerShellRoute = ShellRoute(
           preselectedServiceId: extra?['serviceId'] as int?,
           preselectedServiceName: extra?['serviceName'] as String?,
           preselectedServiceCity: extra?['serviceCity'] as String?,
-          preselectedServiceAreas: (extra?['serviceAreas'] as List?)?.cast<String>(),
+          preselectedServiceAreas:
+              (extra?['serviceAreas'] as List?)?.cast<String>(),
+          preselectedVehicleId: extra?['vehicleId'] as int?,
+          preselectedCategory: extra?['category'] as String?,
         );
       },
     ),

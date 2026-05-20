@@ -11,6 +11,7 @@ class VehicleDetail {
   final String? bodyType;
   final String? color;
   final String? driveType;
+  final int? mileage;
 
   const VehicleDetail({
     required this.id,
@@ -25,6 +26,7 @@ class VehicleDetail {
     this.bodyType,
     this.color,
     this.driveType,
+    this.mileage,
   });
 
   factory VehicleDetail.fromJson(Map<String, dynamic> json) => VehicleDetail(
@@ -41,6 +43,7 @@ class VehicleDetail {
     bodyType: json['bodyType'] as String?,
     color: json['color'] as String?,
     driveType: json['driveType'] as String?,
+    mileage: json['mileage'] as int?,
   );
 }
 

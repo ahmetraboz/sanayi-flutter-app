@@ -25,9 +25,11 @@ class VehiclesScreen extends ConsumerWidget {
           bottom: MediaQuery.of(context).padding.bottom + 56,
         ),
         child: FloatingActionButton(
-          onPressed: () => _showVehicleForm(context),
+          onPressed: () => _showVehicleForm(context, ref),
           backgroundColor: AppColors.primary600,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
@@ -35,19 +37,21 @@ class VehiclesScreen extends ConsumerWidget {
         bottom: false,
         child: Column(
           children: [
-            PageHeader(
-              title: 'Araçlarım',
-              action: const HeaderActions(),
-            ),
+            PageHeader(title: 'Araçlarım', action: const HeaderActions()),
             const SizedBox(height: 16),
-            Expanded(child: _buildBody(context, state, notifier)),
+            Expanded(child: _buildBody(context, ref, state, notifier)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, VehiclesListState state, VehiclesListNotifier notifier) {
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    VehiclesListState state,
+    VehiclesListNotifier notifier,
+  ) {
     if (state.loading && state.vehicles.isEmpty) {
       return const _VehicleListSkeleton();
     }
@@ -84,29 +88,46 @@ class VehiclesScreen extends ConsumerWidget {
                   color: AppColors.success50,
                   borderRadius: BorderRadius.circular(24),
                 ),
-                child: const Icon(Icons.directions_car_outlined, size: 40, color: AppColors.primary600),
+                child: const Icon(
+                  Icons.directions_car_outlined,
+                  size: 40,
+                  color: AppColors.primary600,
+                ),
               ),
               const SizedBox(height: 24),
               const Text(
                 'Henüz araç eklenmemiş',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.gray900),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.gray900,
+                ),
               ),
               const SizedBox(height: 12),
               const Text(
                 'Servis talebi oluşturabilmek için önce bir araç ekleyin.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15, color: AppColors.gray500, height: 1.5),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: AppColors.gray500,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 32),
               ElevatedButton.icon(
-                onPressed: () => _showVehicleForm(context),
+                onPressed: () => _showVehicleForm(context, ref),
                 icon: const Icon(Icons.add, size: 20),
                 label: const Text('İlk Aracınızı Ekleyin'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary600,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 0,
                 ),
               ),
@@ -127,7 +148,7 @@ class VehiclesScreen extends ConsumerWidget {
           final vehicle = state.vehicles[index];
           return _VehicleCard(
             vehicle: vehicle,
-            onEdit: () => _showVehicleForm(context, vehicle: vehicle),
+            onEdit: () => _showVehicleForm(context, ref, vehicle: vehicle),
             onDelete: () => _showDeleteConfirm(context, notifier, vehicle),
           );
         },
@@ -135,8 +156,12 @@ class VehiclesScreen extends ConsumerWidget {
     );
   }
 
-  void _showVehicleForm(BuildContext context, {VehicleDetail? vehicle}) {
-    showModalBottomSheet(
+  void _showVehicleForm(
+    BuildContext context,
+    WidgetRef ref, {
+    VehicleDetail? vehicle,
+  }) async {
+    final added = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -145,43 +170,118 @@ class VehiclesScreen extends ConsumerWidget {
       ),
       builder: (_) => VehicleFormSheet(vehicle: vehicle),
     );
+    ref.read(vehiclesListProvider.notifier).load();
+    if (context.mounted && added != null && vehicle == null) {
+      final mileage = added['mileage'] as int?;
+      final id = added['id'] as int?;
+      if (id != null && mileage != null && mileage >= 10000) {
+        _showMaintenanceDialog(context, id);
+      }
+    }
   }
 
-  void _showDeleteConfirm(BuildContext context, VehiclesListNotifier notifier, VehicleDetail vehicle) {
+  void _showMaintenanceDialog(BuildContext context, int vehicleId) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Aracı Sil', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-        content: Text('${vehicle.brand} ${vehicle.model} aracını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.'),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('İptal', style: TextStyle(color: AppColors.gray600)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              try {
-                await notifier.deleteVehicle(vehicle.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Araç başarıyla silindi')));
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString()), backgroundColor: AppColors.red700));
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.red700,
-              foregroundColor: Colors.white,
-              elevation: 0,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text(
+              'Araç Bakım Zamanı Geldi mi? 🚗',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            child: const Text('Sil'),
+            content: const Text(
+              'Eklediğiniz aracın kilometresi 10.000 km\'yi geçmiş görünüyor.\n\n'
+              'Aracınızın periyodik bakımlarını yaptırdınız mı? Eğer yaptırmadıysanız, hemen bir bakım talebi oluşturarak servislerden teklif alabilirsiniz.',
+              style: TextStyle(fontSize: 14, color: AppColors.gray600),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Evet, Yaptırdım',
+                  style: TextStyle(color: AppColors.gray500),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  context.go(
+                    '/dashboard/requests/new',
+                    extra: {'vehicleId': vehicleId, 'category': 'bakim'},
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                ),
+                child: const Text('Hayır, Talep Oluştur'),
+              ),
+            ],
           ),
-        ],
-      ),
+    );
+  }
+
+  void _showDeleteConfirm(
+    BuildContext context,
+    VehiclesListNotifier notifier,
+    VehicleDetail vehicle,
+  ) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text(
+              'Aracı Sil',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            content: Text(
+              '${vehicle.brand} ${vehicle.model} aracını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.',
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'İptal',
+                  style: TextStyle(color: AppColors.gray600),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  try {
+                    await notifier.deleteVehicle(vehicle.id);
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Araç başarıyla silindi')),
+                      );
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(e.toString()),
+                          backgroundColor: AppColors.red700,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.red700,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                ),
+                child: const Text('Sil'),
+              ),
+            ],
+          ),
     );
   }
 }
@@ -210,7 +310,11 @@ class _VehicleCard extends ConsumerWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.gray200),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Column(
@@ -225,23 +329,40 @@ class _VehicleCard extends ConsumerWidget {
               child: Stack(
                 children: [
                   FutureBuilder<String?>(
-                    future: carApi.getVehicleImage(vehicle.brand, vehicle.model, vehicle.year),
+                    future: carApi.getVehicleImage(
+                      vehicle.brand,
+                      vehicle.model,
+                      vehicle.year,
+                    ),
                     builder: (context, snapshot) {
                       final url = snapshot.data;
                       if (url != null && url.isNotEmpty) {
                         return ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
                           child: Image.network(
                             url,
                             fit: BoxFit.cover,
                             width: double.infinity,
-                            errorBuilder: (_, __, ___) => const Center(
-                              child: Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300),
-                            ),
+                            errorBuilder:
+                                (_, __, ___) => const Center(
+                                  child: Icon(
+                                    Icons.directions_car_outlined,
+                                    size: 48,
+                                    color: AppColors.gray300,
+                                  ),
+                                ),
                           ),
                         );
                       }
-                      return const Center(child: Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300));
+                      return const Center(
+                        child: Icon(
+                          Icons.directions_car_outlined,
+                          size: 48,
+                          color: AppColors.gray300,
+                        ),
+                      );
                     },
                   ),
                   if (vehicle.year != null)
@@ -249,17 +370,27 @@ class _VehicleCard extends ConsumerWidget {
                       top: 12,
                       left: 12,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.9),
                           borderRadius: BorderRadius.circular(8),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 4,
+                            ),
                           ],
                         ),
                         child: Text(
                           vehicle.year.toString(),
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.gray700),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.gray700,
+                          ),
                         ),
                       ),
                     ),
@@ -269,9 +400,17 @@ class _VehicleCard extends ConsumerWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        _buildActionButton(Icons.edit_outlined, AppColors.gray700, onEdit),
+                        _buildActionButton(
+                          Icons.edit_outlined,
+                          AppColors.gray700,
+                          onEdit,
+                        ),
                         const SizedBox(width: 8),
-                        _buildActionButton(Icons.delete_outline, AppColors.red700, onDelete),
+                        _buildActionButton(
+                          Icons.delete_outline,
+                          AppColors.red700,
+                          onDelete,
+                        ),
                       ],
                     ),
                   ),
@@ -285,25 +424,46 @@ class _VehicleCard extends ConsumerWidget {
                 children: [
                   Text(
                     '${vehicle.brand} ${vehicle.model}',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.gray900),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.gray900,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      if (vehicle.licensePlate != null && vehicle.licensePlate!.isNotEmpty) ...[
-                        Icon(Icons.badge_outlined, size: 14, color: AppColors.gray500),
+                      if (vehicle.licensePlate != null &&
+                          vehicle.licensePlate!.isNotEmpty) ...[
+                        Icon(
+                          Icons.badge_outlined,
+                          size: 14,
+                          color: AppColors.gray500,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           vehicle.licensePlate!,
-                          style: const TextStyle(fontSize: 13, color: AppColors.gray600, fontFamily: 'monospace', fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.gray600,
+                            fontFamily: 'monospace',
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         const SizedBox(width: 12),
                       ],
-                      Icon(Icons.calendar_today_outlined, size: 14, color: AppColors.gray500),
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        size: 14,
+                        color: AppColors.gray500,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${vehicle.createdAt.day.toString().padLeft(2, '0')}.${vehicle.createdAt.month.toString().padLeft(2, '0')}.${vehicle.createdAt.year}',
-                        style: const TextStyle(fontSize: 13, color: AppColors.gray500),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.gray500,
+                        ),
                       ),
                     ],
                   ),
@@ -313,9 +473,17 @@ class _VehicleCard extends ConsumerWidget {
                     children: [
                       const Text(
                         'Detayları Gör',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.primary600),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary600,
+                        ),
                       ),
-                      Icon(Icons.arrow_forward, size: 16, color: AppColors.primary600),
+                      Icon(
+                        Icons.arrow_forward,
+                        size: 16,
+                        color: AppColors.primary600,
+                      ),
                     ],
                   ),
                 ],
@@ -354,35 +522,36 @@ class _VehicleListSkeleton extends StatelessWidget {
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       itemCount: 4,
-      itemBuilder: (_, __) => Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-        ),
-        child: Row(
-          children: [
-            const SkeletonBox(width: 52, height: 52, radius: 14),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SkeletonBox(height: 15, radius: 5),
-                  SizedBox(height: 7),
-                  SkeletonBox(height: 12, width: 140, radius: 4),
-                  SizedBox(height: 6),
-                  SkeletonBox(height: 11, width: 90, radius: 4),
-                ],
-              ),
+      itemBuilder:
+          (_, __) => Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE5E7EB)),
             ),
-            const SizedBox(width: 8),
-            const SkeletonBox(width: 24, height: 24, radius: 6),
-          ],
-        ),
-      ),
+            child: Row(
+              children: [
+                const SkeletonBox(width: 52, height: 52, radius: 14),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      SkeletonBox(height: 15, radius: 5),
+                      SizedBox(height: 7),
+                      SkeletonBox(height: 12, width: 140, radius: 4),
+                      SizedBox(height: 6),
+                      SkeletonBox(height: 11, width: 90, radius: 4),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const SkeletonBox(width: 24, height: 24, radius: 6),
+              ],
+            ),
+          ),
     );
   }
 }

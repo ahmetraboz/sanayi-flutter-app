@@ -14,22 +14,124 @@ import '../../../shared/widgets/date_picker_sheet.dart';
 import 'create_request_providers.dart';
 
 const _categories = [
-  _Category('motor', 'Motor', Icons.local_fire_department_outlined, Color(0xFFFEF2F2), Color(0xFFEF4444)),
-  _Category('elektrik', 'Elektrik', Icons.bolt_outlined, Color(0xFFFEFCE8), Color(0xFFEAB308)),
-  _Category('fren', 'Fren', Icons.radio_button_checked_outlined, Color(0xFFFFF7ED), Color(0xFFF97316)),
-  _Category('suspan', 'Süspansiyon', Icons.tune_outlined, Color(0xFFEFF6FF), Color(0xFF3B82F6)),
-  _Category('kaporta', 'Kaporta', Icons.brush_outlined, Color(0xFFFAF5FF), Color(0xFFA855F7)),
-  _Category('klima', 'Klima', Icons.wb_sunny_outlined, Color(0xFFECFEFF), Color(0xFF06B6D4)),
-  _Category('lastik', 'Lastik', Icons.circle_outlined, Color(0xFFF8FAFC), Color(0xFF64748B)),
-  _Category('vites', 'Vites', Icons.settings_outlined, Color(0xFFEEF2FF), Color(0xFF6366F1)),
-  _Category('egzoz', 'Egzoz', Icons.cloud_outlined, Color(0xFFECFDF5), Color(0xFF10B981)),
-  _Category('diger', 'Diğer', Icons.help_outline, Color(0xFFF9FAFB), Color(0xFF9CA3AF)),
+  _Category(
+    'bakim',
+    'Periyodik Bakım',
+    Icons.build_outlined,
+    Color(0xFFECFDF5),
+    Color(0xFF10B981),
+  ),
+  _Category(
+    'motor',
+    'Motor',
+    Icons.local_fire_department_outlined,
+    Color(0xFFFEF2F2),
+    Color(0xFFEF4444),
+  ),
+  _Category(
+    'elektrik',
+    'Elektrik',
+    Icons.bolt_outlined,
+    Color(0xFFFEFCE8),
+    Color(0xFFEAB308),
+  ),
+  _Category(
+    'fren',
+    'Fren',
+    Icons.radio_button_checked_outlined,
+    Color(0xFFFFF7ED),
+    Color(0xFFF97316),
+  ),
+  _Category(
+    'suspan',
+    'Süspansiyon',
+    Icons.tune_outlined,
+    Color(0xFFEFF6FF),
+    Color(0xFF3B82F6),
+  ),
+  _Category(
+    'kaporta',
+    'Kaporta',
+    Icons.brush_outlined,
+    Color(0xFFFAF5FF),
+    Color(0xFFA855F7),
+  ),
+  _Category(
+    'klima',
+    'Klima',
+    Icons.wb_sunny_outlined,
+    Color(0xFFECFEFF),
+    Color(0xFF06B6D4),
+  ),
+  _Category(
+    'lastik',
+    'Lastik',
+    Icons.circle_outlined,
+    Color(0xFFF8FAFC),
+    Color(0xFF64748B),
+  ),
+  _Category(
+    'vites',
+    'Vites',
+    Icons.settings_outlined,
+    Color(0xFFEEF2FF),
+    Color(0xFF6366F1),
+  ),
+  _Category(
+    'egzoz',
+    'Egzoz',
+    Icons.cloud_outlined,
+    Color(0xFFECFDF5),
+    Color(0xFF10B981),
+  ),
+  _Category(
+    'diger',
+    'Diğer',
+    Icons.help_outline,
+    Color(0xFFF9FAFB),
+    Color(0xFF9CA3AF),
+  ),
+];
+
+const _maintenanceItems = [
+  'Motor Yağı ve Yağ Filtresi Değişimi',
+  'Hava Filtresi Değişimi',
+  'Polen (Kabin) Filtresi Değişimi',
+  'Yakıt Filtresi Değişimi',
+  'Ateşleme Bujileri Değişimi',
+  'Fren Balata ve Disk Kontrolü/Değişimi',
+  'Antifriz ve Fren Sıvısı Değişimi',
+  'Genel Check-up ve Sıvı Kontrolleri',
 ];
 
 const _urgencyOptions = [
-  _Urgency('low', 'Acele Değil', 'Uygun zamanda bakılabilir', Icons.access_time_outlined, Color(0xFF059669), Color(0xFFECFDF5), Color(0xFF6EE7B7)),
-  _Urgency('normal', 'Normal', 'Bu hafta içinde', Icons.calendar_today_outlined, Color(0xFFD97706), Color(0xFFFFFBEB), Color(0xFFFCD34D)),
-  _Urgency('urgent', 'Acil', 'En kısa sürede', Icons.warning_amber_outlined, Color(0xFFDC2626), Color(0xFFFEF2F2), Color(0xFFFCA5A5)),
+  _Urgency(
+    'low',
+    'Acele Değil',
+    'Uygun zamanda bakılabilir',
+    Icons.access_time_outlined,
+    Color(0xFF059669),
+    Color(0xFFECFDF5),
+    Color(0xFF6EE7B7),
+  ),
+  _Urgency(
+    'normal',
+    'Normal',
+    'Bu hafta içinde',
+    Icons.calendar_today_outlined,
+    Color(0xFFD97706),
+    Color(0xFFFFFBEB),
+    Color(0xFFFCD34D),
+  ),
+  _Urgency(
+    'urgent',
+    'Acil',
+    'En kısa sürede',
+    Icons.warning_amber_outlined,
+    Color(0xFFDC2626),
+    Color(0xFFFEF2F2),
+    Color(0xFFFCA5A5),
+  ),
 ];
 
 class _Category {
@@ -49,7 +151,15 @@ class _Urgency {
   final Color color;
   final Color bg;
   final Color border;
-  const _Urgency(this.value, this.label, this.description, this.icon, this.color, this.bg, this.border);
+  const _Urgency(
+    this.value,
+    this.label,
+    this.description,
+    this.icon,
+    this.color,
+    this.bg,
+    this.border,
+  );
 }
 
 class CreateRequestScreen extends ConsumerStatefulWidget {
@@ -57,6 +167,8 @@ class CreateRequestScreen extends ConsumerStatefulWidget {
   final String? preselectedServiceName;
   final String? preselectedServiceCity;
   final List<String>? preselectedServiceAreas;
+  final int? preselectedVehicleId;
+  final String? preselectedCategory;
 
   const CreateRequestScreen({
     super.key,
@@ -64,10 +176,13 @@ class CreateRequestScreen extends ConsumerStatefulWidget {
     this.preselectedServiceName,
     this.preselectedServiceCity,
     this.preselectedServiceAreas,
+    this.preselectedVehicleId,
+    this.preselectedCategory,
   });
 
   @override
-  ConsumerState<CreateRequestScreen> createState() => _CreateRequestScreenState();
+  ConsumerState<CreateRequestScreen> createState() =>
+      _CreateRequestScreenState();
 }
 
 class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
@@ -87,6 +202,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   List<DamageReport> _damageReports = [];
   String? _preferredDateFrom;
   String? _preferredDateTo;
+
+  // Step 2 maintenance fields
+  String? _maintenanceLastDate;
+  final _maintenanceLastMileageCtrl = TextEditingController();
+  final List<String> _maintenanceSelectedItems = [];
 
   // Step 3
   int? _vehicleId;
@@ -108,12 +228,24 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       _selectedServiceIds = [widget.preselectedServiceId!];
       _selectedCity = widget.preselectedServiceCity;
     }
+    if (widget.preselectedCategory != null) {
+      _category = widget.preselectedCategory;
+      if (_category == 'bakim') {
+        _titleCtrl.text = 'Periyodik Araç Bakımı';
+        _descCtrl.text =
+            'Aracımın periyodik bakımlarının yapılmasını istiyorum.';
+      }
+    }
+    if (widget.preselectedVehicleId != null) {
+      _vehicleId = widget.preselectedVehicleId;
+    }
   }
 
   @override
   void dispose() {
     _titleCtrl.dispose();
     _descCtrl.dispose();
+    _maintenanceLastMileageCtrl.dispose();
     super.dispose();
   }
 
@@ -134,15 +266,21 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         _errors['desc'] = 'Açıklama en az 10 karakter olmalıdır';
         ok = false;
       }
-      if (!ok) { setState(() {}); return false; }
+      if (!ok) {
+        setState(() {});
+        return false;
+      }
     } else if (_step == 3) {
       if (_vehicleId == null) {
         setState(() => _errors['vehicle'] = 'Lütfen bir araç seçin');
         return false;
       }
     } else if (_step == 4) {
-      if (!_hasPreselectedService && (_selectedCity == null || _selectedServiceIds.isEmpty)) {
-        setState(() => _errors['services'] = 'İl ve en az bir servis seçmelisiniz');
+      if (!_hasPreselectedService &&
+          (_selectedCity == null || _selectedServiceIds.isEmpty)) {
+        setState(
+          () => _errors['services'] = 'İl ve en az bir servis seçmelisiniz',
+        );
         return false;
       }
     }
@@ -159,7 +297,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   }
 
   Future<void> _showAddVehicleSheet() async {
-    await showModalBottomSheet(
+    final added = await showModalBottomSheet<Map<String, dynamic>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -169,16 +307,88 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       builder: (_) => const VehicleFormSheet(),
     );
     ref.invalidate(userVehiclesProvider);
+    if (added != null) {
+      final mileage = added['mileage'] as int?;
+      final id = added['id'] as int?;
+      if (id != null) {
+        setState(() {
+          _vehicleId = id;
+          _errors.remove('vehicle');
+        });
+        if (mileage != null && mileage >= 10000) {
+          _showMaintenanceDialogForRequest(id);
+        }
+      }
+    }
+  }
+
+  void _showMaintenanceDialogForRequest(int vehicleId) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text(
+              'Araç Bakım Zamanı Geldi mi? 🚗',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            content: const Text(
+              'Eklediğiniz aracın kilometresi 10.000 km\'yi geçmiş görünüyor.\n\n'
+              'Periyodik bakım talebi oluşturmak ister misiniz? Evet derseniz kategori "Periyodik Bakım" olarak güncellenecek ve ilgili formu doldurabileceksiniz.',
+              style: TextStyle(fontSize: 14, color: AppColors.gray600),
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Hayır, Devam Et',
+                  style: TextStyle(color: AppColors.gray500),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  setState(() {
+                    _category = 'bakim';
+                    _step =
+                        2; // Go to step 2 to let them fill maintenance details
+                    if (_titleCtrl.text.trim().isEmpty) {
+                      _titleCtrl.text = 'Periyodik Araç Bakımı';
+                    }
+                    if (_descCtrl.text.trim().isEmpty) {
+                      _descCtrl.text =
+                          'Aracımın periyodik bakımlarının yapılmasını istiyorum.';
+                    }
+                  });
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                ),
+                child: const Text('Evet, Güncelle'),
+              ),
+            ],
+          ),
+    );
   }
 
   Future<void> _pickAndUploadImage() async {
     final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 80,
+    );
     if (file == null) return;
     setState(() => _uploadingImage = true);
     try {
       final url = await ref.read(bookingRepositoryProvider).uploadImage(file);
-      setState(() { _imageUrl = url; _uploadingImage = false; });
+      setState(() {
+        _imageUrl = url;
+        _uploadingImage = false;
+      });
     } catch (_) {
       setState(() => _uploadingImage = false);
     }
@@ -188,34 +398,77 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     if (!_validate()) return;
     setState(() => _submitting = true);
     try {
+      var desc = _descCtrl.text.trim();
+      if (_category == 'bakim') {
+        final itemsStr =
+            _maintenanceSelectedItems.isNotEmpty
+                ? _maintenanceSelectedItems.join(', ')
+                : 'Belirtilmedi';
+
+        final rawMileage = _maintenanceLastMileageCtrl.text.trim();
+        String formattedMileage = 'Belirtilmedi';
+        if (rawMileage.isNotEmpty) {
+          final parsed = int.tryParse(
+            rawMileage.replaceAll('.', '').replaceAll(' ', ''),
+          );
+          if (parsed != null) {
+            final str = parsed.toString();
+            final buffer = StringBuffer();
+            for (int i = 0; i < str.length; i++) {
+              if (i > 0 && (str.length - i) % 3 == 0) {
+                buffer.write('.');
+              }
+              buffer.write(str[i]);
+            }
+            formattedMileage = '${buffer.toString()} km';
+          } else {
+            formattedMileage = '$rawMileage km';
+          }
+        }
+
+        desc =
+            '[Periyodik Bakım Detayları]\n'
+            '• Son Bakım Tarihi: ${_maintenanceLastDate ?? 'Belirtilmedi'}\n'
+            '• Son Bakım Kilometresi: $formattedMileage\n'
+            '• İstenen İşlemler: $itemsStr\n\n'
+            'Açıklama:\n'
+            '$desc';
+      }
+
       final data = {
         'vehicleId': _vehicleId,
         'problemCategory': _category,
         'title': _titleCtrl.text.trim(),
-        'description': _descCtrl.text.trim(),
+        'description': desc,
         'urgencyLevel': _urgency,
         'targetCity': _selectedCity,
         'targetServiceIds': _selectedServiceIds,
         if (_imageUrl != null) 'imageUrl': _imageUrl,
         if (_preferredDateFrom != null) 'preferredDateFrom': _preferredDateFrom,
         if (_preferredDateTo != null) 'preferredDateTo': _preferredDateTo,
-        if (widget.preselectedServiceId != null) 'targetProviderId': widget.preselectedServiceId,
+        if (widget.preselectedServiceId != null)
+          'targetProviderId': widget.preselectedServiceId,
         if (_damageReports.isNotEmpty)
           'damageReports': _damageReports.map((r) => r.toJson()).toList(),
       };
       await ref.read(submitRequestProvider(data).future);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Talebiniz başarıyla oluşturuldu!'),
-          backgroundColor: AppColors.green700,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Talebiniz başarıyla oluşturuldu!'),
+            backgroundColor: AppColors.green700,
+          ),
+        );
         context.go('/dashboard/requests');
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Hata: $e'),
-        backgroundColor: AppColors.red700,
-      ));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: $e'),
+            backgroundColor: AppColors.red700,
+          ),
+        );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -228,11 +481,18 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Yeni Talep Oluştur',
-            style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.gray900)),
+        title: const Text(
+          'Yeni Talep Oluştur',
+          style: TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: AppColors.gray900,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.gray700),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/dashboard'),
+          onPressed:
+              () => context.canPop() ? context.pop() : context.go('/dashboard'),
         ),
       ),
       body: Column(
@@ -250,16 +510,29 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.blue600.withValues(alpha: 0.3)),
+                        border: Border.all(
+                          color: AppColors.blue600.withValues(alpha: 0.3),
+                        ),
                       ),
-                      child: Row(children: [
-                        const Icon(Icons.info_outline, color: AppColors.blue600, size: 18),
-                        const SizedBox(width: 10),
-                        Expanded(child: Text(
-                          '${widget.preselectedServiceName} servisine doğrudan iletilecektir.',
-                          style: const TextStyle(color: AppColors.blue800, fontSize: 13),
-                        )),
-                      ]),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.info_outline,
+                            color: AppColors.blue600,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              '${widget.preselectedServiceName} servisine doğrudan iletilecektir.',
+                              style: const TextStyle(
+                                color: AppColors.blue800,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   _buildCurrentStep(),
                   const SizedBox(height: 24),
@@ -286,7 +559,10 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             return Expanded(
               child: Container(
                 height: 2,
-                color: _step > stepNum ? AppColors.primary600.withValues(alpha: 0.5) : AppColors.gray100,
+                color:
+                    _step > stepNum
+                        ? AppColors.primary600.withValues(alpha: 0.5)
+                        : AppColors.gray100,
               ),
             );
           }
@@ -301,24 +577,41 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 height: active ? 36 : 32,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: done
-                      ? AppColors.primary600.withValues(alpha: 0.15)
-                      : active
+                  color:
+                      done
+                          ? AppColors.primary600.withValues(alpha: 0.15)
+                          : active
                           ? AppColors.primary600
                           : AppColors.gray100,
-                  boxShadow: active
-                      ? [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
-                      : null,
+                  boxShadow:
+                      active
+                          ? [
+                            BoxShadow(
+                              color: AppColors.primary600.withValues(
+                                alpha: 0.3,
+                              ),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                          : null,
                 ),
                 child: Center(
-                  child: done
-                      ? const Icon(Icons.check, size: 14, color: AppColors.primary600)
-                      : Text('$stepNum',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                            color: active ? Colors.white : AppColors.gray400,
-                          )),
+                  child:
+                      done
+                          ? const Icon(
+                            Icons.check,
+                            size: 14,
+                            color: AppColors.primary600,
+                          )
+                          : Text(
+                            '$stepNum',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: active ? Colors.white : AppColors.gray400,
+                            ),
+                          ),
                 ),
               ),
               const SizedBox(height: 4),
@@ -327,7 +620,10 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: _step >= stepNum ? AppColors.primary600 : AppColors.gray400,
+                  color:
+                      _step >= stepNum
+                          ? AppColors.primary600
+                          : AppColors.gray400,
                 ),
               ),
             ],
@@ -351,15 +647,17 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   Widget _buildStep1() {
     final serviceAreas = widget.preselectedServiceAreas;
     final hasFilter = serviceAreas != null && serviceAreas.isNotEmpty;
-    final availableCategories = hasFilter
-        ? _categories.where((c) => serviceAreas.contains(c.value)).toList()
-        : _categories;
+    final availableCategories =
+        hasFilter
+            ? _categories.where((c) => serviceAreas.contains(c.value)).toList()
+            : _categories;
 
     return _card(
       title: 'Sorun ne ile ilgili?',
-      subtitle: hasFilter
-          ? '${widget.preselectedServiceName} bu alanlarda hizmet vermektedir'
-          : 'Aracınızdaki probleme en uygun kategoriyi seçin',
+      subtitle:
+          hasFilter
+              ? '${widget.preselectedServiceName} bu alanlarda hizmet vermektedir'
+              : 'Aracınızdaki probleme en uygun kategoriyi seçin',
       child: Column(
         children: [
           if (hasFilter) ...[
@@ -369,18 +667,29 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFFEFF6FF),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.blue600.withValues(alpha: 0.25)),
-              ),
-              child: Row(children: [
-                const Icon(Icons.info_outline, size: 15, color: AppColors.blue600),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Yalnızca bu servisin ilgilendiği kategoriler gösteriliyor.',
-                    style: const TextStyle(fontSize: 12, color: AppColors.blue800),
-                  ),
+                border: Border.all(
+                  color: AppColors.blue600.withValues(alpha: 0.25),
                 ),
-              ]),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 15,
+                    color: AppColors.blue600,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Yalnızca bu servisin ilgilendiği kategoriler gösteriliyor.',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.blue800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
           GridView.count(
@@ -390,49 +699,74 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
             childAspectRatio: 1.6,
-            children: availableCategories.map((cat) {
-              final selected = _category == cat.value;
-              return GestureDetector(
-                onTap: () => setState(() { _category = cat.value; _errors.remove('category'); }),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  decoration: BoxDecoration(
-                    color: selected ? cat.bg : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: selected ? cat.color : AppColors.gray200,
-                      width: selected ? 2 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 14),
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(color: cat.bg, borderRadius: BorderRadius.circular(8)),
-                        child: Icon(cat.icon, size: 18, color: cat.color),
-                      ),
-                      const SizedBox(width: 10),
-                      Flexible(child: Text(cat.label,
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: selected ? cat.color : AppColors.gray700,
-                          ))),
-                      if (selected) ...[
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 7, height: 7,
-                          margin: const EdgeInsets.only(right: 10),
-                          decoration: BoxDecoration(color: cat.color, shape: BoxShape.circle),
+            children:
+                availableCategories.map((cat) {
+                  final selected = _category == cat.value;
+                  return GestureDetector(
+                    onTap:
+                        () => setState(() {
+                          _category = cat.value;
+                          _errors.remove('category');
+                          if (_category == 'bakim') {
+                            if (_titleCtrl.text.trim().isEmpty) {
+                              _titleCtrl.text = 'Periyodik Araç Bakımı';
+                            }
+                            if (_descCtrl.text.trim().isEmpty) {
+                              _descCtrl.text =
+                                  'Aracımın periyodik bakımlarının yapılmasını istiyorum.';
+                            }
+                          }
+                        }),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      decoration: BoxDecoration(
+                        color: selected ? cat.bg : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: selected ? cat.color : AppColors.gray200,
+                          width: selected ? 2 : 1,
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 14),
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: cat.bg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(cat.icon, size: 18, color: cat.color),
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              cat.label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: selected ? cat.color : AppColors.gray700,
+                              ),
+                            ),
+                          ),
+                          if (selected) ...[
+                            const SizedBox(width: 4),
+                            Container(
+                              width: 7,
+                              height: 7,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color: cat.color,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
           ),
           if (_errors['category'] != null) ...[
             const SizedBox(height: 10),
@@ -449,63 +783,284 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     return _card(
       title: 'Sorunu Anlatın',
       subtitle: 'Servis ustaları için detaylı açıklama yapın',
-      titleIcon: selCat != null
-          ? Container(
-              width: 36, height: 36,
-              decoration: BoxDecoration(color: selCat.bg, borderRadius: BorderRadius.circular(8)),
-              child: Icon(selCat.icon, size: 18, color: selCat.color),
-            )
-          : null,
+      titleIcon:
+          selCat != null
+              ? Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: selCat.bg,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(selCat.icon, size: 18, color: selCat.color),
+              )
+              : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Urgency
-          const Text('Ne kadar acil?',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray900)),
+          const Text(
+            'Ne kadar acil?',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.gray900,
+            ),
+          ),
           const SizedBox(height: 10),
           Row(
-            children: _urgencyOptions.map((opt) {
-              final selected = _urgency == opt.value;
-              return Expanded(
-                child: GestureDetector(
-                  onTap: () => setState(() => _urgency = opt.value),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 150),
-                    margin: EdgeInsets.only(right: opt == _urgencyOptions.last ? 0 : 8),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: selected ? opt.bg : Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: selected ? opt.border : AppColors.gray200,
-                        width: selected ? 2 : 1,
+            children:
+                _urgencyOptions.map((opt) {
+                  final selected = _urgency == opt.value;
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _urgency = opt.value),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        margin: EdgeInsets.only(
+                          right: opt == _urgencyOptions.last ? 0 : 8,
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          color: selected ? opt.bg : Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selected ? opt.border : AppColors.gray200,
+                            width: selected ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              opt.icon,
+                              size: 20,
+                              color: selected ? opt.color : AppColors.gray400,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              opt.label,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: selected ? opt.color : AppColors.gray700,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              opt.description,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: AppColors.gray500,
+                              ),
+                              maxLines: 2,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Icon(opt.icon, size: 20, color: selected ? opt.color : AppColors.gray400),
-                        const SizedBox(height: 4),
-                        Text(opt.label,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: selected ? opt.color : AppColors.gray700,
-                            )),
-                        const SizedBox(height: 2),
-                        Text(opt.description,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(fontSize: 9, color: AppColors.gray500),
-                            maxLines: 2),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
           const SizedBox(height: 20),
           const Divider(color: AppColors.gray100),
           const SizedBox(height: 16),
+
+          // Periyodik Bakım Detayları
+          if (_category == 'bakim') ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.build_outlined,
+                        color: Color(0xFF059669),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Periyodik Bakım Bilgileri',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF065F46),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Son Bakım Tarihi',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.gray700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            _buildDateField(
+                              label: 'Seçin',
+                              value: _maintenanceLastDate,
+                              onTap:
+                                  () => _pickDate(
+                                    title: 'Son Bakım Tarihi',
+                                    initial: _maintenanceLastDate,
+                                    onSelected:
+                                        (d) => setState(
+                                          () => _maintenanceLastDate = d,
+                                        ),
+                                  ),
+                              onClear:
+                                  _maintenanceLastDate != null
+                                      ? () => setState(
+                                        () => _maintenanceLastDate = null,
+                                      )
+                                      : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Son Bakım KM',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.gray700,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            TextField(
+                              controller: _maintenanceLastMileageCtrl,
+                              style: const TextStyle(
+                                color: AppColors.gray900,
+                                fontSize: 14,
+                              ),
+                              keyboardType: TextInputType.number,
+                              decoration: _inputDeco(
+                                'Örn: 45000',
+                                null,
+                              ).copyWith(
+                                suffixText: 'km',
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 11,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Yapılmasını İstediğiniz Bakım Kalemleri',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gray700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Column(
+                    children:
+                        _maintenanceItems.map((item) {
+                          final isSelected = _maintenanceSelectedItems.contains(
+                            item,
+                          );
+                          return GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                if (isSelected) {
+                                  _maintenanceSelectedItems.remove(item);
+                                } else {
+                                  _maintenanceSelectedItems.add(item);
+                                }
+                              });
+                            },
+                            child: Container(
+                              margin: const EdgeInsets.only(bottom: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color:
+                                      isSelected
+                                          ? const Color(0xFF10B981)
+                                          : AppColors.gray200,
+                                  width: isSelected ? 1.5 : 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: Checkbox(
+                                      value: isSelected,
+                                      activeColor: const Color(0xFF10B981),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          if (isSelected) {
+                                            _maintenanceSelectedItems.remove(
+                                              item,
+                                            );
+                                          } else {
+                                            _maintenanceSelectedItems.add(item);
+                                          }
+                                        });
+                                      },
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      item,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                        color: AppColors.gray700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Divider(color: AppColors.gray100),
+            const SizedBox(height: 16),
+          ],
 
           // Title
           _fieldLabel('Başlık', required: true),
@@ -513,16 +1068,24 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           TextField(
             controller: _titleCtrl,
             style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-            onChanged: (_) { if (_errors['title'] != null) setState(() => _errors.remove('title')); },
-            decoration: _inputDeco('Örn: Motor yağından ses geliyor, fren tutmuyor...', Icons.edit_outlined,
-                error: _errors['title']),
+            onChanged: (_) {
+              if (_errors['title'] != null)
+                setState(() => _errors.remove('title'));
+            },
+            decoration: _inputDeco(
+              'Örn: Motor yağından ses geliyor, fren tutmuyor...',
+              Icons.edit_outlined,
+              error: _errors['title'],
+            ),
           ),
           Align(
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('${_titleCtrl.text.length} / 200',
-                  style: const TextStyle(fontSize: 11, color: AppColors.gray400)),
+              child: Text(
+                '${_titleCtrl.text.length} / 200',
+                style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+              ),
             ),
           ),
           const SizedBox(height: 14),
@@ -535,7 +1098,10 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             minLines: 4,
             maxLines: 6,
             style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-            onChanged: (_) { if (_errors['desc'] != null) setState(() => _errors.remove('desc')); },
+            onChanged: (_) {
+              if (_errors['desc'] != null)
+                setState(() => _errors.remove('desc'));
+            },
             decoration: _inputDeco(
               'Sorun ne zaman başladı? Nasıl fark ettiniz? Detaylı anlatın.',
               null,
@@ -546,8 +1112,10 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             alignment: Alignment.centerRight,
             child: Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text('${_descCtrl.text.length} / min 10',
-                  style: const TextStyle(fontSize: 11, color: AppColors.gray400)),
+              child: Text(
+                '${_descCtrl.text.length} / min 10',
+                style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -570,37 +1138,47 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           const SizedBox(height: 10),
           Row(
             children: [
-              Expanded(child: _buildDateField(
-                label: 'Başlangıç',
-                value: _preferredDateFrom,
-                onTap: () => _pickDate(
-                  title: 'Başlangıç Tarihi',
-                  initial: _preferredDateFrom,
-                  onSelected: (d) => setState(() {
-                    _preferredDateFrom = d;
-                    if (_preferredDateTo != null && _preferredDateTo!.compareTo(d) < 0) {
-                      _preferredDateTo = null;
-                    }
-                  }),
+              Expanded(
+                child: _buildDateField(
+                  label: 'Başlangıç',
+                  value: _preferredDateFrom,
+                  onTap:
+                      () => _pickDate(
+                        title: 'Başlangıç Tarihi',
+                        initial: _preferredDateFrom,
+                        onSelected:
+                            (d) => setState(() {
+                              _preferredDateFrom = d;
+                              if (_preferredDateTo != null &&
+                                  _preferredDateTo!.compareTo(d) < 0) {
+                                _preferredDateTo = null;
+                              }
+                            }),
+                      ),
+                  onClear:
+                      _preferredDateFrom != null
+                          ? () => setState(() => _preferredDateFrom = null)
+                          : null,
                 ),
-                onClear: _preferredDateFrom != null
-                    ? () => setState(() => _preferredDateFrom = null)
-                    : null,
-              )),
+              ),
               const SizedBox(width: 10),
-              Expanded(child: _buildDateField(
-                label: 'Bitiş',
-                value: _preferredDateTo,
-                onTap: () => _pickDate(
-                  title: 'Bitiş Tarihi',
-                  initial: _preferredDateTo,
-                  highlightFrom: _preferredDateFrom,
-                  onSelected: (d) => setState(() => _preferredDateTo = d),
+              Expanded(
+                child: _buildDateField(
+                  label: 'Bitiş',
+                  value: _preferredDateTo,
+                  onTap:
+                      () => _pickDate(
+                        title: 'Bitiş Tarihi',
+                        initial: _preferredDateTo,
+                        highlightFrom: _preferredDateFrom,
+                        onSelected: (d) => setState(() => _preferredDateTo = d),
+                      ),
+                  onClear:
+                      _preferredDateTo != null
+                          ? () => setState(() => _preferredDateTo = null)
+                          : null,
                 ),
-                onClear: _preferredDateTo != null
-                    ? () => setState(() => _preferredDateTo = null)
-                    : null,
-              )),
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -609,10 +1187,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
           // Damage toggle
           GestureDetector(
-            onTap: () => setState(() {
-              _hasDamage = !_hasDamage;
-              if (!_hasDamage) _damageReports = [];
-            }),
+            onTap:
+                () => setState(() {
+                  _hasDamage = !_hasDamage;
+                  if (!_hasDamage) _damageReports = [];
+                }),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               padding: const EdgeInsets.all(14),
@@ -620,52 +1199,92 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                 color: _hasDamage ? const Color(0xFFFFF7ED) : Colors.white,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: _hasDamage ? const Color(0xFFFBBF24) : AppColors.gray200,
+                  color:
+                      _hasDamage ? const Color(0xFFFBBF24) : AppColors.gray200,
                   width: _hasDamage ? 2 : 1,
                 ),
               ),
-              child: Row(children: [
-                Container(
-                  width: 36, height: 36,
-                  decoration: BoxDecoration(
-                    color: _hasDamage ? const Color(0xFFFEF3C7) : AppColors.gray100,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.warning_amber_outlined, size: 18,
-                      color: _hasDamage ? const Color(0xFFD97706) : AppColors.gray400),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Hasarlı Aracım Var',
-                        style: TextStyle(
-                          fontSize: 13, fontWeight: FontWeight.w600,
-                          color: _hasDamage ? const Color(0xFFB45309) : AppColors.gray700,
-                        )),
-                    const Text('AI ile hasar analizi yapın, servislere otomatik rapor gönderin',
-                        style: TextStyle(fontSize: 11, color: AppColors.gray500)),
-                  ]),
-                ),
-                Container(
-                  width: 20, height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _hasDamage ? const Color(0xFFF97316) : Colors.transparent,
-                    border: Border.all(
-                      color: _hasDamage ? const Color(0xFFF97316) : AppColors.gray300,
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color:
+                          _hasDamage
+                              ? const Color(0xFFFEF3C7)
+                              : AppColors.gray100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.warning_amber_outlined,
+                      size: 18,
+                      color:
+                          _hasDamage
+                              ? const Color(0xFFD97706)
+                              : AppColors.gray400,
                     ),
                   ),
-                  child: _hasDamage
-                      ? const Icon(Icons.check, size: 12, color: Colors.white)
-                      : null,
-                ),
-              ]),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hasarlı Aracım Var',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                _hasDamage
+                                    ? const Color(0xFFB45309)
+                                    : AppColors.gray700,
+                          ),
+                        ),
+                        const Text(
+                          'AI ile hasar analizi yapın, servislere otomatik rapor gönderin',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.gray500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color:
+                          _hasDamage
+                              ? const Color(0xFFF97316)
+                              : Colors.transparent,
+                      border: Border.all(
+                        color:
+                            _hasDamage
+                                ? const Color(0xFFF97316)
+                                : AppColors.gray300,
+                      ),
+                    ),
+                    child:
+                        _hasDamage
+                            ? const Icon(
+                              Icons.check,
+                              size: 12,
+                              color: Colors.white,
+                            )
+                            : null,
+                  ),
+                ],
+              ),
             ),
           ),
           if (_hasDamage) ...[
             const SizedBox(height: 12),
             DamageAnalysisWidget(
-              onReportsChanged: (reports) => setState(() => _damageReports = reports),
+              onReportsChanged:
+                  (reports) => setState(() => _damageReports = reports),
             ),
           ],
         ],
@@ -677,20 +1296,31 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     if (_imageUrl != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child: Stack(children: [
-          Image.network(_imageUrl!, height: 160, width: double.infinity, fit: BoxFit.cover),
-          Positioned(
-            top: 8, right: 8,
-            child: GestureDetector(
-              onTap: () => setState(() => _imageUrl = null),
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
-                child: const Icon(Icons.close, size: 16, color: Colors.white),
+        child: Stack(
+          children: [
+            Image.network(
+              _imageUrl!,
+              height: 160,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: GestureDetector(
+                onTap: () => setState(() => _imageUrl = null),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.black54,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close, size: 16, color: Colors.white),
+                ),
               ),
             ),
-          ),
-        ]),
+          ],
+        ),
       );
     }
     return GestureDetector(
@@ -701,16 +1331,38 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         decoration: BoxDecoration(
           color: AppColors.gray50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray200, style: BorderStyle.solid),
+          border: Border.all(
+            color: AppColors.gray200,
+            style: BorderStyle.solid,
+          ),
         ),
-        child: _uploadingImage
-            ? const Center(child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600))
-            : const Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                Icon(Icons.camera_alt_outlined, size: 28, color: AppColors.gray400),
-                SizedBox(height: 6),
-                Text('Arıza fotoğrafı ekleyin', style: TextStyle(fontSize: 13, color: AppColors.gray500)),
-                Text('JPG, PNG veya WebP', style: TextStyle(fontSize: 11, color: AppColors.gray400)),
-              ]),
+        child:
+            _uploadingImage
+                ? const Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary600,
+                  ),
+                )
+                : const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.camera_alt_outlined,
+                      size: 28,
+                      color: AppColors.gray400,
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      'Arıza fotoğrafı ekleyin',
+                      style: TextStyle(fontSize: 13, color: AppColors.gray500),
+                    ),
+                    Text(
+                      'JPG, PNG veya WebP',
+                      style: TextStyle(fontSize: 11, color: AppColors.gray400),
+                    ),
+                  ],
+                ),
       ),
     );
   }
@@ -725,47 +1377,97 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         children: [
           _fieldLabel('Araç', required: true),
           const SizedBox(height: 8),
-          ref.watch(userVehiclesProvider).when(
-            loading: () => const Center(child: Padding(
-              padding: EdgeInsets.all(16),
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600),
-            )),
-            error: (e, _) => Text('Araçlar yüklenemedi: $e',
-                style: const TextStyle(color: AppColors.red700, fontSize: 13)),
-            data: (vehicles) {
-              if (vehicles.isEmpty) {
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppColors.gray50,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.gray200),
-                  ),
-                  child: Row(children: [
-                    const Icon(Icons.directions_car_outlined, color: AppColors.gray400, size: 20),
-                    const SizedBox(width: 10),
-                    const Text('Henüz araç eklenmemiş. ', style: TextStyle(color: AppColors.gray500, fontSize: 13)),
-                    GestureDetector(
-                      onTap: () => _showAddVehicleSheet(),
-                      child: const Text('Araç Ekle', style: TextStyle(color: AppColors.primary600, fontSize: 13, fontWeight: FontWeight.w600)),
+          ref
+              .watch(userVehiclesProvider)
+              .when(
+                loading:
+                    () => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(16),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primary600,
+                        ),
+                      ),
                     ),
-                  ]),
-                );
-              }
-              return DropdownButtonFormField<int>(
-                value: _vehicleId,
-                dropdownColor: Colors.white,
-                style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                hint: const Text('Araç Seçin', style: TextStyle(color: AppColors.gray400, fontSize: 14)),
-                decoration: _inputDeco(null, Icons.directions_car_outlined),
-                items: vehicles.map((v) {
-                  final plate = v.licensePlate != null ? ' - ${v.licensePlate}' : '';
-                  return DropdownMenuItem(value: v.id, child: Text('${v.brand} ${v.model}$plate'));
-                }).toList(),
-                onChanged: (val) => setState(() { _vehicleId = val; _errors.remove('vehicle'); }),
-              );
-            },
-          ),
+                error:
+                    (e, _) => Text(
+                      'Araçlar yüklenemedi: $e',
+                      style: const TextStyle(
+                        color: AppColors.red700,
+                        fontSize: 13,
+                      ),
+                    ),
+                data: (vehicles) {
+                  if (vehicles.isEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.gray50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.gray200),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.directions_car_outlined,
+                            color: AppColors.gray400,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Henüz araç eklenmemiş. ',
+                            style: TextStyle(
+                              color: AppColors.gray500,
+                              fontSize: 13,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: () => _showAddVehicleSheet(),
+                            child: const Text(
+                              'Araç Ekle',
+                              style: TextStyle(
+                                color: AppColors.primary600,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return DropdownButtonFormField<int>(
+                    value: _vehicleId,
+                    dropdownColor: Colors.white,
+                    style: const TextStyle(
+                      color: AppColors.gray900,
+                      fontSize: 14,
+                    ),
+                    hint: const Text(
+                      'Araç Seçin',
+                      style: TextStyle(color: AppColors.gray400, fontSize: 14),
+                    ),
+                    decoration: _inputDeco(null, Icons.directions_car_outlined),
+                    items:
+                        vehicles.map((v) {
+                          final plate =
+                              v.licensePlate != null
+                                  ? ' - ${v.licensePlate}'
+                                  : '';
+                          return DropdownMenuItem(
+                            value: v.id,
+                            child: Text('${v.brand} ${v.model}$plate'),
+                          );
+                        }).toList(),
+                    onChanged:
+                        (val) => setState(() {
+                          _vehicleId = val;
+                          _errors.remove('vehicle');
+                        }),
+                  );
+                },
+              ),
           if (_errors['vehicle'] != null) ...[
             const SizedBox(height: 6),
             _errorText(_errors['vehicle']!),
@@ -773,22 +1475,34 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           const SizedBox(height: 12),
           GestureDetector(
             onTap: () => _showAddVehicleSheet(),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Icon(Icons.info_outline, size: 14, color: AppColors.gray400),
-              const SizedBox(width: 6),
-              Flexible(
-                child: RichText(
-                  text: const TextSpan(
-                    style: TextStyle(fontSize: 12, color: AppColors.gray400),
-                    children: [
-                      TextSpan(text: 'Araç listesinde görünmüyorsa '),
-                      TextSpan(text: 'buradan ekleyebilirsiniz',
-                          style: TextStyle(color: AppColors.primary600, fontWeight: FontWeight.w500)),
-                    ],
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: AppColors.gray400,
+                ),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: RichText(
+                    text: const TextSpan(
+                      style: TextStyle(fontSize: 12, color: AppColors.gray400),
+                      children: [
+                        TextSpan(text: 'Araç listesinde görünmüyorsa '),
+                        TextSpan(
+                          text: 'buradan ekleyebilirsiniz',
+                          style: TextStyle(
+                            color: AppColors.primary600,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           ),
         ],
       ),
@@ -806,32 +1520,66 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
           decoration: BoxDecoration(
             color: AppColors.primary600.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary600.withValues(alpha: 0.3)),
-          ),
-          child: Row(children: [
-            Container(
-              width: 44, height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primary600.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.store_outlined, color: AppColors.primary600, size: 22),
+            border: Border.all(
+              color: AppColors.primary600.withValues(alpha: 0.3),
             ),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(
-                widget.preselectedServiceName ?? 'Seçilen Servis',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.gray900),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppColors.primary600.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.store_outlined,
+                  color: AppColors.primary600,
+                  size: 22,
+                ),
               ),
-              if (widget.preselectedServiceCity != null)
-                Row(children: [
-                  const Icon(Icons.location_on_outlined, size: 13, color: AppColors.gray400),
-                  const SizedBox(width: 3),
-                  Text(widget.preselectedServiceCity!, style: const TextStyle(fontSize: 12, color: AppColors.gray500)),
-                ]),
-            ])),
-            const Icon(Icons.check_circle, color: AppColors.primary600, size: 22),
-          ]),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.preselectedServiceName ?? 'Seçilen Servis',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gray900,
+                      ),
+                    ),
+                    if (widget.preselectedServiceCity != null)
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: AppColors.gray400,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            widget.preselectedServiceCity!,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.gray500,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary600,
+                size: 22,
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -849,11 +1597,12 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             value: _selectedCity,
             hintText: 'İl arayın veya seçin...',
             decoration: _inputDeco(null, Icons.location_on_outlined),
-            onChanged: (val) => setState(() {
-              _selectedCity = val;
-              _selectedServiceIds = [];
-              _errors.remove('services');
-            }),
+            onChanged:
+                (val) => setState(() {
+                  _selectedCity = val;
+                  _selectedServiceIds = [];
+                  _errors.remove('services');
+                }),
             validator: (v) => (v == null || v.isEmpty) ? 'İl seçin' : null,
           ),
           const SizedBox(height: 16),
@@ -872,107 +1621,180 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   }
 
   Widget _buildProviderList() {
-    return ref.watch(providersByCityProvider(_selectedCity!)).when(
-      loading: () => const Center(child: Padding(
-        padding: EdgeInsets.all(24),
-        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600),
-      )),
-      error: (e, _) => Text('Servisler yüklenemedi: $e',
-          style: const TextStyle(color: AppColors.red700, fontSize: 13)),
-      data: (providers) {
-        if (providers.isEmpty) {
-          return Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: AppColors.gray50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.gray200),
-            ),
-            child: Column(children: [
-              const Icon(Icons.store_outlined, size: 32, color: AppColors.gray300),
-              const SizedBox(height: 8),
-              Text('$_selectedCity ilinde henüz kayıtlı doğrulanmış servis sağlayıcı bulunmuyor.',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: AppColors.gray500)),
-              const SizedBox(height: 4),
-              const Text('Başka bir il seçmeyi deneyin.',
-                  style: TextStyle(fontSize: 12, color: AppColors.gray400)),
-            ]),
-          );
-        }
-        return Column(
-          children: providers.map((p) => _buildProviderTile(p)).toList(),
+    return ref
+        .watch(providersByCityProvider(_selectedCity!))
+        .when(
+          loading:
+              () => const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary600,
+                  ),
+                ),
+              ),
+          error:
+              (e, _) => Text(
+                'Servisler yüklenemedi: $e',
+                style: const TextStyle(color: AppColors.red700, fontSize: 13),
+              ),
+          data: (providers) {
+            if (providers.isEmpty) {
+              return Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.gray50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.gray200),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.store_outlined,
+                      size: 32,
+                      color: AppColors.gray300,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$_selectedCity ilinde henüz kayıtlı doğrulanmış servis sağlayıcı bulunmuyor.',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Başka bir il seçmeyi deneyin.',
+                      style: TextStyle(fontSize: 12, color: AppColors.gray400),
+                    ),
+                  ],
+                ),
+              );
+            }
+            return Column(
+              children: providers.map((p) => _buildProviderTile(p)).toList(),
+            );
+          },
         );
-      },
-    );
   }
 
   Widget _buildProviderTile(ProviderModel p) {
     final selected = _selectedServiceIds.contains(p.id);
     return GestureDetector(
-      onTap: () => setState(() {
-        if (selected) {
-          _selectedServiceIds.remove(p.id);
-        } else {
-          _selectedServiceIds.add(p.id);
-        }
-        _errors.remove('services');
-      }),
+      onTap:
+          () => setState(() {
+            if (selected) {
+              _selectedServiceIds.remove(p.id);
+            } else {
+              _selectedServiceIds.add(p.id);
+            }
+            _errors.remove('services');
+          }),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primary600.withValues(alpha: 0.05) : Colors.white,
+          color:
+              selected
+                  ? AppColors.primary600.withValues(alpha: 0.05)
+                  : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? AppColors.primary600 : AppColors.gray200,
             width: selected ? 2 : 1,
           ),
         ),
-        child: Row(children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: AppColors.gray100,
-              borderRadius: BorderRadius.circular(8),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.gray100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child:
+                  p.logoUrl != null
+                      ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          p.logoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (_, __, ___) => const Icon(
+                                Icons.store_outlined,
+                                size: 20,
+                                color: AppColors.gray400,
+                              ),
+                        ),
+                      )
+                      : const Icon(
+                        Icons.store_outlined,
+                        size: 20,
+                        color: AppColors.gray400,
+                      ),
             ),
-            child: p.logoUrl != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(p.logoUrl!, fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.store_outlined, size: 20, color: AppColors.gray400)),
-                  )
-                : const Icon(Icons.store_outlined, size: 20, color: AppColors.gray400),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Flexible(child: Text(p.companyName,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.gray900))),
-                if (p.isVerified) ...[
-                  const SizedBox(width: 4),
-                  const Icon(Icons.verified, size: 14, color: AppColors.primary600),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          p.companyName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                      ),
+                      if (p.isVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.verified,
+                          size: 14,
+                          color: AppColors.primary600,
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (p.district != null || p.averageRating != null)
+                    Text(
+                      [
+                        if (p.district != null) p.district!,
+                        if (p.averageRating != null) '★ ${p.averageRating}',
+                      ].join(' · '),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.gray500,
+                      ),
+                    ),
                 ],
-              ]),
-              if (p.district != null || p.averageRating != null)
-                Text(
-                  [if (p.district != null) p.district!, if (p.averageRating != null) '★ ${p.averageRating}'].join(' · '),
-                  style: const TextStyle(fontSize: 12, color: AppColors.gray500),
-                ),
-            ]),
-          ),
-          Container(
-            width: 22, height: 22,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: selected ? AppColors.primary600 : Colors.transparent,
-              border: Border.all(color: selected ? AppColors.primary600 : AppColors.gray300),
+              ),
             ),
-            child: selected ? const Icon(Icons.check, size: 13, color: Colors.white) : null,
-          ),
-        ]),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: selected ? AppColors.primary600 : Colors.transparent,
+                border: Border.all(
+                  color: selected ? AppColors.primary600 : AppColors.gray300,
+                ),
+              ),
+              child:
+                  selected
+                      ? const Icon(Icons.check, size: 13, color: Colors.white)
+                      : null,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -991,50 +1813,71 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
               side: const BorderSide(color: AppColors.gray300),
               minimumSize: const Size(0, 48),
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
           )
         else
           TextButton.icon(
-            onPressed: () => context.canPop() ? context.pop() : context.go('/dashboard'),
+            onPressed:
+                () =>
+                    context.canPop() ? context.pop() : context.go('/dashboard'),
             icon: const Icon(Icons.close, size: 16),
             label: const Text('Vazgeç'),
             style: TextButton.styleFrom(foregroundColor: AppColors.gray500),
           ),
         const Spacer(),
-        Text('$_step / $_totalSteps', style: const TextStyle(fontSize: 12, color: AppColors.gray400)),
+        Text(
+          '$_step / $_totalSteps',
+          style: const TextStyle(fontSize: 12, color: AppColors.gray400),
+        ),
         const SizedBox(width: 12),
         if (_step < _totalSteps)
           ElevatedButton.icon(
             onPressed: _next,
             icon: const SizedBox.shrink(),
-            label: const Row(children: [
-              Text('İleri'),
-              SizedBox(width: 4),
-              Icon(Icons.arrow_forward, size: 16),
-            ]),
+            label: const Row(
+              children: [
+                Text('İleri'),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward, size: 16),
+              ],
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary600,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 48),
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
           )
         else
           ElevatedButton.icon(
             onPressed: _submitting ? null : _submit,
-            icon: _submitting
-                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Icon(Icons.send_outlined, size: 16),
+            icon:
+                _submitting
+                    ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                    : const Icon(Icons.send_outlined, size: 16),
             label: const Text('Talep Oluştur'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary600,
               foregroundColor: Colors.white,
               minimumSize: const Size(0, 48),
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               elevation: 0,
             ),
           ),
@@ -1043,7 +1886,12 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
-  Widget _card({required String title, required String subtitle, required Widget child, Widget? titleIcon}) {
+  Widget _card({
+    required String title,
+    required String subtitle,
+    required Widget child,
+    Widget? titleIcon,
+  }) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -1055,14 +1903,34 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            if (titleIcon != null) ...[titleIcon, const SizedBox(width: 10)],
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.gray900)),
-              const SizedBox(height: 2),
-              Text(subtitle, style: const TextStyle(fontSize: 12, color: AppColors.gray500)),
-            ])),
-          ]),
+          Row(
+            children: [
+              if (titleIcon != null) ...[titleIcon, const SizedBox(width: 10)],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.gray900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 16),
           const Divider(color: AppColors.gray100),
           const SizedBox(height: 16),
@@ -1085,12 +1953,13 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => DatePickerSheet(
-        title: title,
-        initialDate: initial,
-        highlightFrom: highlightFrom,
-        onSelected: onSelected,
-      ),
+      builder:
+          (_) => DatePickerSheet(
+            title: title,
+            initialDate: initial,
+            highlightFrom: highlightFrom,
+            onSelected: onSelected,
+          ),
     );
   }
 
@@ -1112,58 +1981,98 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
             width: value != null ? 1.5 : 1,
           ),
         ),
-        child: Row(children: [
-          Icon(Icons.calendar_today_outlined, size: 16,
-              color: value != null ? AppColors.primary600 : AppColors.gray400),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value != null ? formatDateTr(value) : label,
-              style: TextStyle(
-                fontSize: 13,
-                color: value != null ? AppColors.gray900 : AppColors.gray400,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+        child: Row(
+          children: [
+            Icon(
+              Icons.calendar_today_outlined,
+              size: 16,
+              color: value != null ? AppColors.primary600 : AppColors.gray400,
             ),
-          ),
-          if (onClear != null)
-            GestureDetector(
-              onTap: onClear,
-              behavior: HitTestBehavior.opaque,
-              child: const Padding(
-                padding: EdgeInsets.only(left: 4),
-                child: Icon(Icons.close, size: 14, color: AppColors.gray400),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                value != null ? formatDateTr(value) : label,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: value != null ? AppColors.gray900 : AppColors.gray400,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-        ]),
+            if (onClear != null)
+              GestureDetector(
+                onTap: onClear,
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 4),
+                  child: Icon(Icons.close, size: 14, color: AppColors.gray400),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _fieldLabel(String text, {bool required = false}) => Row(children: [
-    Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray700)),
-    if (required) const Text(' *', style: TextStyle(color: AppColors.red700, fontSize: 13)),
-  ]);
+  Widget _fieldLabel(String text, {bool required = false}) => Row(
+    children: [
+      Text(
+        text,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w600,
+          color: AppColors.gray700,
+        ),
+      ),
+      if (required)
+        const Text(
+          ' *',
+          style: TextStyle(color: AppColors.red700, fontSize: 13),
+        ),
+    ],
+  );
 
-  Widget _errorText(String msg) => Row(children: [
-    const Icon(Icons.error_outline, size: 14, color: AppColors.red700),
-    const SizedBox(width: 4),
-    Text(msg, style: const TextStyle(fontSize: 12, color: AppColors.red700)),
-  ]);
+  Widget _errorText(String msg) => Row(
+    children: [
+      const Icon(Icons.error_outline, size: 14, color: AppColors.red700),
+      const SizedBox(width: 4),
+      Text(msg, style: const TextStyle(fontSize: 12, color: AppColors.red700)),
+    ],
+  );
 
-  InputDecoration _inputDeco(String? hint, IconData? icon, {String? error}) => InputDecoration(
+  InputDecoration _inputDeco(
+    String? hint,
+    IconData? icon, {
+    String? error,
+  }) => InputDecoration(
     hintText: hint,
     hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 14),
-    prefixIcon: icon != null ? Icon(icon, size: 18, color: AppColors.gray400) : null,
+    prefixIcon:
+        icon != null ? Icon(icon, size: 18, color: AppColors.gray400) : null,
     errorText: error,
     filled: true,
     fillColor: AppColors.gray50,
     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
-    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.gray200)),
-    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary600, width: 1.5)),
-    errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red700)),
-    focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red700)),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: AppColors.gray200),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: AppColors.primary600, width: 1.5),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: AppColors.red700),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(color: AppColors.red700),
+    ),
   );
 }

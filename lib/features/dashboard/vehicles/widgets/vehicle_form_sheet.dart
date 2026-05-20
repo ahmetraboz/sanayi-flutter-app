@@ -50,11 +50,19 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     super.initState();
     _brandController = TextEditingController(text: widget.vehicle?.brand ?? '');
     _modelController = TextEditingController(text: widget.vehicle?.model ?? '');
-    _yearController = TextEditingController(text: widget.vehicle?.year?.toString() ?? '');
-    _plateController = TextEditingController(text: widget.vehicle?.licensePlate ?? '');
-    _engineController = TextEditingController(text: widget.vehicle?.engineDisplacement ?? '');
+    _yearController = TextEditingController(
+      text: widget.vehicle?.year?.toString() ?? '',
+    );
+    _plateController = TextEditingController(
+      text: widget.vehicle?.licensePlate ?? '',
+    );
+    _engineController = TextEditingController(
+      text: widget.vehicle?.engineDisplacement ?? '',
+    );
     _colorController = TextEditingController(text: widget.vehicle?.color ?? '');
-    _mileageController = TextEditingController();
+    _mileageController = TextEditingController(
+      text: widget.vehicle?.mileage?.toString() ?? '',
+    );
     _fuelType = widget.vehicle?.fuelType;
     _transmissionType = widget.vehicle?.transmissionType;
     _driveType = widget.vehicle?.driveType;
@@ -91,21 +99,37 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
     final brand = _brandController.text.trim();
     final model = _selectedModel ?? _modelController.text.trim();
     if (brand.isEmpty || model.isEmpty) {
-      setState(() { _carImages = []; _imageIndex = 0; });
+      setState(() {
+        _carImages = [];
+        _imageIndex = 0;
+      });
       return;
     }
     final year = _yearController.text.trim();
     _lastFetchedYear = year;
-    setState(() { _imageLoading = true; _imageIndex = 0; });
+    setState(() {
+      _imageLoading = true;
+      _imageIndex = 0;
+    });
     try {
       final params = <String, String>{'make': brand, 'model': model};
       if (year.isNotEmpty) params['year'] = year;
-final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParameters: params);
+      final res = await ref
+          .read(apiClientProvider)
+          .get('/api/cars/image', queryParameters: params);
       final data = res.data as Map<String, dynamic>;
       final images = (data['images'] as List?)?.cast<String>() ?? [];
-      if (mounted) setState(() { _carImages = images; _imageLoading = false; });
+      if (mounted)
+        setState(() {
+          _carImages = images;
+          _imageLoading = false;
+        });
     } catch (_) {
-      if (mounted) setState(() { _carImages = []; _imageLoading = false; });
+      if (mounted)
+        setState(() {
+          _carImages = [];
+          _imageLoading = false;
+        });
     }
   }
 
@@ -115,12 +139,15 @@ final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParame
       setState(() => _vinError = 'VIN 17 karakter olmalıdır');
       return;
     }
-    setState(() { _vinLoading = true; _vinError = null; _vinSuccess = null; });
+    setState(() {
+      _vinLoading = true;
+      _vinError = null;
+      _vinSuccess = null;
+    });
     try {
-      final res = await ref.read(apiClientProvider).get(
-        '/api/vehicles/vin-decode',
-        queryParameters: {'vin': vin},
-      );
+      final res = await ref
+          .read(apiClientProvider)
+          .get('/api/vehicles/vin-decode', queryParameters: {'vin': vin});
       final data = res.data as Map<String, dynamic>;
       final make = (data['make'] as String?) ?? '';
       final model = (data['model'] as String?) ?? '';
@@ -135,43 +162,58 @@ final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParame
       });
       _fetchCarImage();
     } catch (e) {
-      setState(() { _vinLoading = false; _vinError = 'VIN tanımlanamadı, lütfen tekrar deneyin.'; });
+      setState(() {
+        _vinLoading = false;
+        _vinError = 'VIN tanımlanamadı, lütfen tekrar deneyin.';
+      });
     }
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     final data = {
       'brand': _brandController.text.trim(),
       'model': _modelController.text.trim(),
-      if (_yearController.text.trim().isNotEmpty) 'year': int.tryParse(_yearController.text.trim()),
-      if (_plateController.text.trim().isNotEmpty) 'licensePlate': _plateController.text.trim().toUpperCase(),
+      if (_yearController.text.trim().isNotEmpty)
+        'year': int.tryParse(_yearController.text.trim()),
+      if (_plateController.text.trim().isNotEmpty)
+        'licensePlate': _plateController.text.trim().toUpperCase(),
       if (_fuelType != null) 'fuelType': _fuelType,
       if (_transmissionType != null) 'transmissionType': _transmissionType,
       if (_driveType != null) 'driveType': _driveType,
       if (_bodyType != null) 'bodyType': _bodyType,
-      if (_engineController.text.trim().isNotEmpty) 'engineDisplacement': _engineController.text.trim(),
-      if (_colorController.text.trim().isNotEmpty) 'color': _colorController.text.trim(),
-      if (_mileageController.text.trim().isNotEmpty) 'mileage': int.tryParse(_mileageController.text.trim()),
+      if (_engineController.text.trim().isNotEmpty)
+        'engineDisplacement': _engineController.text.trim(),
+      if (_colorController.text.trim().isNotEmpty)
+        'color': _colorController.text.trim(),
+      if (_mileageController.text.trim().isNotEmpty)
+        'mileage': int.tryParse(_mileageController.text.trim()),
     };
 
     try {
       final api = ref.read(apiClientProvider);
       debugPrint('Vehicle submit data: $data');
+      Map<String, dynamic>? addedVehicle;
       if (widget.vehicle != null) {
         await api.put('/api/vehicles/${widget.vehicle!.id}', data: data);
       } else {
-        await api.post('/api/vehicles', data: data);
+        final res = await api.post('/api/vehicles', data: data);
+        final resData = res.data;
+        if (resData is Map<String, dynamic> && resData.containsKey('vehicle')) {
+          addedVehicle = resData['vehicle'] as Map<String, dynamic>?;
+        }
       }
-      
+
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, addedVehicle);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.vehicle != null ? 'Araç güncellendi' : 'Araç eklendi'),
+            content: Text(
+              widget.vehicle != null ? 'Araç güncellendi' : 'Araç eklendi',
+            ),
             backgroundColor: AppColors.green700,
           ),
         );
@@ -182,9 +224,12 @@ final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParame
         if (e is DioException) {
           final d = e.response?.data;
           if (d is Map) {
-            msg = d['statusMessage'] as String? ?? d['message'] as String? ?? msg;
+            msg =
+                d['statusMessage'] as String? ?? d['message'] as String? ?? msg;
           }
-          debugPrint('Vehicle API error: ${e.response?.statusCode} ${e.response?.data}');
+          debugPrint(
+            'Vehicle API error: ${e.response?.statusCode} ${e.response?.data}',
+          );
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(msg), backgroundColor: AppColors.red700),
@@ -210,205 +255,281 @@ final res = await ref.read(apiClientProvider).get('/api/cars/image', queryParame
         key: _formKey,
         child: SingleChildScrollView(
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  widget.vehicle != null ? 'Aracı Düzenle' : 'Yeni Araç Ekle',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.gray900),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.gray500),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            if (widget.vehicle == null) ...[
-              const SizedBox(height: 8),
-              _VinToggleRow(
-                showVin: _showVin,
-                onToggle: (v) => setState(() { _showVin = v; _vinError = null; _vinSuccess = null; }),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    widget.vehicle != null ? 'Aracı Düzenle' : 'Yeni Araç Ekle',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.gray900,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppColors.gray500),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
               ),
-              if (_showVin) ...[
-                const SizedBox(height: 12),
-                _VinInputRow(
-                  controller: _vinController,
-                  loading: _vinLoading,
-                  onLookup: _lookupVin,
+              if (widget.vehicle == null) ...[
+                const SizedBox(height: 8),
+                _VinToggleRow(
+                  showVin: _showVin,
+                  onToggle:
+                      (v) => setState(() {
+                        _showVin = v;
+                        _vinError = null;
+                        _vinSuccess = null;
+                      }),
                 ),
-                if (_vinSuccess != null)
-                  _AlertBanner(message: _vinSuccess!, isError: false),
-                if (_vinError != null)
-                  _AlertBanner(message: _vinError!, isError: true),
+                if (_showVin) ...[
+                  const SizedBox(height: 12),
+                  _VinInputRow(
+                    controller: _vinController,
+                    loading: _vinLoading,
+                    onLookup: _lookupVin,
+                  ),
+                  if (_vinSuccess != null)
+                    _AlertBanner(message: _vinSuccess!, isError: false),
+                  if (_vinError != null)
+                    _AlertBanner(message: _vinError!, isError: true),
+                ],
               ],
-            ],
-            const SizedBox(height: 16),
-            _VehicleBrandField(
-              controller: _brandController,
-              initialValue: widget.vehicle?.brand ?? '',
-              onSelected: (make) {
-                _brandController.text = make.name;
-                setState(() {
-                  _selectedMakeId = make.id;
-                  _selectedModel = null;
-                  _modelController.clear();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            if (_selectedMakeId != null)
-              _VehicleModelField(
-                makeId: _selectedMakeId!,
-                value: _selectedModel,
-                onChanged: (v) {
-                  setState(() => _selectedModel = v);
-                  _modelController.text = v ?? '';
-                  if (v != null) _fetchCarImage();
-                },
-              )
-            else
-              TextFormField(
-                controller: _modelController,
-                style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                decoration: _inputDecoration('Model (Örn: Megane)'),
-                validator: (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
-                textInputAction: TextInputAction.next,
-              ),
-            if (_imageLoading || _carImages.isNotEmpty) ...[
               const SizedBox(height: 16),
-              _CarImagePreview(
-                images: _carImages,
-                loading: _imageLoading,
-                currentIndex: _imageIndex,
-                onPageChanged: (i) => setState(() => _imageIndex = i),
+              _VehicleBrandField(
+                controller: _brandController,
+                initialValue: widget.vehicle?.brand ?? '',
+                onSelected: (make) {
+                  _brandController.text = make.name;
+                  setState(() {
+                    _selectedMakeId = make.id;
+                    _selectedModel = null;
+                    _modelController.clear();
+                  });
+                },
               ),
+              const SizedBox(height: 16),
+              if (_selectedMakeId != null)
+                _VehicleModelField(
+                  makeId: _selectedMakeId!,
+                  value: _selectedModel,
+                  onChanged: (v) {
+                    setState(() => _selectedModel = v);
+                    _modelController.text = v ?? '';
+                    if (v != null) _fetchCarImage();
+                  },
+                )
+              else
+                TextFormField(
+                  controller: _modelController,
+                  style: const TextStyle(
+                    color: AppColors.gray900,
+                    fontSize: 14,
+                  ),
+                  decoration: _inputDecoration('Model (Örn: Megane)'),
+                  validator:
+                      (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
+                  textInputAction: TextInputAction.next,
+                ),
+              if (_imageLoading || _carImages.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                _CarImagePreview(
+                  images: _carImages,
+                  loading: _imageLoading,
+                  currentIndex: _imageIndex,
+                  onPageChanged: (i) => setState(() => _imageIndex = i),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _yearController,
+                      style: const TextStyle(
+                        color: AppColors.gray900,
+                        fontSize: 14,
+                      ),
+                      decoration: _inputDecoration('Yıl (Opsiyonel)'),
+                      keyboardType: TextInputType.number,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _plateController,
+                      style: const TextStyle(
+                        color: AppColors.gray900,
+                        fontSize: 14,
+                      ),
+                      decoration: _inputDecoration('Plaka (Opsiyonel)'),
+                      textCapitalization: TextCapitalization.characters,
+                      textInputAction: TextInputAction.done,
+                      onFieldSubmitted: (_) => _submit(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              const _SectionLabel('Teknik Detaylar (Opsiyonel)'),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DropdownField(
+                      hint: 'Yakıt Tipi',
+                      value: _fuelType,
+                      items: const [
+                        'benzin',
+                        'dizel',
+                        'lpg',
+                        'hibrit',
+                        'elektrik',
+                      ],
+                      labels: const [
+                        'Benzin',
+                        'Dizel',
+                        'LPG',
+                        'Hibrit',
+                        'Elektrik',
+                      ],
+                      onChanged: (v) => setState(() => _fuelType = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DropdownField(
+                      hint: 'Şanzıman',
+                      value: _transmissionType,
+                      items: const ['manuel', 'otomatik', 'yariOtomatik'],
+                      labels: const ['Manuel', 'Otomatik', 'Yarı Otomatik'],
+                      onChanged: (v) => setState(() => _transmissionType = v),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _engineController,
+                      style: const TextStyle(
+                        color: AppColors.gray900,
+                        fontSize: 14,
+                      ),
+                      decoration: _inputDecoration('Motor Hacmi (Örn: 1.6)'),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _DropdownField(
+                      hint: 'Çekiş',
+                      value: _driveType,
+                      items: const ['fwd', 'rwd', 'awd', '4wd'],
+                      labels: const [
+                        'Önden Çekiş',
+                        'Arkadan İtiş',
+                        'AWD',
+                        '4x4',
+                      ],
+                      onChanged: (v) => setState(() => _driveType = v),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: _DropdownField(
+                      hint: 'Kasa Tipi',
+                      value: _bodyType,
+                      items: const [
+                        'sedan',
+                        'hatchback',
+                        'suv',
+                        'coupe',
+                        'station',
+                        'pickup',
+                        'minivan',
+                      ],
+                      labels: const [
+                        'Sedan',
+                        'Hatchback',
+                        'SUV',
+                        'Coupe',
+                        'Station Wagon',
+                        'Pickup',
+                        'Minivan',
+                      ],
+                      onChanged: (v) => setState(() => _bodyType = v),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _colorController,
+                      style: const TextStyle(
+                        color: AppColors.gray900,
+                        fontSize: 14,
+                      ),
+                      decoration: _inputDecoration('Renk'),
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _mileageController,
+                style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+                decoration: _inputDecoration(
+                  'Kilometre',
+                ).copyWith(suffixText: 'km'),
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) => _submit(),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _isSubmitting ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary600,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child:
+                    _isSubmitting
+                        ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                        : Text(
+                          widget.vehicle != null ? 'Güncelle' : 'Kaydet',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+              ),
+              const SizedBox(height: 32),
             ],
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _yearController,
-                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                    decoration: _inputDecoration('Yıl (Opsiyonel)'),
-                    keyboardType: TextInputType.number,
-                    textInputAction: TextInputAction.next,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _plateController,
-                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                    decoration: _inputDecoration('Plaka (Opsiyonel)'),
-                    textCapitalization: TextCapitalization.characters,
-                    textInputAction: TextInputAction.done,
-                    onFieldSubmitted: (_) => _submit(),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            const _SectionLabel('Teknik Detaylar (Opsiyonel)'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _DropdownField(
-                    hint: 'Yakıt Tipi',
-                    value: _fuelType,
-                    items: const ['benzin', 'dizel', 'lpg', 'hibrit', 'elektrik'],
-                    labels: const ['Benzin', 'Dizel', 'LPG', 'Hibrit', 'Elektrik'],
-                    onChanged: (v) => setState(() => _fuelType = v),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _DropdownField(
-                    hint: 'Şanzıman',
-                    value: _transmissionType,
-                    items: const ['manuel', 'otomatik', 'yariOtomatik'],
-                    labels: const ['Manuel', 'Otomatik', 'Yarı Otomatik'],
-                    onChanged: (v) => setState(() => _transmissionType = v),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _engineController,
-                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                    decoration: _inputDecoration('Motor Hacmi (Örn: 1.6)'),
-                    textInputAction: TextInputAction.next,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _DropdownField(
-                    hint: 'Çekiş',
-                    value: _driveType,
-                    items: const ['fwd', 'rwd', 'awd', '4wd'],
-                    labels: const ['Önden Çekiş', 'Arkadan İtiş', 'AWD', '4x4'],
-                    onChanged: (v) => setState(() => _driveType = v),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _DropdownField(
-                    hint: 'Kasa Tipi',
-                    value: _bodyType,
-                    items: const ['sedan', 'hatchback', 'suv', 'coupe', 'station', 'pickup', 'minivan'],
-                    labels: const ['Sedan', 'Hatchback', 'SUV', 'Coupe', 'Station Wagon', 'Pickup', 'Minivan'],
-                    onChanged: (v) => setState(() => _bodyType = v),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _colorController,
-                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                    decoration: _inputDecoration('Renk'),
-                    textInputAction: TextInputAction.next,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _mileageController,
-              style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-              decoration: _inputDecoration('Kilometre').copyWith(suffixText: 'km'),
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _submit(),
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _isSubmitting ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary600,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 0,
-              ),
-              child: _isSubmitting
-                  ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : Text(widget.vehicle != null ? 'Güncelle' : 'Kaydet', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
+          ),
         ),
       ),
     );
@@ -447,41 +568,53 @@ class _VehicleBrandFieldState extends ConsumerState<_VehicleBrandField> {
         return service.filterMakes(value.text);
       },
       displayStringForOption: (make) => make.name,
-      fieldViewBuilder: (context, ctrl, focusNode, onSubmit) => TextFormField(
-        controller: ctrl,
-        focusNode: focusNode,
-        onEditingComplete: onSubmit,
-        textInputAction: TextInputAction.next,
-        style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-        decoration: _sheetInputDecoration('Marka (Örn: Renault)'),
-        validator: (v) => v == null || v.isEmpty ? 'Marka zorunludur' : null,
-      ),
-      optionsViewBuilder: (context, onSelected, options) => Align(
-        alignment: Alignment.topLeft,
-        child: Material(
-          elevation: 4,
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxHeight: 180),
-            child: ListView.builder(
-              shrinkWrap: true,
-              padding: EdgeInsets.zero,
-              itemCount: options.length,
-              itemBuilder: (context, i) {
-                final make = options.elementAt(i);
-                return InkWell(
-                  onTap: () => onSelected(make),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    child: Text(make.name, style: const TextStyle(fontSize: 14, color: AppColors.gray900)),
-                  ),
-                );
-              },
+      fieldViewBuilder:
+          (context, ctrl, focusNode, onSubmit) => TextFormField(
+            controller: ctrl,
+            focusNode: focusNode,
+            onEditingComplete: onSubmit,
+            textInputAction: TextInputAction.next,
+            style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+            decoration: _sheetInputDecoration('Marka (Örn: Renault)'),
+            validator:
+                (v) => v == null || v.isEmpty ? 'Marka zorunludur' : null,
+          ),
+      optionsViewBuilder:
+          (context, onSelected, options) => Align(
+            alignment: Alignment.topLeft,
+            child: Material(
+              elevation: 4,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 180),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.zero,
+                  itemCount: options.length,
+                  itemBuilder: (context, i) {
+                    final make = options.elementAt(i);
+                    return InkWell(
+                      onTap: () => onSelected(make),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        child: Text(
+                          make.name,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: AppColors.gray900,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ),
-        ),
-      ),
       onSelected: widget.onSelected,
     );
   }
@@ -494,7 +627,11 @@ class _VehicleModelField extends ConsumerStatefulWidget {
   final String? value;
   final ValueChanged<String?> onChanged;
 
-  const _VehicleModelField({required this.makeId, required this.onChanged, this.value});
+  const _VehicleModelField({
+    required this.makeId,
+    required this.onChanged,
+    this.value,
+  });
 
   @override
   ConsumerState<_VehicleModelField> createState() => _VehicleModelFieldState();
@@ -508,71 +645,103 @@ class _VehicleModelFieldState extends ConsumerState<_VehicleModelField> {
     final modelsAsync = ref.watch(carModelsProvider(widget.makeId));
 
     return modelsAsync.when(
-      loading: () => Container(
-        height: 56,
-        decoration: BoxDecoration(
-          color: AppColors.gray50,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.gray200),
-        ),
-        child: const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600))),
-      ),
-      error: (err, stack) => TextFormField(
-        decoration: _sheetInputDecoration('Model (Örn: Megane)'),
-        onChanged: (v) => widget.onChanged(v),
-        validator: (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
-      ),
-      data: (models) => Autocomplete<String>(
-        initialValue: TextEditingValue(text: widget.value ?? ''),
-        optionsBuilder: (textValue) {
-          if (textValue.text.isEmpty) return models.map((m) => m.name);
-          return models.map((m) => m.name).where(
-            (name) => name.toLowerCase().contains(textValue.text.toLowerCase()),
-          );
-        },
-        fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-          _autocompleteFocusNode = focusNode;
-          return TextFormField(
-            controller: ctrl,
-            focusNode: focusNode,
-            onEditingComplete: onSubmit,
-            style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-            decoration: _sheetInputDecoration('Model seçin veya yazın'),
-            validator: (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
-          );
-        },
-        optionsViewBuilder: (context, onSelected, options) => Align(
-          alignment: Alignment.topLeft,
-          child: Material(
-            elevation: 4,
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 200),
-              child: ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: options.length,
-                separatorBuilder: (_, __) => const Divider(height: 1, color: AppColors.gray100),
-                itemBuilder: (context, i) {
-                  final name = options.elementAt(i);
-                  return InkWell(
-                    onTap: () => onSelected(name),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                      child: Text(name, style: const TextStyle(fontSize: 14, color: AppColors.gray900)),
-                    ),
-                  );
-                },
+      loading:
+          () => Container(
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.gray50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.gray200),
+            ),
+            child: const Center(
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary600,
+                ),
               ),
             ),
           ),
-        ),
-        onSelected: (name) {
-          widget.onChanged(name);
-          _autocompleteFocusNode?.unfocus();
-        },
-      ),
+      error:
+          (err, stack) => TextFormField(
+            decoration: _sheetInputDecoration('Model (Örn: Megane)'),
+            onChanged: (v) => widget.onChanged(v),
+            validator:
+                (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
+          ),
+      data:
+          (models) => Autocomplete<String>(
+            initialValue: TextEditingValue(text: widget.value ?? ''),
+            optionsBuilder: (textValue) {
+              if (textValue.text.isEmpty) return models.map((m) => m.name);
+              return models
+                  .map((m) => m.name)
+                  .where(
+                    (name) => name.toLowerCase().contains(
+                      textValue.text.toLowerCase(),
+                    ),
+                  );
+            },
+            fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
+              _autocompleteFocusNode = focusNode;
+              return TextFormField(
+                controller: ctrl,
+                focusNode: focusNode,
+                onEditingComplete: onSubmit,
+                style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+                decoration: _sheetInputDecoration('Model seçin veya yazın'),
+                validator:
+                    (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
+              );
+            },
+            optionsViewBuilder:
+                (context, onSelected, options) => Align(
+                  alignment: Alignment.topLeft,
+                  child: Material(
+                    elevation: 4,
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 200),
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        padding: EdgeInsets.zero,
+                        itemCount: options.length,
+                        separatorBuilder:
+                            (_, __) => const Divider(
+                              height: 1,
+                              color: AppColors.gray100,
+                            ),
+                        itemBuilder: (context, i) {
+                          final name = options.elementAt(i);
+                          return InkWell(
+                            onTap: () => onSelected(name),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 11,
+                              ),
+                              child: Text(
+                                name,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.gray900,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+            onSelected: (name) {
+              widget.onChanged(name);
+              _autocompleteFocusNode?.unfocus();
+            },
+          ),
     );
   }
 }
@@ -582,11 +751,26 @@ InputDecoration _sheetInputDecoration(String hint) => InputDecoration(
   hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 14),
   filled: true,
   fillColor: AppColors.gray50,
-  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.gray200)),
-  focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary600)),
-  errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.red700)),
-  focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.red700)),
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: BorderSide.none,
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: AppColors.gray200),
+  ),
+  focusedBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: AppColors.primary600),
+  ),
+  errorBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: AppColors.red700),
+  ),
+  focusedErrorBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(12),
+    borderSide: const BorderSide(color: AppColors.red700),
+  ),
 );
 
 // ─── Vin Section ──────────────────────────────────────────────────────────────
@@ -612,8 +796,18 @@ class _VinToggleRow extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('VIN ile otomatik doldur', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.gray900)),
-              const Text('17 haneli şasi numarasıyla sorgula', style: TextStyle(fontSize: 12, color: AppColors.gray500)),
+              const Text(
+                'VIN ile otomatik doldur',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.gray900,
+                ),
+              ),
+              const Text(
+                '17 haneli şasi numarasıyla sorgula',
+                style: TextStyle(fontSize: 12, color: AppColors.gray500),
+              ),
             ],
           ),
           Switch(
@@ -633,7 +827,11 @@ class _VinInputRow extends StatelessWidget {
   final bool loading;
   final VoidCallback onLookup;
 
-  const _VinInputRow({required this.controller, required this.loading, required this.onLookup});
+  const _VinInputRow({
+    required this.controller,
+    required this.loading,
+    required this.onLookup,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -648,16 +846,36 @@ class _VinInputRow extends StatelessWidget {
               LengthLimitingTextInputFormatter(17),
               _UpperCaseFormatter(),
             ],
-            style: const TextStyle(fontFamily: 'monospace', letterSpacing: 1.5, fontSize: 13, color: AppColors.gray900),
+            style: const TextStyle(
+              fontFamily: 'monospace',
+              letterSpacing: 1.5,
+              fontSize: 13,
+              color: AppColors.gray900,
+            ),
             decoration: InputDecoration(
               hintText: 'JTDBT923X71234567',
-              hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 13),
+              hintStyle: const TextStyle(
+                color: AppColors.gray400,
+                fontSize: 13,
+              ),
               filled: true,
               fillColor: AppColors.gray50,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.gray200)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: AppColors.primary600)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.gray200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: AppColors.primary600),
+              ),
             ),
           ),
         ),
@@ -671,11 +889,27 @@ class _VinInputRow extends StatelessWidget {
               backgroundColor: AppColors.primary600,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
-            child: loading
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Sorgula', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            child:
+                loading
+                    ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                    : const Text(
+                      'Sorgula',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
           ),
         ),
       ],
@@ -697,7 +931,9 @@ class _AlertBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: isError ? AppColors.red50 : AppColors.success50,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isError ? AppColors.red100 : AppColors.emerald200),
+        border: Border.all(
+          color: isError ? AppColors.red100 : AppColors.emerald200,
+        ),
       ),
       child: Row(
         children: [
@@ -710,7 +946,10 @@ class _AlertBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: TextStyle(fontSize: 12, color: isError ? AppColors.red700 : AppColors.primary700),
+              style: TextStyle(
+                fontSize: 12,
+                color: isError ? AppColors.red700 : AppColors.primary700,
+              ),
             ),
           ),
         ],
@@ -721,7 +960,10 @@ class _AlertBanner extends StatelessWidget {
 
 class _UpperCaseFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue next) {
+  TextEditingValue formatEditUpdate(
+    TextEditingValue old,
+    TextEditingValue next,
+  ) {
     return next.copyWith(text: next.text.toUpperCase());
   }
 }
@@ -748,9 +990,10 @@ class _CarImagePreview extends StatelessWidget {
       child: Container(
         height: 200,
         color: AppColors.gray100,
-        child: loading
-            ? _buildSkeleton()
-            : images.isEmpty
+        child:
+            loading
+                ? _buildSkeleton()
+                : images.isEmpty
                 ? _buildPlaceholder()
                 : _buildCarousel(),
       ),
@@ -766,9 +1009,16 @@ class _CarImagePreview extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.directions_car_outlined, size: 48, color: AppColors.gray300),
+          Icon(
+            Icons.directions_car_outlined,
+            size: 48,
+            color: AppColors.gray300,
+          ),
           SizedBox(height: 8),
-          Text('Görsel bulunamadı', style: TextStyle(fontSize: 12, color: AppColors.gray400)),
+          Text(
+            'Görsel bulunamadı',
+            style: TextStyle(fontSize: 12, color: AppColors.gray400),
+          ),
         ],
       ),
     );
@@ -782,16 +1032,23 @@ class _CarImagePreview extends StatelessWidget {
           controller: controller,
           itemCount: images.length,
           onPageChanged: onPageChanged,
-          itemBuilder: (context, i) => Image.network(
-            images[i],
-            fit: BoxFit.cover,
-            width: double.infinity,
-            loadingBuilder: (_, child, progress) =>
-                progress == null ? child : const _ShimmerBox(),
-            errorBuilder: (_, __, ___) => const Center(
-              child: Icon(Icons.broken_image_outlined, size: 40, color: AppColors.gray300),
-            ),
-          ),
+          itemBuilder:
+              (context, i) => Image.network(
+                images[i],
+                fit: BoxFit.cover,
+                width: double.infinity,
+                loadingBuilder:
+                    (_, child, progress) =>
+                        progress == null ? child : const _ShimmerBox(),
+                errorBuilder:
+                    (_, __, ___) => const Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 40,
+                        color: AppColors.gray300,
+                      ),
+                    ),
+              ),
         ),
         if (images.length > 1)
           Positioned(
@@ -827,7 +1084,11 @@ class _CarImagePreview extends StatelessWidget {
               ),
               child: Text(
                 '${currentIndex + 1}/${images.length}',
-                style: const TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -843,15 +1104,22 @@ class _ShimmerBox extends StatefulWidget {
   State<_ShimmerBox> createState() => _ShimmerBoxState();
 }
 
-class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderStateMixin {
+class _ShimmerBoxState extends State<_ShimmerBox>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late final Animation<double> _anim;
 
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 1200))..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.4, end: 0.9).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _anim = Tween<double>(
+      begin: 0.4,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override
@@ -864,7 +1132,9 @@ class _ShimmerBoxState extends State<_ShimmerBox> with SingleTickerProviderState
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _anim,
-      builder: (_, __) => Container(color: Color.fromRGBO(209, 213, 219, _anim.value)),
+      builder:
+          (_, __) =>
+              Container(color: Color.fromRGBO(209, 213, 219, _anim.value)),
     );
   }
 }
@@ -918,55 +1188,100 @@ class _DropdownField extends StatelessWidget {
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (sheetCtx) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(99)),
+      builder:
+          (sheetCtx) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(hint, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.gray900)),
-                  if (value != null)
-                    GestureDetector(
-                      onTap: () { onChanged(null); Navigator.pop(sheetCtx); },
-                      child: const Text('Temizle', style: TextStyle(fontSize: 13, color: AppColors.gray500)),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(height: 1, color: AppColors.gray100),
-            ...List.generate(items.length, (i) => InkWell(
-              onTap: () { onChanged(items[i]); Navigator.pop(sheetCtx); },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(labels[i], style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: value == items[i] ? FontWeight.w600 : FontWeight.w400,
-                      color: value == items[i] ? AppColors.primary600 : AppColors.gray700,
-                    ))),
-                    if (value == items[i])
-                      const Icon(Icons.check_rounded, size: 18, color: AppColors.primary600),
-                  ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.gray200,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
                 ),
-              ),
-            )),
-            SizedBox(height: bottomPad + 16),
-          ],
-        ),
-      ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        hint,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.gray900,
+                        ),
+                      ),
+                      if (value != null)
+                        GestureDetector(
+                          onTap: () {
+                            onChanged(null);
+                            Navigator.pop(sheetCtx);
+                          },
+                          child: const Text(
+                            'Temizle',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.gray500,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(height: 1, color: AppColors.gray100),
+                ...List.generate(
+                  items.length,
+                  (i) => InkWell(
+                    onTap: () {
+                      onChanged(items[i]);
+                      Navigator.pop(sheetCtx);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              labels[i],
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight:
+                                    value == items[i]
+                                        ? FontWeight.w600
+                                        : FontWeight.w400,
+                                color:
+                                    value == items[i]
+                                        ? AppColors.primary600
+                                        : AppColors.gray700,
+                              ),
+                            ),
+                          ),
+                          if (value == items[i])
+                            const Icon(
+                              Icons.check_rounded,
+                              size: 18,
+                              color: AppColors.primary600,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: bottomPad + 16),
+              ],
+            ),
+          ),
     );
   }
 
@@ -980,7 +1295,9 @@ class _DropdownField extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: selected != null ? AppColors.primary600 : AppColors.gray200),
+          border: Border.all(
+            color: selected != null ? AppColors.primary600 : AppColors.gray200,
+          ),
         ),
         child: Row(
           children: [
@@ -989,13 +1306,18 @@ class _DropdownField extends StatelessWidget {
                 selected ?? hint,
                 style: TextStyle(
                   fontSize: 13,
-                  color: selected != null ? AppColors.gray900 : AppColors.gray400,
+                  color:
+                      selected != null ? AppColors.gray900 : AppColors.gray400,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            Icon(Icons.keyboard_arrow_down_rounded, size: 18,
-                color: selected != null ? AppColors.primary600 : AppColors.gray400),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color:
+                  selected != null ? AppColors.primary600 : AppColors.gray400,
+            ),
           ],
         ),
       ),
