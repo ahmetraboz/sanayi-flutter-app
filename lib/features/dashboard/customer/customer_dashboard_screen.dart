@@ -338,12 +338,41 @@ class _RecentBidRow extends StatelessWidget {
   final RecentBid bid;
   const _RecentBidRow({required this.bid});
 
+  static const _statusLabels = {
+    'pending':   'Beklemede',
+    'quoted':    'Beklemede',
+    'accepted':  'Kabul Edildi',
+    'rejected':  'Reddedildi',
+    'countered': 'Karşı Teklif',
+    'expired':   'Süresi Doldu',
+  };
+
+  static const _statusColors = {
+    'pending':   Color(0xFFD97706),
+    'quoted':    Color(0xFFD97706),
+    'accepted':  Color(0xFF059669),
+    'rejected':  Color(0xFFDC2626),
+    'countered': Color(0xFF7C3AED),
+    'expired':   Color(0xFF6B7280),
+  };
+
+  static const _statusBgColors = {
+    'pending':   Color(0xFFFEF3C7),
+    'quoted':    Color(0xFFFEF3C7),
+    'accepted':  Color(0xFFECFDF5),
+    'rejected':  Color(0xFFFEE2E2),
+    'countered': Color(0xFFF5F3FF),
+    'expired':   Color(0xFFF3F4F6),
+  };
+
   @override
   Widget build(BuildContext context) {
     final priceStr = bid.price != null
-        ? NumberFormat('#,##0', 'tr').format(bid.price) + ' ₺'
+        ? '${NumberFormat('#,##0', 'tr').format(bid.price)} ₺'
         : '-';
-    final isPending = bid.status == 'pending' || bid.status == 'quoted';
+    final label   = _statusLabels[bid.status]   ?? bid.status;
+    final color   = _statusColors[bid.status]   ?? AppColors.gray500;
+    final bgColor = _statusBgColors[bid.status] ?? AppColors.gray100;
 
     return GestureDetector(
       onTap: () => context.push('/dashboard/requests/${bid.requestId}'),
@@ -397,18 +426,14 @@ class _RecentBidRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isPending ? AppColors.amber50 : AppColors.gray100,
-                    borderRadius: BorderRadius.circular(5),
+                    color: bgColor,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
-                    isPending ? 'Bekliyor' : bid.status,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                      color: isPending ? AppColors.amber700 : AppColors.gray500,
-                    ),
+                    label,
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
                   ),
                 ),
               ],
