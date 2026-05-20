@@ -42,8 +42,8 @@ class ApiClient {
 
   Future<Response> delete(String path) => _dio.delete(path);
 
-  Future<Response> postFormData(String path, FormData formData) =>
-      _dio.post(path, data: formData);
+  Future<Response> postFormData(String path, FormData formData, {Options? options}) =>
+      _dio.post(path, data: formData, options: options);
 
   Future<void> saveToken(String token) => _storage.write(key: _tokenKey, value: token);
   Future<void> deleteToken() => _storage.delete(key: _tokenKey);

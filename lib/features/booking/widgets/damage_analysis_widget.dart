@@ -36,10 +36,111 @@ class _DamageAnalysisWidgetState extends ConsumerState<DamageAnalysisWidget> {
   bool _loading = false;
   String? _error;
   List<DamageReport> _reports = [];
-  String _selectedPart = 'Ön Tampon';
-  FocusNode? _partsFocusNode;
+  String? _selectedPart;
+
+  void _openPartPicker() {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        final maxHeight = MediaQuery.of(context).size.height * 0.75;
+        return Container(
+          constraints: BoxConstraints(maxHeight: maxHeight),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE5E7EB),
+                  borderRadius: BorderRadius.circular(99),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Hasar Bölgesi Seçin',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF111827),
+                      ),
+                    ),
+                    if (_selectedPart != null)
+                      GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedPart = null);
+                          Navigator.pop(sheetCtx);
+                        },
+                        child: const Text(
+                          'Temizle',
+                          style: TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFF3F4F6)),
+              Flexible(
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  padding: EdgeInsets.only(bottom: bottomPad + 16),
+                  itemCount: _kCarParts.length,
+                  separatorBuilder: (_, i) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                  itemBuilder: (context, i) {
+                    final part = _kCarParts[i];
+                    final selected = _selectedPart == part;
+                    return InkWell(
+                      onTap: () {
+                        setState(() => _selectedPart = part);
+                        Navigator.pop(sheetCtx);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                part,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                                  color: selected ? const Color(0xFFD97706) : const Color(0xFF374151),
+                                ),
+                              ),
+                            ),
+                            if (selected)
+                              const Icon(Icons.check_rounded, size: 18, color: Color(0xFFD97706)),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
   Future<void> _pickAndAnalyze() async {
+    if (_selectedPart == null) {
+      _openPartPicker();
+      return;
+    }
     final picker = ImagePicker();
     final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
     if (file == null) return;
@@ -51,7 +152,7 @@ class _DamageAnalysisWidgetState extends ConsumerState<DamageAnalysisWidget> {
 
     try {
       final repo = ref.read(bookingRepositoryProvider);
-      final reports = await repo.analyzeDamage(file, userPart: _selectedPart);
+      final reports = await repo.analyzeDamage(file, userPart: _selectedPart!);
       setState(() {
         _reports = reports;
         _loading = false;
@@ -120,67 +221,37 @@ class _DamageAnalysisWidgetState extends ConsumerState<DamageAnalysisWidget> {
           Row(
             children: [
               Expanded(
-                child: Autocomplete<String>(
-                  key: ValueKey(_selectedPart),
-                  initialValue: TextEditingValue(text: _selectedPart),
-                  optionsBuilder: (textValue) {
-                    if (textValue.text.isEmpty) return _kCarParts;
-                    return _kCarParts.where(
-                      (p) => p.toLowerCase().contains(textValue.text.toLowerCase()),
-                    );
-                  },
-                  fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-                    _partsFocusNode = focusNode;
-                    return Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFDE68A)),
-                      ),
-                      child: TextField(
-                        controller: ctrl,
-                        focusNode: focusNode,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF92400E)),
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          hintStyle: TextStyle(fontSize: 13, color: Color(0xFFB45309)),
+                child: GestureDetector(
+                  onTap: _openPartPicker,
+                  child: Container(
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedPart ?? 'Hasar bölgesi seçin',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _selectedPart != null
+                                  ? const Color(0xFF92400E)
+                                  : const Color(0xFFB45309),
+                            ),
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                  optionsViewBuilder: (context, onSelected, options) => Align(
-                    alignment: Alignment.topLeft,
-                    child: Material(
-                      elevation: 4,
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxHeight: 200),
-                        child: ListView.separated(
-                          shrinkWrap: true,
-                          padding: EdgeInsets.zero,
-                          itemCount: options.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
-                          itemBuilder: (context, i) {
-                            final part = options.elementAt(i);
-                            return InkWell(
-                              onTap: () => onSelected(part),
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                child: Text(part, style: const TextStyle(fontSize: 13, color: Color(0xFF111827))),
-                              ),
-                            );
-                          },
+                        const Icon(
+                          Icons.keyboard_arrow_down_rounded,
+                          size: 16,
+                          color: Color(0xFFB45309),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                  onSelected: (part) {
-                    setState(() => _selectedPart = part);
-                    _partsFocusNode?.unfocus();
-                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -189,7 +260,11 @@ class _DamageAnalysisWidgetState extends ConsumerState<DamageAnalysisWidget> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
-                    color: _loading ? const Color(0xFFE5E7EB) : const Color(0xFFD97706),
+                    color: _loading
+                        ? const Color(0xFFE5E7EB)
+                        : _selectedPart == null
+                            ? const Color(0xFFFDE68A)
+                            : const Color(0xFFD97706),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: _loading
@@ -203,10 +278,12 @@ class _DamageAnalysisWidgetState extends ConsumerState<DamageAnalysisWidget> {
                         )
                       : Text(
                           _reports.isEmpty ? 'Fotoğraf Seç' : 'Yeniden',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                            color: _selectedPart == null
+                                ? const Color(0xFFB45309)
+                                : Colors.white,
                           ),
                         ),
                 ),

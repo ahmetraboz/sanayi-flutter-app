@@ -90,14 +90,18 @@ class BookingRepository {
     }
   }
 
-  Future<List<DamageReport>> analyzeDamage(XFile file, {String userPart = 'Ön Tampon'}) async {
+  Future<List<DamageReport>> analyzeDamage(XFile file, {required String userPart}) async {
     try {
       final bytes = await file.readAsBytes();
       final formData = FormData.fromMap({
         'image': MultipartFile.fromBytes(bytes, filename: file.name),
         'userPart': userPart,
       });
-      final res = await _api.postFormData('/api/public/analyze-damage', formData);
+      final res = await _api.postFormData(
+        '/api/public/analyze-damage',
+        formData,
+        options: Options(receiveTimeout: const Duration(minutes: 3)),
+      );
       final data = res.data as Map<String, dynamic>;
       // API returns a single report object (not a reports array)
       // Shape: { originalUrl, annotatedUrl, damageCount, damages[] }
