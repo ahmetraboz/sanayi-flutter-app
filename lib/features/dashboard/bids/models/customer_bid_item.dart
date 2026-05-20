@@ -9,6 +9,7 @@ class CustomerBidItem {
   final String? description;
   final String? estimatedDuration;
   final String? proposedDate;
+  final String? dateProposedBy;
 
   const CustomerBidItem({
     required this.id,
@@ -21,7 +22,12 @@ class CustomerBidItem {
     this.description,
     this.estimatedDuration,
     this.proposedDate,
+    this.dateProposedBy,
   });
+
+  bool get isDateProposedByProvider => dateProposedBy == 'provider';
+  bool get isDateAgreed => dateProposedBy == 'agreed';
+  bool get isDateProposedByCustomer => dateProposedBy == 'customer';
 
   factory CustomerBidItem.fromJson(Map<String, dynamic> json) {
     return CustomerBidItem(
@@ -37,6 +43,7 @@ class CustomerBidItem {
       description: json['description'] as String?,
       estimatedDuration: json['estimatedDuration'] as String?,
       proposedDate: json['proposedDate'] as String?,
+      dateProposedBy: json['dateProposedBy'] as String?,
     );
   }
 }

@@ -136,6 +136,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
             onAccept: () => _handleAccept(notifier, filteredBids[index].id),
             onReject: () => _handleReject(notifier, filteredBids[index].id),
             onProposeDate: (date) => _handleProposeDate(notifier, filteredBids[index].id, date),
+            onAcceptDate: () => _handleAcceptDate(notifier, filteredBids[index].id),
           );
         },
       ),
@@ -231,6 +232,27 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
     }
   }
 
+  Future<void> _handleAcceptDate(CustomerBidsNotifier notifier, int bidId) async {
+    try {
+      await notifier.acceptDate(bidId);
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tarih kabul edildi'),
+            backgroundColor: AppColors.green700,
+          ),
+        );
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppColors.red700,
+          ),
+        );
+    }
+  }
+
   Future<void> _handleProposeDate(CustomerBidsNotifier notifier, int bidId, String date) async {
     try {
       await notifier.proposeDate(bidId, date);
@@ -258,12 +280,14 @@ class _BidCard extends StatefulWidget {
   final VoidCallback onAccept;
   final VoidCallback onReject;
   final Future<void> Function(String date) onProposeDate;
+  final Future<void> Function() onAcceptDate;
 
   const _BidCard({
     required this.bid,
     required this.onAccept,
     required this.onReject,
     required this.onProposeDate,
+    required this.onAcceptDate,
   });
 
   @override
@@ -272,6 +296,7 @@ class _BidCard extends StatefulWidget {
 
 class _BidCardState extends State<_BidCard> {
   bool _proposing = false;
+  bool _acceptingDate = false;
 
   void _openProposeDateSheet() {
     showModalBottomSheet(
@@ -377,16 +402,32 @@ class _BidCardState extends State<_BidCard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFECFDF5),
-                border: Border(bottom: BorderSide(color: AppColors.emerald200)),
+                color: bid.isDateAgreed ? const Color(0xFFECFDF5) : const Color(0xFFFFFBEB),
+                border: Border(
+                  bottom: BorderSide(
+                    color: bid.isDateAgreed ? AppColors.emerald200 : const Color(0xFFFDE68A),
+                  ),
+                ),
               ),
               child: Row(children: [
-                const Icon(Icons.event_available_outlined, size: 16, color: AppColors.green700),
+                Icon(
+                  bid.isDateAgreed ? Icons.event_available_outlined : Icons.event_outlined,
+                  size: 16,
+                  color: bid.isDateAgreed ? AppColors.green700 : const Color(0xFFB45309),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Usta bu tarihe uygun: ${formatDateTr(bid.proposedDate)}',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.green700),
+                    bid.isDateAgreed
+                        ? 'Tarih anlaşıldı: ${formatDateTr(bid.proposedDate)}'
+                        : bid.isDateProposedByProvider
+                            ? 'Usta yeni bir tarih önerdi: ${formatDateTr(bid.proposedDate)}'
+                            : 'Tarih öneriniz gönderildi: ${formatDateTr(bid.proposedDate)}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: bid.isDateAgreed ? AppColors.green700 : const Color(0xFFB45309),
+                    ),
                   ),
                 ),
               ]),
@@ -538,27 +579,65 @@ class _BidCardState extends State<_BidCard> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: _proposing ? null : _openProposeDateSheet,
-                      icon: _proposing
-                          ? const SizedBox(
-                              width: 14, height: 14,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600),
-                            )
-                          : const Icon(Icons.event_outlined, size: 16),
-                      label: Text(bid.proposedDate != null ? 'Farklı Tarih Öner' : 'Tarih Öner'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.primary600,
-                        side: const BorderSide(color: AppColors.primary600),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  if (bid.isDateProposedByProvider) ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: (_acceptingDate || _proposing) ? null : () async {
+                              setState(() => _acceptingDate = true);
+                              await widget.onAcceptDate();
+                              if (mounted) setState(() => _acceptingDate = false);
+                            },
+                            icon: _acceptingDate
+                                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                : const Icon(Icons.check_circle_outline, size: 16),
+                            label: const Text('Bu Tarihe Uygun'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.green700,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: (_proposing || _acceptingDate) ? null : _openProposeDateSheet,
+                            icon: _proposing
+                                ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600))
+                                : const Icon(Icons.event_outlined, size: 16),
+                            label: const Text('Farklı Tarih'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppColors.primary600,
+                              side: const BorderSide(color: AppColors.primary600),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else if (!bid.isDateAgreed) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: _proposing ? null : _openProposeDateSheet,
+                        icon: _proposing
+                            ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary600))
+                            : const Icon(Icons.event_outlined, size: 16),
+                        label: Text(bid.proposedDate != null ? 'Farklı Tarih Öner' : 'Tarih Öner'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary600,
+                          side: const BorderSide(color: AppColors.primary600),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),

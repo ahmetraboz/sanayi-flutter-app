@@ -92,6 +92,16 @@ class CustomerBidsNotifier extends StateNotifier<CustomerBidsState> {
       throw e is DioException ? e.message ?? 'Hata' : 'Tarih önerilemedi';
     }
   }
+
+  Future<void> acceptDate(int bidId) async {
+    try {
+      await _api.post('/api/bids/$bidId/customer-accept-date');
+      _invalidateStats();
+      await load();
+    } catch (e) {
+      throw e is DioException ? e.message ?? 'Hata' : 'Tarih kabul edilemedi';
+    }
+  }
 }
 
 final customerBidsProvider =
