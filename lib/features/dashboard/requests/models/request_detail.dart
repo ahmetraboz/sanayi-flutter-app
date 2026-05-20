@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class RequestDetail {
   final int id;
   final String title;
@@ -80,6 +82,88 @@ class RequestDetail {
   );
 }
 
+// ─── Cost Item ────────────────────────────────────────────────────────────────
+
+class CostItem {
+  final String name;
+  final double amount;
+
+  const CostItem({required this.name, required this.amount});
+
+  factory CostItem.fromJson(Map<String, dynamic> json) => CostItem(
+    name: json['name'] as String? ?? '',
+    amount: double.tryParse(json['amount']?.toString() ?? '') ?? 0.0,
+  );
+}
+
+// ─── Job Update ───────────────────────────────────────────────────────────────
+
+class JobUpdate {
+  final int id;
+  final String updateType;
+  final String description;
+  final String companyName;
+  final double? totalCost;
+  final List<CostItem> costItems;
+  final double? kdvRate;
+  final double? kdvAmount;
+  final String? overBudgetReason;
+  final DateTime createdAt;
+
+  const JobUpdate({
+    required this.id,
+    required this.updateType,
+    required this.description,
+    required this.companyName,
+    this.totalCost,
+    this.costItems = const [],
+    this.kdvRate,
+    this.kdvAmount,
+    this.overBudgetReason,
+    required this.createdAt,
+  });
+
+  bool get hasInvoice => costItems.isNotEmpty || (totalCost != null && totalCost! > 0);
+
+  double get subtotal => costItems.fold(0.0, (sum, item) => sum + item.amount);
+
+  factory JobUpdate.fromJson(Map<String, dynamic> json) {
+    List<CostItem> items = [];
+    final raw = json['costItems'];
+    try {
+      if (raw is String && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw);
+        if (decoded is List) {
+          items = decoded
+              .whereType<Map<String, dynamic>>()
+              .map(CostItem.fromJson)
+              .toList();
+        }
+      } else if (raw is List) {
+        items = raw
+            .whereType<Map<String, dynamic>>()
+            .map(CostItem.fromJson)
+            .toList();
+      }
+    } catch (_) {}
+
+    return JobUpdate(
+      id: json['id'] as int,
+      updateType: json['updateType'] as String? ?? 'progress',
+      description: json['description'] as String? ?? '',
+      companyName: json['companyName'] as String? ?? '',
+      totalCost: double.tryParse(json['totalCost']?.toString() ?? ''),
+      costItems: items,
+      kdvRate: double.tryParse(json['kdvRate']?.toString() ?? ''),
+      kdvAmount: double.tryParse(json['kdvAmount']?.toString() ?? ''),
+      overBudgetReason: json['overBudgetReason'] as String?,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
+}
+
+// ─── Info Request Data ────────────────────────────────────────────────────────
+
 class InfoRequestData {
   final int id;
   final bool wantsEngineDisplacement;
@@ -112,6 +196,8 @@ class InfoRequestData {
     additionalNotes: json['additionalNotes'] as String?,
   );
 }
+
+// ─── Bid Item ─────────────────────────────────────────────────────────────────
 
 class BidItem {
   final int id;

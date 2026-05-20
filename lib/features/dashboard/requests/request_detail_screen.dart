@@ -72,7 +72,10 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
     }
 
     final request = state.request!;
-    final canAccept = request.status == 'open' || request.status == 'bidding';
+    final canAccept = request.status == 'open' ||
+        request.status == 'bidding' ||
+        request.status == 'info_requested' ||
+        request.status == 'info_provided';
 
     return RefreshIndicator(
       color: AppColors.primary600,
@@ -122,6 +125,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                   },
                   onCancel: () => setState(() => _showInfoForm = false),
                 ),
+              const SizedBox(height: 12),
+            ],
+
+            // Fatura görünümü
+            if (state.completionUpdate != null) ...[
+              _InvoiceCard(update: state.completionUpdate!),
               const SizedBox(height: 12),
             ],
 
@@ -869,6 +878,212 @@ class _ReviewFormState extends State<_ReviewForm> {
     5 => 'Mükemmel',
     _ => '',
   };
+}
+
+// ─── Invoice Card ─────────────────────────────────────────────────────────────
+
+class _InvoiceCard extends StatelessWidget {
+  final JobUpdate update;
+  const _InvoiceCard({required this.update});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasItems = update.costItems.isNotEmpty;
+    final hasKdv = update.kdvAmount != null && update.kdvAmount! > 0;
+    final total = update.totalCost ?? (update.subtotal + (update.kdvAmount ?? 0));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Başlık
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.success50,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_outlined,
+                    size: 20,
+                    color: AppColors.primary600,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Servis Faturası',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.gray900,
+                      ),
+                    ),
+                    Text(
+                      update.companyName,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.gray500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // Bütçe aşım uyarısı
+          if (update.overBudgetReason != null) ...[
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.red50,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.red100),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 18,
+                    color: AppColors.red700,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Bütçe Aşım Nedeni',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.red700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          update.overBudgetReason!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: AppColors.red700,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          const Divider(height: 1, color: AppColors.gray100),
+
+          // Kalem listesi
+          if (hasItems) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Column(
+                children: update.costItems
+                    .map((item) => _InvoiceRow(label: item.name, amount: item.amount))
+                    .toList(),
+              ),
+            ),
+            const Divider(height: 24, indent: 16, endIndent: 16, color: AppColors.gray100),
+          ],
+
+          // Ara toplam + KDV + Toplam
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, hasItems ? 0 : 14, 16, 16),
+            child: Column(
+              children: [
+                if (hasItems && hasKdv) ...[
+                  _InvoiceRow(
+                    label: 'Ara Toplam',
+                    amount: update.subtotal,
+                    isSubtle: true,
+                  ),
+                  const SizedBox(height: 6),
+                ],
+                if (hasKdv) ...[
+                  _InvoiceRow(
+                    label: 'KDV (%${update.kdvRate?.toStringAsFixed(0) ?? ''})',
+                    amount: update.kdvAmount!,
+                    isSubtle: true,
+                  ),
+                  const SizedBox(height: 10),
+                  const Divider(height: 1, color: AppColors.gray200),
+                  const SizedBox(height: 10),
+                ],
+                _InvoiceRow(
+                  label: 'Genel Toplam',
+                  amount: total,
+                  isTotal: true,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InvoiceRow extends StatelessWidget {
+  final String label;
+  final double amount;
+  final bool isSubtle;
+  final bool isTotal;
+
+  const _InvoiceRow({
+    required this.label,
+    required this.amount,
+    this.isSubtle = false,
+    this.isTotal = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: isTotal ? 15 : 13,
+              fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+              color: isSubtle ? AppColors.gray500 : AppColors.gray700,
+            ),
+          ),
+          Text(
+            '₺${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: isTotal ? 17 : 13,
+              fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+              color: isTotal ? AppColors.primary600 : AppColors.gray700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _RequestDetailSkeleton extends StatelessWidget {

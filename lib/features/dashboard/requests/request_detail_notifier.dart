@@ -10,6 +10,7 @@ class RequestDetailState {
   final String? error;
   final RequestDetail? request;
   final List<BidItem> bids;
+  final List<JobUpdate> updates;
   final bool accepting;
   final String? acceptError;
   final int? acceptedBidId;
@@ -28,6 +29,7 @@ class RequestDetailState {
     this.error,
     this.request,
     this.bids = const [],
+    this.updates = const [],
     this.infoRequest,
     this.accepting = false,
     this.acceptError,
@@ -48,11 +50,22 @@ class RequestDetailState {
   bool get isPendingReview => status == 'pending_review';
   bool get canCancel => status != null && status != 'cancelled' && status != 'completed';
 
+  JobUpdate? get completionUpdate {
+    try {
+      return updates.lastWhere(
+        (u) => u.updateType == 'completion' && u.hasInvoice,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   RequestDetailState copyWith({
     bool? loading,
     Object? error = _sentinel,
     Object? request = _sentinel,
     List<BidItem>? bids,
+    List<JobUpdate>? updates,
     bool? accepting,
     Object? acceptError = _sentinel,
     Object? acceptedBidId = _sentinel,
@@ -71,6 +84,7 @@ class RequestDetailState {
       error: identical(error, _sentinel) ? this.error : error as String?,
       request: identical(request, _sentinel) ? this.request : request as RequestDetail?,
       bids: bids ?? this.bids,
+      updates: updates ?? this.updates,
       infoRequest: identical(infoRequest, _sentinel) ? this.infoRequest : infoRequest as InfoRequestData?,
       accepting: accepting ?? this.accepting,
       acceptError: identical(acceptError, _sentinel) ? this.acceptError : acceptError as String?,
@@ -110,7 +124,16 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
               .toList();
       final infoRequestRaw = data['infoRequest'] as Map<String, dynamic>?;
       final infoRequest = infoRequestRaw != null ? InfoRequestData.fromJson(infoRequestRaw) : null;
-      state = state.copyWith(loading: false, request: detail, bids: bids, infoRequest: infoRequest);
+      final updates = (data['updates'] as List? ?? [])
+          .map((e) => JobUpdate.fromJson(e as Map<String, dynamic>))
+          .toList();
+      state = state.copyWith(
+        loading: false,
+        request: detail,
+        bids: bids,
+        updates: updates,
+        infoRequest: infoRequest,
+      );
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
