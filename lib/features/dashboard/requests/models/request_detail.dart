@@ -212,6 +212,8 @@ class BidItem {
   final double? averageRating;
   final int? reviewCount;
   final DateTime? createdAt;
+  final DateTime? proposedDate;
+  final String? dateProposedBy;
 
   const BidItem({
     required this.id,
@@ -226,6 +228,8 @@ class BidItem {
     this.averageRating,
     this.reviewCount,
     this.createdAt,
+    this.proposedDate,
+    this.dateProposedBy,
   });
 
   factory BidItem.fromJson(Map<String, dynamic> json) => BidItem(
@@ -243,5 +247,9 @@ class BidItem {
     createdAt: json['createdAt'] != null
         ? DateTime.tryParse(json['createdAt'] as String)
         : null,
+    proposedDate: json['proposedDate'] != null
+        ? DateTime.tryParse(json['proposedDate'] as String)
+        : null,
+    dateProposedBy: json['dateProposedBy'] as String?,
   );
 }

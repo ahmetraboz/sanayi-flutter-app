@@ -175,10 +175,7 @@ class RequestInfoCard extends StatelessWidget {
           label: _fmtDate(request.createdAt),
         ),
         if (preferredDateLabel != null)
-          _MetaChip(
-            icon: Icons.event_available_outlined,
-            label: preferredDateLabel,
-          ),
+          _PreferredDateChip(label: preferredDateLabel),
         if (request.urgencyLevel != null && request.urgencyLevel!.isNotEmpty)
           _UrgencyChip(level: request.urgencyLevel!),
         if (request.problemCategory != null &&
@@ -328,6 +325,43 @@ class _MetaChip extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(fontSize: 12, color: AppColors.gray600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreferredDateChip extends StatelessWidget {
+  final String label;
+  const _PreferredDateChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.event_available_outlined, size: 13, color: Color(0xFF2563EB)),
+          const SizedBox(width: 5),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tercih Edilen Tarih',
+                style: TextStyle(fontSize: 10, color: Color(0xFF3B82F6), fontWeight: FontWeight.w500),
+              ),
+              Text(
+                label,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
         ],
       ),

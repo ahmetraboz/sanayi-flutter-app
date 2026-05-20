@@ -272,6 +272,31 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
       return false;
     }
   }
+
+  Future<bool> counterDate({required int bidId, required DateTime date}) async {
+    state = state.copyWith(actionError: null);
+    try {
+      final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      await _api.post('/api/bids/$bidId/counter-propose-date', data: {'date': dateStr});
+      await loadDetail();
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(actionError: e.message ?? 'Tarih önerilemedi');
+      return false;
+    }
+  }
+
+  Future<bool> acceptDate({required int bidId}) async {
+    state = state.copyWith(actionError: null);
+    try {
+      await _api.post('/api/bids/$bidId/accept-date');
+      await loadDetail();
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(actionError: e.message ?? 'Tarih kabul edilemedi');
+      return false;
+    }
+  }
 }
 
 final requestDetailProvider = StateNotifierProvider.autoDispose

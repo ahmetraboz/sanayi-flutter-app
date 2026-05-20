@@ -252,6 +252,8 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               rejecting: state.rejecting,
               onAccept: () => notifier.acceptBid(bid.id),
               onReject: () => notifier.rejectBid(bid.id),
+              onCounterDate: (date) => notifier.counterDate(bidId: bid.id, date: date),
+              onAcceptDate: () => notifier.acceptDate(bidId: bid.id),
             ),
           ),
       ],

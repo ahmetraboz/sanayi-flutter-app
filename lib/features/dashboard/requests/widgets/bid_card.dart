@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/theme.dart';
+import '../../../../shared/widgets/date_picker_sheet.dart';
 import '../models/request_detail.dart';
 
 class BidCard extends StatelessWidget {
@@ -10,6 +11,8 @@ class BidCard extends StatelessWidget {
   final bool rejecting;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
+  final Future<bool> Function(DateTime date)? onCounterDate;
+  final Future<bool> Function()? onAcceptDate;
 
   const BidCard({
     super.key,
@@ -19,6 +22,8 @@ class BidCard extends StatelessWidget {
     this.rejecting = false,
     this.onAccept,
     this.onReject,
+    this.onCounterDate,
+    this.onAcceptDate,
   });
 
   @override
@@ -42,7 +47,7 @@ class BidCard extends StatelessWidget {
         children: [
           _buildHeader(isAccepted),
           const Divider(height: 1, thickness: 1, color: AppColors.gray100),
-          _buildBody(),
+          _buildBody(context),
           if (canAccept && (bid.status == 'quoted' || bid.status == 'pending')) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.gray100),
             _buildActions(context),
@@ -125,7 +130,7 @@ class BidCard extends StatelessWidget {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       child: Column(
@@ -173,6 +178,16 @@ class BidCard extends StatelessWidget {
                 color: AppColors.gray600,
                 height: 1.5,
               ),
+            ),
+          ],
+          if (bid.proposedDate != null) ...[
+            const SizedBox(height: 10),
+            _ProposedDateRow(
+              proposedDate: bid.proposedDate!,
+              dateProposedBy: bid.dateProposedBy,
+              canCounter: canAccept,
+              onCounterDate: onCounterDate,
+              onAcceptDate: onAcceptDate,
             ),
           ],
         ],
@@ -392,6 +407,204 @@ class BidCard extends StatelessWidget {
               ),
             ],
           ),
+    );
+  }
+}
+
+// ─── Proposed Date Row ────────────────────────────────────────────────────────
+
+class _ProposedDateRow extends StatelessWidget {
+  final DateTime proposedDate;
+  final String? dateProposedBy;
+  final bool canCounter;
+  final Future<bool> Function(DateTime date)? onCounterDate;
+  final Future<bool> Function()? onAcceptDate;
+
+  const _ProposedDateRow({
+    required this.proposedDate,
+    required this.canCounter,
+    this.dateProposedBy,
+    this.onCounterDate,
+    this.onAcceptDate,
+  });
+
+  static const _kMonths = [
+    'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
+    'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara',
+  ];
+
+  String _fmt(DateTime dt) => '${dt.day} ${_kMonths[dt.month - 1]} ${dt.year}';
+
+  String _toIsoDate(DateTime dt) =>
+      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+
+  void _pickCounterDate(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: DatePickerSheet(
+          title: 'Farklı Tarih Seçin',
+          initialDate: _toIsoDate(
+            proposedDate.isAfter(DateTime.now()) ? proposedDate : DateTime.now().add(const Duration(days: 1)),
+          ),
+          onSelected: (dateStr) {
+            final parts = dateStr.split('-');
+            if (parts.length < 3) return;
+            final picked = DateTime(
+              int.parse(parts[0]),
+              int.parse(parts[1]),
+              int.parse(parts[2]),
+            );
+            onCounterDate?.call(picked);
+          },
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final proposedByCustomer = dateProposedBy == 'customer';
+
+    // Customer proposed → waiting for provider to respond
+    if (proposedByCustomer) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFFDE68A)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.schedule_outlined, size: 16, color: Color(0xFFD97706)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Önerdiğiniz Tarih',
+                    style: TextStyle(fontSize: 11, color: Color(0xFFD97706), fontWeight: FontWeight.w500),
+                  ),
+                  Text(
+                    _fmt(proposedDate),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF92400E),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Text(
+              'Usta yanıt bekliyor',
+              style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Provider proposed → customer can accept or counter
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F3FF),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFDDD6FE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_month_outlined, size: 16, color: Color(0xFF7C3AED)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Ustanın Önerdiği Tarih',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF7C3AED), fontWeight: FontWeight.w500),
+                    ),
+                    Text(
+                      _fmt(proposedDate),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF4C1D95),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (canCounter) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _pickCounterDate(context),
+                    child: Container(
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFDDD6FE)),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Farklı Tarih Öner',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF7C3AED),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => onAcceptDate?.call(),
+                    child: Container(
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF7C3AED),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Tarihi Kabul Et',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
