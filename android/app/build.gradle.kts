@@ -26,7 +26,7 @@ val mapsApiKey: String = localProps.getProperty("MAPS_API_KEY")
 
 android {
     namespace = "com.bozappz.sanayi_app"
-    compileSdkPreview = "Baklava"
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
