@@ -244,291 +244,300 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
     final bottomPad = MediaQuery.of(context).padding.bottom;
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: bottomInset > 0 ? bottomInset : bottomPad + 100,
-        left: 20,
-        right: 20,
-        top: 24,
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: SafeArea(
+        top: true,
+        bottom: false,
+        child: Padding(
+          padding: EdgeInsets.only(
+            bottom: bottomInset > 0 ? bottomInset : bottomPad + 100,
+            left: 20,
+            right: 20,
+            top: 16,
+          ),
+          child: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    widget.vehicle != null ? 'Aracı Düzenle' : 'Yeni Araç Ekle',
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.gray900,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.gray500),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              if (widget.vehicle == null) ...[
-                const SizedBox(height: 8),
-                _VinToggleRow(
-                  showVin: _showVin,
-                  onToggle:
-                      (v) => setState(() {
-                        _showVin = v;
-                        _vinError = null;
-                        _vinSuccess = null;
-                      }),
-                ),
-                if (_showVin) ...[
-                  const SizedBox(height: 12),
-                  _VinInputRow(
-                    controller: _vinController,
-                    loading: _vinLoading,
-                    onLookup: _lookupVin,
-                  ),
-                  if (_vinSuccess != null)
-                    _AlertBanner(message: _vinSuccess!, isError: false),
-                  if (_vinError != null)
-                    _AlertBanner(message: _vinError!, isError: true),
-                ],
-              ],
-              const SizedBox(height: 16),
-              _VehicleBrandField(
-                controller: _brandController,
-                initialValue: widget.vehicle?.brand ?? '',
-                onSelected: (make) {
-                  _brandController.text = make.name;
-                  setState(() {
-                    _selectedMakeId = make.id == -1 ? null : make.id;
-                    _selectedModel = null;
-                    _modelController.clear();
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-              if (_selectedMakeId != null)
-                _VehicleModelField(
-                  makeId: _selectedMakeId!,
-                  value: _selectedModel,
-                  onChanged: (v) {
-                    setState(() => _selectedModel = v);
-                    _modelController.text = v ?? '';
-                    if (v != null) _fetchCarImage();
-                  },
-                )
-              else
-                TextFormField(
-                  controller: _modelController,
-                  style: const TextStyle(
-                    color: AppColors.gray900,
-                    fontSize: 14,
-                  ),
-                  decoration: _inputDecoration('Model (Örn: Megane)'),
-                  validator:
-                      (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
-                  textInputAction: TextInputAction.next,
-                ),
-              if (_imageLoading || _carImages.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                _CarImagePreview(
-                  images: _carImages,
-                  loading: _imageLoading,
-                  currentIndex: _imageIndex,
-                  onPageChanged: (i) => setState(() => _imageIndex = i),
-                ),
-              ],
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _yearController,
-                      style: const TextStyle(
-                        color: AppColors.gray900,
-                        fontSize: 14,
-                      ),
-                      decoration: _inputDecoration('Yıl (Opsiyonel)'),
-                      keyboardType: TextInputType.number,
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _plateController,
-                      style: const TextStyle(
-                        color: AppColors.gray900,
-                        fontSize: 14,
-                      ),
-                      decoration: _inputDecoration('Plaka (Opsiyonel)'),
-                      textCapitalization: TextCapitalization.characters,
-                      textInputAction: TextInputAction.done,
-                      onFieldSubmitted: (_) => _submit(),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const _SectionLabel('Teknik Detaylar (Opsiyonel)'),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _DropdownField(
-                      hint: 'Yakıt Tipi',
-                      value: _fuelType,
-                      items: const [
-                        'benzin',
-                        'dizel',
-                        'lpg',
-                        'hibrit',
-                        'elektrik',
-                      ],
-                      labels: const [
-                        'Benzin',
-                        'Dizel',
-                        'LPG',
-                        'Hibrit',
-                        'Elektrik',
-                      ],
-                      onChanged: (v) => setState(() => _fuelType = v),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DropdownField(
-                      hint: 'Şanzıman',
-                      value: _transmissionType,
-                      items: const ['manuel', 'otomatik', 'yariOtomatik'],
-                      labels: const ['Manuel', 'Otomatik', 'Yarı Otomatik'],
-                      onChanged: (v) => setState(() => _transmissionType = v),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _engineController,
-                      style: const TextStyle(
-                        color: AppColors.gray900,
-                        fontSize: 14,
-                      ),
-                      decoration: _inputDecoration('Motor Hacmi (Örn: 1.6)'),
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _DropdownField(
-                      hint: 'Çekiş',
-                      value: _driveType,
-                      items: const ['fwd', 'rwd', 'awd', '4wd'],
-                      labels: const [
-                        'Önden Çekiş',
-                        'Arkadan İtiş',
-                        'AWD',
-                        '4x4',
-                      ],
-                      onChanged: (v) => setState(() => _driveType = v),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _DropdownField(
-                      hint: 'Kasa Tipi',
-                      value: _bodyType,
-                      items: const [
-                        'sedan',
-                        'hatchback',
-                        'suv',
-                        'coupe',
-                        'station',
-                        'pickup',
-                        'minivan',
-                      ],
-                      labels: const [
-                        'Sedan',
-                        'Hatchback',
-                        'SUV',
-                        'Coupe',
-                        'Station Wagon',
-                        'Pickup',
-                        'Minivan',
-                      ],
-                      onChanged: (v) => setState(() => _bodyType = v),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _colorController,
-                      style: const TextStyle(
-                        color: AppColors.gray900,
-                        fontSize: 14,
-                      ),
-                      decoration: _inputDecoration('Renk'),
-                      textInputAction: TextInputAction.next,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _mileageController,
-                style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-                decoration: _inputDecoration(
-                  'Kilometre',
-                ).copyWith(suffixText: 'km'),
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-              ),
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary600,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child:
-                    _isSubmitting
-                        ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                        : Text(
-                          widget.vehicle != null ? 'Güncelle' : 'Kaydet',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        widget.vehicle != null ? 'Aracı Düzenle' : 'Yeni Araç Ekle',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.gray900,
                         ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppColors.gray500),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                  if (widget.vehicle == null) ...[
+                    const SizedBox(height: 8),
+                    _VinToggleRow(
+                      showVin: _showVin,
+                      onToggle:
+                          (v) => setState(() {
+                            _showVin = v;
+                            _vinError = null;
+                            _vinSuccess = null;
+                          }),
+                    ),
+                    if (_showVin) ...[
+                      const SizedBox(height: 12),
+                      _VinInputRow(
+                        controller: _vinController,
+                        loading: _vinLoading,
+                        onLookup: _lookupVin,
+                      ),
+                      if (_vinSuccess != null)
+                        _AlertBanner(message: _vinSuccess!, isError: false),
+                      if (_vinError != null)
+                        _AlertBanner(message: _vinError!, isError: true),
+                    ],
+                  ],
+                  const SizedBox(height: 16),
+                  _VehicleBrandField(
+                    controller: _brandController,
+                    initialValue: widget.vehicle?.brand ?? '',
+                    onSelected: (make) {
+                      _brandController.text = make.name;
+                      setState(() {
+                        _selectedMakeId = make.id == -1 ? null : make.id;
+                        _selectedModel = null;
+                        _modelController.clear();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  if (_selectedMakeId != null)
+                    _VehicleModelField(
+                      makeId: _selectedMakeId!,
+                      value: _selectedModel,
+                      onChanged: (v) {
+                        setState(() => _selectedModel = v);
+                        _modelController.text = v ?? '';
+                        if (v != null) _fetchCarImage();
+                      },
+                    )
+                  else
+                    TextFormField(
+                      controller: _modelController,
+                      style: const TextStyle(
+                        color: AppColors.gray900,
+                        fontSize: 14,
+                      ),
+                      decoration: _inputDecoration('Model (Örn: Megane)'),
+                      validator:
+                          (v) => v == null || v.isEmpty ? 'Model zorunludur' : null,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  if (_imageLoading || _carImages.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _CarImagePreview(
+                      images: _carImages,
+                      loading: _imageLoading,
+                      currentIndex: _imageIndex,
+                      onPageChanged: (i) => setState(() => _imageIndex = i),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _yearController,
+                          style: const TextStyle(
+                            color: AppColors.gray900,
+                            fontSize: 14,
+                          ),
+                          decoration: _inputDecoration('Yıl (Opsiyonel)'),
+                          keyboardType: TextInputType.number,
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _plateController,
+                          style: const TextStyle(
+                            color: AppColors.gray900,
+                            fontSize: 14,
+                          ),
+                          decoration: _inputDecoration('Plaka (Opsiyonel)'),
+                          textCapitalization: TextCapitalization.characters,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _submit(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const _SectionLabel('Teknik Detaylar (Opsiyonel)'),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DropdownField(
+                          hint: 'Yakıt Tipi',
+                          value: _fuelType,
+                          items: const [
+                            'benzin',
+                            'dizel',
+                            'lpg',
+                            'hibrit',
+                            'elektrik',
+                          ],
+                          labels: const [
+                            'Benzin',
+                            'Dizel',
+                            'LPG',
+                            'Hibrit',
+                            'Elektrik',
+                          ],
+                          onChanged: (v) => setState(() => _fuelType = v),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _DropdownField(
+                          hint: 'Şanzıman',
+                          value: _transmissionType,
+                          items: const ['manuel', 'otomatik', 'yariOtomatik'],
+                          labels: const ['Manuel', 'Otomatik', 'Yarı Otomatik'],
+                          onChanged: (v) => setState(() => _transmissionType = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _engineController,
+                          style: const TextStyle(
+                            color: AppColors.gray900,
+                            fontSize: 14,
+                          ),
+                          decoration: _inputDecoration('Motor Hacmi (Örn: 1.6)'),
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _DropdownField(
+                          hint: 'Çekiş',
+                          value: _driveType,
+                          items: const ['fwd', 'rwd', 'awd', '4wd'],
+                          labels: const [
+                            'Önden Çekiş',
+                            'Arkadan İtiş',
+                            'AWD',
+                            '4x4',
+                          ],
+                          onChanged: (v) => setState(() => _driveType = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _DropdownField(
+                          hint: 'Kasa Tipi',
+                          value: _bodyType,
+                          items: const [
+                            'sedan',
+                            'hatchback',
+                            'suv',
+                            'coupe',
+                            'station',
+                            'pickup',
+                            'minivan',
+                          ],
+                          labels: const [
+                            'Sedan',
+                            'Hatchback',
+                            'SUV',
+                            'Coupe',
+                            'Station Wagon',
+                            'Pickup',
+                            'Minivan',
+                          ],
+                          onChanged: (v) => setState(() => _bodyType = v),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _colorController,
+                          style: const TextStyle(
+                            color: AppColors.gray900,
+                            fontSize: 14,
+                          ),
+                          decoration: _inputDecoration('Renk'),
+                          textInputAction: TextInputAction.next,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: _mileageController,
+                    style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+                    decoration: _inputDecoration(
+                      'Kilometre',
+                    ).copyWith(suffixText: 'km'),
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    onFieldSubmitted: (_) => _submit(),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child:
+                        _isSubmitting
+                            ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : Text(
+                              widget.vehicle != null ? 'Güncelle' : 'Kaydet',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ),
-              const SizedBox(height: 32),
-            ],
+            ),
           ),
         ),
       ),

@@ -78,7 +78,9 @@ class GuestBookingModel {
     transmissionType: json['transmissionType'] as String?,
     engineDisplacement: json['engineDisplacement'] as String?,
     color: json['color'] as String?,
-    mileage: json['mileage'] as int?,
+    mileage: json['mileage'] != null
+        ? int.tryParse(json['mileage'].toString())
+        : null,
     imageUrl: json['imageUrl'] as String?,
     preferredDate: json['preferredDate'] as String?,
     damageReports: json['damageReports'],

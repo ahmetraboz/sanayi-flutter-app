@@ -34,10 +34,10 @@ class FilterPills extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useRootNavigator: true,
-      builder: (_) => _FilterSheet(
+      builder: (sheetContext) => _FilterSheet(
         activeFilter: activeFilter,
         onChanged: (val) {
-          Navigator.of(context).pop();
+          Navigator.of(sheetContext).pop();
           onChanged(val);
         },
       ),

@@ -43,7 +43,9 @@ class VehicleDetail {
     bodyType: json['bodyType'] as String?,
     color: json['color'] as String?,
     driveType: json['driveType'] as String?,
-    mileage: json['mileage'] as int?,
+    mileage: json['mileage'] != null
+        ? int.tryParse(json['mileage'].toString())
+        : null,
   );
 }
 

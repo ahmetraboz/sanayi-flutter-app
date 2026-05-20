@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme.dart';
 import '../models/dashboard_models.dart';
 
@@ -20,6 +21,7 @@ class StatCardsGrid extends StatelessWidget {
                 iconColor: const Color(0xFF3B82F6),
                 value: '${stats.vehicles}',
                 label: 'Kayıtlı Araç',
+                onTap: () => context.go('/dashboard/vehicles'),
               ),
             ),
             const SizedBox(width: 10),
@@ -30,6 +32,7 @@ class StatCardsGrid extends StatelessWidget {
                 iconColor: AppColors.gray500,
                 value: '${stats.totalRequests}',
                 label: 'Toplam Talep',
+                onTap: () => context.go('/dashboard/requests'),
               ),
             ),
           ],
@@ -45,6 +48,7 @@ class StatCardsGrid extends StatelessWidget {
                 value: '${stats.openRequests}',
                 label: 'Açık Talep',
                 valueColor: const Color(0xFFCA8A04),
+                onTap: () => context.go('/dashboard/requests'),
               ),
             ),
             const SizedBox(width: 10),
@@ -56,6 +60,7 @@ class StatCardsGrid extends StatelessWidget {
                 value: '${stats.pendingBids}',
                 label: 'Gelen Teklif',
                 valueColor: AppColors.primary600,
+                onTap: () => context.go('/dashboard/bids'),
               ),
             ),
           ],
@@ -72,6 +77,7 @@ class _StatCard extends StatelessWidget {
   final String value;
   final String label;
   final Color? valueColor;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.icon,
@@ -80,46 +86,51 @@ class _StatCard extends StatelessWidget {
     required this.value,
     required this.label,
     this.valueColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gray200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconBgColor,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.gray200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: iconBgColor,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, size: 18, color: iconColor),
             ),
-            child: Icon(icon, size: 18, color: iconColor),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: valueColor ?? AppColors.gray900,
+            const SizedBox(height: 12),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: valueColor ?? AppColors.gray900,
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: AppColors.gray500),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: AppColors.gray500),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }

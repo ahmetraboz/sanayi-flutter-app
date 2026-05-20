@@ -31,10 +31,10 @@ class BidFilterPills extends StatelessWidget {
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       useRootNavigator: true,
-      builder: (_) => _BidFilterSheet(
+      builder: (sheetContext) => _BidFilterSheet(
         activeFilter: activeFilter,
         onChanged: (val) {
-          Navigator.of(context).pop();
+          Navigator.of(sheetContext).pop();
           onChanged(val);
         },
       ),
