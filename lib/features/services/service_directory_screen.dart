@@ -147,7 +147,7 @@ class _ServiceDirectoryScreenState extends ConsumerState<ServiceDirectoryScreen>
       color: AppColors.primary600,
       onRefresh: () => notifier.fetchProviders(),
       child: GridView.builder(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(16, 16, 16, widget.asTab ? 100 : 16),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: crossAxisCount,
           crossAxisSpacing: 16,

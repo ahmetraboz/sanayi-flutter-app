@@ -127,7 +127,7 @@ class _CustomerBidsScreenState extends ConsumerState<CustomerBidsScreen> {
       color: AppColors.primary600,
       onRefresh: notifier.load,
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         itemCount: filteredBids.length,
         separatorBuilder: (_, __) => const SizedBox(height: 16),
         itemBuilder: (context, index) {
@@ -296,7 +296,7 @@ class _BidCardState extends State<_BidCard> {
   @override
   Widget build(BuildContext context) {
     final bid = widget.bid;
-    final isPending = bid.status == 'pending';
+    final isPending = bid.status == 'pending' || bid.status == 'quoted';
     final isAccepted = bid.status == 'accepted';
     final isRejected = bid.status == 'rejected';
 
@@ -608,8 +608,8 @@ class _BidCardState extends State<_BidCard> {
         icon = Icons.check_circle_outline;
         break;
       case 'rejected':
-        bg = AppColors.gray100;
-        text = AppColors.gray600;
+        bg = AppColors.red50;
+        text = AppColors.red700;
         label = 'Reddedildi';
         icon = Icons.cancel_outlined;
         break;

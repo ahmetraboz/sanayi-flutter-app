@@ -83,6 +83,13 @@ const _statusConfig = <String, _StatusConfig>{
     borderColor: AppColors.red100,
     icon: Icons.cancel_outlined,
   ),
+  'rejected': _StatusConfig(
+    label: 'Reddedildi',
+    textColor: AppColors.red700,
+    bgColor: AppColors.red50,
+    borderColor: AppColors.red100,
+    icon: Icons.cancel_outlined,
+  ),
 };
 
 const _defaultStatus = _StatusConfig(

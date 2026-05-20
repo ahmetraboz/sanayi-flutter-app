@@ -209,6 +209,7 @@ class _StatusBadge extends StatelessWidget {
     'pending_review': 'Değerlendirme',
     'completed': 'Tamamlandı',
     'cancelled': 'İptal',
+    'rejected': 'Reddedildi',
   };
 
   static const _colors = <String, Color>{
@@ -221,6 +222,7 @@ class _StatusBadge extends StatelessWidget {
     'pending_review': Color(0xFFD97706),
     'completed': AppColors.gray500,
     'cancelled': AppColors.red700,
+    'rejected': AppColors.red700,
   };
 
   static const _bgColors = <String, Color>{
@@ -233,6 +235,7 @@ class _StatusBadge extends StatelessWidget {
     'pending_review': Color(0xFFFEF3C7),
     'completed': AppColors.gray100,
     'cancelled': AppColors.red50,
+    'rejected': AppColors.red50,
   };
 
   @override

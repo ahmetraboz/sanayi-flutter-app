@@ -175,6 +175,7 @@ class _DatePickerSheetState extends State<DatePickerSheet> {
               }
 
               return GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () {
                   widget.onSelected(cell.str);
                   Navigator.pop(context);

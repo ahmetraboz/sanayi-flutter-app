@@ -12,6 +12,7 @@ const _kStatusMap = <String, _StatusConfig>{
   'pending_review': (bg: AppColors.amber50, text: AppColors.amber700, label: 'Değerlendirme'),
   'completed': (bg: AppColors.green50, text: AppColors.green700, label: 'Tamamlandı'),
   'cancelled': (bg: AppColors.red50, text: AppColors.red700, label: 'İptal Edildi'),
+  'rejected': (bg: AppColors.red50, text: AppColors.red700, label: 'Reddedildi'),
 };
 
 enum StatusBadgeVariant { subtle, solid }

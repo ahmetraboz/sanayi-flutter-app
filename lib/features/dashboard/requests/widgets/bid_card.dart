@@ -43,7 +43,7 @@ class BidCard extends StatelessWidget {
           _buildHeader(isAccepted),
           const Divider(height: 1, thickness: 1, color: AppColors.gray100),
           _buildBody(),
-          if (canAccept && bid.status == 'quoted') ...[
+          if (canAccept && (bid.status == 'quoted' || bid.status == 'pending')) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.gray100),
             _buildActions(context),
           ],
@@ -408,7 +408,7 @@ class _BidStatusBadge extends StatelessWidget {
         const Color(0xFF059669),
         const Color(0xFFECFDF5),
       ),
-      'rejected' => ('Reddedildi', AppColors.gray500, AppColors.gray100),
+      'rejected' => ('Reddedildi', AppColors.red700, AppColors.red50),
       _ => ('Teklif Verildi', const Color(0xFF2563EB), const Color(0xFFEFF6FF)),
     };
 

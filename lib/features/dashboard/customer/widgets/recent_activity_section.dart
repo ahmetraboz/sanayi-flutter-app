@@ -10,6 +10,7 @@ const _requestStatusLabels = <String, String>{
   'completed': 'Tamamlandı',
   'cancelled': 'İptal',
   'pending_review': 'Değerlendirme',
+  'rejected': 'Reddedildi',
 };
 
 const _requestStatusColors = <String, Color>{
@@ -19,6 +20,7 @@ const _requestStatusColors = <String, Color>{
   'completed': Color(0xFF6B7280),
   'cancelled': Color(0xFFB91C1C),
   'pending_review': Color(0xFFD97706),
+  'rejected': Color(0xFFEF4444),
 };
 
 const _requestStatusBgColors = <String, Color>{
@@ -28,6 +30,7 @@ const _requestStatusBgColors = <String, Color>{
   'completed': Color(0xFFF3F4F6),
   'cancelled': Color(0xFFFEF2F2),
   'pending_review': Color(0xFFFEF3C7),
+  'rejected': Color(0xFFFEE2E2),
 };
 
 const _bidStatusLabels = <String, String>{

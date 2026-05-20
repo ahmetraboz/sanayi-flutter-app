@@ -243,6 +243,7 @@ class _RecentRequestRow extends StatelessWidget {
     'pending_review': 'İncelemede',
     'completed': 'Tamamlandı',
     'cancelled': 'İptal Edildi',
+    'rejected': 'Reddedildi',
   };
 
   static const _statusColors = {
@@ -255,6 +256,7 @@ class _RecentRequestRow extends StatelessWidget {
     'pending_review': Color(0xFFD97706),
     'completed': Color(0xFF16A34A),
     'cancelled': Color(0xFF6B7280),
+    'rejected': Color(0xFFEF4444),
   };
 
   static const _statusBgColors = {
@@ -267,6 +269,7 @@ class _RecentRequestRow extends StatelessWidget {
     'pending_review': Color(0xFFFEF3C7),
     'completed': Color(0xFFF0FDF4),
     'cancelled': Color(0xFFF3F4F6),
+    'rejected': Color(0xFFFEE2E2),
   };
 
   @override
@@ -340,7 +343,7 @@ class _RecentBidRow extends StatelessWidget {
     final priceStr = bid.price != null
         ? NumberFormat('#,##0', 'tr').format(bid.price) + ' ₺'
         : '-';
-    final isPending = bid.status == 'pending';
+    final isPending = bid.status == 'pending' || bid.status == 'quoted';
 
     return GestureDetector(
       onTap: () => context.push('/dashboard/requests/${bid.requestId}'),

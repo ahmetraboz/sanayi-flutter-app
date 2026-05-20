@@ -41,6 +41,7 @@ const _statusColors = <String, Color>{
   'in_progress': AppColors.amber600,
   'completed': AppColors.green700,
   'cancelled': AppColors.gray500,
+  'rejected': AppColors.red700,
 };
 
 const _statusBgColors = <String, Color>{
@@ -50,6 +51,7 @@ const _statusBgColors = <String, Color>{
   'in_progress': AppColors.warning50,
   'completed': AppColors.success50,
   'cancelled': AppColors.gray100,
+  'rejected': AppColors.red50,
 };
 
 const _statusLabels = <String, String>{
@@ -61,6 +63,7 @@ const _statusLabels = <String, String>{
   'in_progress': 'Devam Ediyor',
   'completed': 'Tamamlandı',
   'cancelled': 'İptal',
+  'rejected': 'Reddedildi',
 };
 
 class VehicleDetailScreen extends ConsumerWidget {

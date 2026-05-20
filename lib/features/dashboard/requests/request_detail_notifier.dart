@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/api/api_client.dart';
+import '../customer/customer_dashboard_notifier.dart';
+import '../notifications/notifications_notifier.dart';
+import '../bids/customer_bids_notifier.dart';
 import 'models/request_detail.dart';
 
 const _sentinel = Object();
@@ -48,7 +51,7 @@ class RequestDetailState {
   bool get isInfoRequested => status == 'info_requested';
   bool get canComplete => status == 'accepted' || status == 'in_progress';
   bool get isPendingReview => status == 'pending_review';
-  bool get canCancel => status != null && status != 'cancelled' && status != 'completed';
+  bool get canCancel => status != null && status != 'cancelled' && status != 'completed' && status != 'rejected';
 
   JobUpdate? get completionUpdate {
     try {
@@ -104,10 +107,17 @@ class RequestDetailState {
 class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
   final ApiClient _api;
   final int requestId;
+  final Ref _ref;
 
-  RequestDetailNotifier(this._api, this.requestId)
+  RequestDetailNotifier(this._api, this.requestId, this._ref)
     : super(const RequestDetailState()) {
     loadDetail();
+  }
+
+  void _invalidateStats() {
+    _ref.invalidate(customerDashboardProvider);
+    _ref.invalidate(notificationsProvider);
+    _ref.invalidate(customerBidsProvider);
   }
 
   Future<void> loadDetail() async {
@@ -147,6 +157,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/bids/$bidId/accept');
       state = state.copyWith(accepting: false, acceptedBidId: bidId);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -163,6 +174,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/bids/$bidId/reject');
       state = state.copyWith(rejecting: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -179,6 +191,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/requests/$requestId/submit-info', data: data);
       state = state.copyWith(submittingInfo: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -192,6 +205,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/requests/$requestId/reject-info');
       state = state.copyWith(rejectingInfo: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -205,6 +219,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/requests/$requestId/complete');
       state = state.copyWith(completing: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -218,6 +233,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     try {
       await _api.post('/api/requests/$requestId/cancel');
       state = state.copyWith(cancelling: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -234,6 +250,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
         if (comment != null && comment.isNotEmpty) 'comment': comment,
       });
       state = state.copyWith(reviewing: false);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -245,5 +262,5 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
 
 final requestDetailProvider = StateNotifierProvider.autoDispose
     .family<RequestDetailNotifier, RequestDetailState, int>((ref, id) {
-      return RequestDetailNotifier(ref.read(apiClientProvider), id);
+      return RequestDetailNotifier(ref.read(apiClientProvider), id, ref);
     });

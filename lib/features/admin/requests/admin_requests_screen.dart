@@ -200,6 +200,11 @@ class _StatusBadge extends StatelessWidget {
         fg = AppColors.red700;
         label = 'İptal';
         break;
+      case 'rejected':
+        bg = AppColors.red50;
+        fg = AppColors.red700;
+        label = 'Reddedildi';
+        break;
       default:
         bg = AppColors.gray100;
         fg = AppColors.gray700;
