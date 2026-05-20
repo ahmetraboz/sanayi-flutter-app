@@ -242,6 +242,20 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     }
   }
 
+  Future<bool> skipReview() async {
+    state = state.copyWith(reviewing: true, actionError: null);
+    try {
+      await _api.post('/api/requests/$requestId/skip-review');
+      state = state.copyWith(reviewing: false);
+      _invalidateStats();
+      await loadDetail();
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(reviewing: false, actionError: e.message ?? 'İşlem başarısız');
+      return false;
+    }
+  }
+
   Future<bool> submitReview({required int rating, String? comment}) async {
     state = state.copyWith(reviewing: true, actionError: null);
     try {

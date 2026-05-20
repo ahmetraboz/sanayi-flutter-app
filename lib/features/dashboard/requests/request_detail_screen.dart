@@ -172,7 +172,11 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
             // Değerlendirme bölümü
             if (state.isPendingReview) ...[
               if (!_showReviewForm)
-                _PendingReviewCard(onReview: () => setState(() => _showReviewForm = true)),
+                _PendingReviewCard(
+                  onReview: () => setState(() => _showReviewForm = true),
+                  onSkip: () => notifier.skipReview(),
+                  skipping: state.reviewing,
+                ),
               if (_showReviewForm)
                 _ReviewForm(
                   submitting: state.reviewing,
@@ -708,8 +712,10 @@ class _CancelRequestButton extends StatelessWidget {
 
 class _PendingReviewCard extends StatelessWidget {
   final VoidCallback onReview;
+  final Future<void> Function() onSkip;
+  final bool skipping;
 
-  const _PendingReviewCard({required this.onReview});
+  const _PendingReviewCard({required this.onReview, required this.onSkip, required this.skipping});
 
   @override
   Widget build(BuildContext context) {
@@ -739,7 +745,7 @@ class _PendingReviewCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: onReview,
+              onPressed: skipping ? null : onReview,
               icon: const Icon(Icons.star, size: 16),
               label: const Text('Değerlendirme Yap'),
               style: ElevatedButton.styleFrom(
@@ -748,6 +754,16 @@ class _PendingReviewCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 elevation: 0,
               ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: skipping ? null : onSkip,
+              child: skipping
+                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text('Değerlendirmeyi Atla', style: TextStyle(color: AppColors.gray500, fontSize: 13)),
             ),
           ),
         ],
