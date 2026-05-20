@@ -17,6 +17,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   Future<void> _init() async {
     final myVersion = _sessionVersion;
     final user = await _repo.getMe();
+    if (!mounted) return;
     if (_sessionVersion == myVersion) {
       state = AsyncValue.data(user);
     }

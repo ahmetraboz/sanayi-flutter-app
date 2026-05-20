@@ -211,6 +211,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _buildInputLabel('E-posta'),
           const SizedBox(height: 6),
           TextFormField(
+            key: const Key('email_field'),
             controller: _emailCtrl,
             keyboardType: TextInputType.emailAddress,
             textInputAction: TextInputAction.next,
@@ -224,6 +225,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _buildInputLabel('Şifre'),
           const SizedBox(height: 6),
           TextFormField(
+            key: const Key('password_field'),
             controller: _passwordCtrl,
             obscureText: !_showPassword,
             textInputAction: TextInputAction.done,
@@ -273,6 +275,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Widget _buildSubmitButton() {
     return GestureDetector(
+      key: const Key('login_button'),
       onTap: _loading ? null : _onSubmit,
       child: Container(
         width: double.infinity,

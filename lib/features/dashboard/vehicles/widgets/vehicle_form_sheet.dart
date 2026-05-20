@@ -506,6 +506,7 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
                   ),
                   const SizedBox(height: 32),
                   ElevatedButton(
+                    key: const Key('vehicle_save_button'),
                     onPressed: _isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary600,
@@ -633,6 +634,7 @@ class _VehicleBrandFieldState extends ConsumerState<_VehicleBrandField> {
               _focusNode?.addListener(_onFocusChange);
             }
             return TextFormField(
+              key: const Key('vehicle_brand_field'),
               controller: ctrl,
               focusNode: focusNode,
               onEditingComplete: onSubmit,
