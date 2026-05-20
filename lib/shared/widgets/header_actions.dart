@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
-import '../../features/dashboard/notifications/notifications_notifier.dart';
+import '../../core/providers/notification_polling_provider.dart';
 
 class HeaderActions extends ConsumerWidget {
   const HeaderActions({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread = ref.watch(notificationsProvider).notifications.where((n) => !n.isRead).length;
+    final unread = ref.watch(notificationPollingProvider).unreadCount;
 
     return Row(
       mainAxisSize: MainAxisSize.min,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/theme.dart';
@@ -301,30 +302,211 @@ class _GuestTrackingScreenState extends ConsumerState<GuestTrackingScreen> {
                 const Divider(height: 1, thickness: 1, color: AppColors.gray100),
             itemBuilder: (context, i) {
               final u = updates[i];
+
+              // Get style based on updateType
+              final (typeLabel, typeIcon, typeColor, typeBg) = switch (u.updateType) {
+                'completed' => ('Tamamlandı', Icons.check_circle_outline, AppColors.primary600, const Color(0xFFEFF6FF)),
+                'delay' => ('Gecikme', Icons.schedule_outlined, AppColors.amber600, const Color(0xFFFFFBEB)),
+                _ => ('Güncelleme', Icons.trending_up_outlined, AppColors.blue600, const Color(0xFFEFF6FF)),
+              };
+
+              final hasCost = u.laborCost != null || u.partsCost != null || u.totalCost != null;
+
               return Padding(
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
-                      margin: const EdgeInsets.only(top: 5),
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary600,
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: typeColor.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
+                      child: Icon(typeIcon, size: 16, color: typeColor),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(u.message,
-                              style: const TextStyle(fontSize: 13, color: AppColors.gray700, height: 1.4)),
-                          const SizedBox(height: 2),
-                          Text(_fmtDate(u.createdAt),
-                              style: const TextStyle(fontSize: 11, color: AppColors.gray400)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '$typeLabel · ${u.companyName}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: typeColor,
+                                ),
+                              ),
+                              Text(
+                                _fmtDate(u.createdAt),
+                                style: const TextStyle(fontSize: 11, color: AppColors.gray400),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            u.description,
+                            style: const TextStyle(fontSize: 13, color: AppColors.gray900, height: 1.4),
+                          ),
+                          if (u.partsUsed != null && u.partsUsed!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(Icons.build_circle_outlined, size: 14, color: AppColors.gray400),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  'Kullanılan Parçalar: ',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.gray600),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    u.partsUsed!,
+                                    style: const TextStyle(fontSize: 12, color: AppColors.gray700),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (u.updateType == 'delay' && u.delayReason != null && u.delayReason!.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFF7ED),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFFDBA74).withValues(alpha: 0.5)),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Icon(Icons.warning_amber_outlined, size: 14, color: Color(0xFFEA580C)),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Gecikme Nedeni',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFEA580C)),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          u.delayReason!,
+                                          style: const TextStyle(fontSize: 11, color: Color(0xFFC2410C)),
+                                        ),
+                                        if (u.delayEstimateDays != null) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            'Tahmini Ek Süre: ${u.delayEstimateDays} gün',
+                                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFC2410C)),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (hasCost) ...[
+                            const SizedBox(height: 10),
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: AppColors.gray50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: AppColors.gray200),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Maliyet Kırılımı',
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.gray500),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  if (u.laborCost != null)
+                                    _buildCostRow('İşçilik', u.laborCost!),
+                                  if (u.partsCost != null)
+                                    _buildCostRow('Yedek Parça', u.partsCost!),
+                                  if (u.totalCost != null) ...[
+                                    const Divider(height: 12, color: AppColors.gray200),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text(
+                                          'Toplam',
+                                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                                        ),
+                                        Text(
+                                          '₺${u.totalCost!.toStringAsFixed(0)}',
+                                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary600),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                          if (u.attachmentUrls.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: u.attachmentUrls.map((url) {
+                                final isPdf = url.toLowerCase().contains('.pdf') || url.toLowerCase().contains('pdf');
+                                return GestureDetector(
+                                  onTap: () async {
+                                    final uri = Uri.parse(url);
+                                    if (await canLaunchUrl(uri)) {
+                                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    }
+                                  },
+                                  child: isPdf
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFEF2F2),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(color: const Color(0xFFFCA5A5)),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: const [
+                                              Icon(Icons.picture_as_pdf_outlined, size: 14, color: AppColors.red700),
+                                              SizedBox(width: 6),
+                                              Text(
+                                                'Fatura.pdf',
+                                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.red700),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.network(
+                                            url,
+                                            width: 56,
+                                            height: 56,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) => Container(
+                                              width: 56,
+                                              height: 56,
+                                              color: AppColors.gray100,
+                                              child: const Icon(Icons.image_not_supported_outlined, size: 18, color: AppColors.gray400),
+                                            ),
+                                          ),
+                                        ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -335,6 +517,19 @@ class _GuestTrackingScreenState extends ConsumerState<GuestTrackingScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCostRow(String label, double amount) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.gray600)),
+          Text('₺${amount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.gray900)),
+        ],
+      ),
     );
   }
 

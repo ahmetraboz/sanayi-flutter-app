@@ -2,21 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/providers/notification_polling_provider.dart';
 import 'notifications_notifier.dart';
 import '../../../../shared/models/notification_model.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../shared/widgets/skeleton.dart';
 import '../../../shared/widgets/page_header.dart';
 
-class NotificationsScreen extends ConsumerWidget {
+class NotificationsScreen extends ConsumerStatefulWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
+}
+
+class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await ref.read(notificationsProvider.notifier).markAllAsRead();
+      if (mounted) ref.read(notificationPollingProvider.notifier).refresh();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(notificationsProvider);
     final notifier = ref.read(notificationsProvider.notifier);
 
-    // timeago setup for Turkish if not globally initialized:
     timeago.setLocaleMessages('tr', timeago.TrMessages());
 
     final unreadCount = state.notifications.where((n) => !n.isRead).length;

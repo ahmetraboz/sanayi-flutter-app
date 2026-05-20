@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class QuoteResponse {
   final int id;
   final String companyName;
@@ -33,17 +35,64 @@ class QuoteResponse {
 
 class BookingUpdate {
   final int id;
-  final String message;
+  final String updateType;
+  final String description;
+  final String? partsUsed;
+  final List<String> attachmentUrls;
+  final String? delayReason;
+  final int? delayEstimateDays;
+  final double? laborCost;
+  final double? partsCost;
+  final double? totalCost;
+  final String companyName;
   final DateTime createdAt;
 
-  const BookingUpdate({required this.id, required this.message, required this.createdAt});
+  const BookingUpdate({
+    required this.id,
+    required this.updateType,
+    required this.description,
+    this.partsUsed,
+    required this.attachmentUrls,
+    this.delayReason,
+    this.delayEstimateDays,
+    this.laborCost,
+    this.partsCost,
+    this.totalCost,
+    required this.companyName,
+    required this.createdAt,
+  });
 
-  factory BookingUpdate.fromJson(Map<String, dynamic> json) => BookingUpdate(
-        id: json['id'] as int,
-        message: json['message'] as String? ?? '',
-        createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
-      );
+  factory BookingUpdate.fromJson(Map<String, dynamic> json) {
+    List<String> attachments = [];
+    final rawAttachments = json['attachmentUrls'];
+    try {
+      if (rawAttachments is String && rawAttachments.isNotEmpty) {
+        final decoded = jsonDecode(rawAttachments);
+        if (decoded is List) {
+          attachments = decoded.map((e) => e.toString()).toList();
+        }
+      } else if (rawAttachments is List) {
+        attachments = rawAttachments.map((e) => e.toString()).toList();
+      }
+    } catch (_) {}
+
+    return BookingUpdate(
+      id: json['id'] as int,
+      updateType: json['updateType'] as String? ?? 'progress',
+      description: json['description'] as String? ?? '',
+      partsUsed: json['partsUsed'] as String?,
+      attachmentUrls: attachments,
+      delayReason: json['delayReason'] as String?,
+      delayEstimateDays: json['delayEstimateDays'] as int?,
+      laborCost: double.tryParse(json['laborCost']?.toString() ?? ''),
+      partsCost: double.tryParse(json['partsCost']?.toString() ?? ''),
+      totalCost: double.tryParse(json['totalCost']?.toString() ?? ''),
+      companyName: json['companyName'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? DateTime.now(),
+    );
+  }
 }
+
 
 class GuestBookingTracking {
   final int id;

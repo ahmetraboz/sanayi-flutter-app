@@ -2,54 +2,84 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/theme.dart';
-import '../notifications/notifications_notifier.dart';
+import '../../../core/providers/notification_polling_provider.dart';
 
-class CustomerShell extends ConsumerWidget {
+class CustomerShell extends ConsumerStatefulWidget {
   final Widget child;
 
   const CustomerShell({super.key, required this.child});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final path = GoRouterState.of(context).uri.path;
-    final selectedIndex = _indexFromPath(path);
+  ConsumerState<CustomerShell> createState() => _CustomerShellState();
+}
 
-    final unreadNotifications = ref
-        .watch(notificationsProvider)
-        .notifications
-        .where((n) => !n.isRead)
-        .toList();
-
-    int tabBadge(String prefix) =>
-        unreadNotifications.where((n) => n.link != null && n.link!.startsWith(prefix)).length;
-
-    final badges = [
-      0,
-      tabBadge('/dashboard/workplaces'),
-      tabBadge('/dashboard/requests'),
-      tabBadge('/dashboard/bids'),
-      tabBadge('/dashboard/vehicles'),
-    ];
-
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Stack(
-        children: [
-          child,
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _FloatingNavBar(
-              selectedIndex: selectedIndex,
-              badges: badges,
-              onTap: (i) => _navigate(context, i),
+class _CustomerShellState extends ConsumerState<CustomerShell> {
+  @override
+  void initState() {
+    super.initState();
+    ref.listenManual(
+      notificationPollingProvider.select((s) => s.pendingBanners),
+      (prev, next) {
+        if (next.isEmpty) return;
+        if (prev != null && next.length <= prev.length) return;
+        final banner = next.first;
+        ref.read(notificationPollingProvider.notifier).consumeBanner();
+        final (icon, color) = _bannerStyle(banner.type);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: const Duration(seconds: 5),
+            backgroundColor: Colors.white,
+            elevation: 4,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 80),
+            content: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icon, size: 18, color: color),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(banner.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: AppColors.gray900)),
+                      if (banner.message.isNotEmpty)
+                        Text(banner.message, style: const TextStyle(fontSize: 12, color: AppColors.gray500), maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            action: SnackBarAction(
+              label: 'Görüntüle',
+              textColor: AppColors.primary600,
+              onPressed: () {
+                if (banner.link != null && banner.link!.isNotEmpty) {
+                  context.push(banner.link!);
+                } else {
+                  context.push('/dashboard/notifications');
+                }
+              },
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+
+  (IconData, Color) _bannerStyle(String type) => switch (type) {
+    'bid_received' => (Icons.local_offer_outlined, AppColors.blue600),
+    'request_update' => (Icons.update, AppColors.amber600),
+    _ => (Icons.notifications_outlined, AppColors.primary600),
+  };
 
   int _indexFromPath(String path) {
     if (path.startsWith('/dashboard/workplaces')) return 1;
@@ -59,7 +89,7 @@ class CustomerShell extends ConsumerWidget {
     return 0;
   }
 
-  void _navigate(BuildContext context, int i) {
+  void _navigate(int i) {
     const paths = [
       '/dashboard',
       '/dashboard/workplaces',
@@ -68,6 +98,31 @@ class CustomerShell extends ConsumerWidget {
       '/dashboard/vehicles',
     ];
     context.go(paths[i]);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final path = GoRouterState.of(context).uri.path;
+    final selectedIndex = _indexFromPath(path);
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: Stack(
+        children: [
+          widget.child,
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: _FloatingNavBar(
+              selectedIndex: selectedIndex,
+              badges: const [0, 0, 0, 0, 0],
+              onTap: _navigate,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
