@@ -58,6 +58,10 @@ class RequestInfoCard extends StatelessWidget {
         _buildVehicleCard(),
         const SizedBox(height: 8),
         _buildMetaRow(),
+        if (request.preferredDateFrom != null) ...[
+          const SizedBox(height: 10),
+          _buildPreferredDateBlock(),
+        ],
       ],
     );
   }
@@ -155,17 +159,6 @@ class RequestInfoCard extends StatelessWidget {
   }
 
   Widget _buildMetaRow() {
-    String? preferredDateLabel;
-    if (request.preferredDateFrom != null) {
-      final from = _fmtDate(request.preferredDateFrom!);
-      if (request.preferredDateTo != null &&
-          request.preferredDateTo != request.preferredDateFrom) {
-        preferredDateLabel = '$from – ${_fmtDate(request.preferredDateTo!)}';
-      } else {
-        preferredDateLabel = from;
-      }
-    }
-
     return Wrap(
       spacing: 8,
       runSpacing: 6,
@@ -174,8 +167,6 @@ class RequestInfoCard extends StatelessWidget {
           icon: Icons.calendar_today_outlined,
           label: _fmtDate(request.createdAt),
         ),
-        if (preferredDateLabel != null)
-          _PreferredDateChip(label: preferredDateLabel),
         if (request.urgencyLevel != null && request.urgencyLevel!.isNotEmpty)
           _UrgencyChip(level: request.urgencyLevel!),
         if (request.problemCategory != null &&
@@ -185,6 +176,65 @@ class RequestInfoCard extends StatelessWidget {
             label: _capitalize(request.problemCategory!),
           ),
       ],
+    );
+  }
+
+  Widget _buildPreferredDateBlock() {
+    final from = _fmtDate(request.preferredDateFrom!);
+    final hasRange = request.preferredDateTo != null &&
+        request.preferredDateTo != request.preferredDateFrom;
+    final label = hasRange
+        ? '$from – ${_fmtDate(request.preferredDateTo!)}'
+        : from;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFBFDBFE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: const Color(0xFFDBEAFE),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(
+              Icons.event_available_outlined,
+              size: 18,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tercih Ettiğiniz Tarih Aralığı',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF3B82F6),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF1D4ED8),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -332,39 +382,3 @@ class _MetaChip extends StatelessWidget {
   }
 }
 
-class _PreferredDateChip extends StatelessWidget {
-  final String label;
-  const _PreferredDateChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF6FF),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFBFDBFE)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.event_available_outlined, size: 13, color: Color(0xFF2563EB)),
-          const SizedBox(width: 5),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Tercih Edilen Tarih',
-                style: TextStyle(fontSize: 10, color: Color(0xFF3B82F6), fontWeight: FontWeight.w500),
-              ),
-              Text(
-                label,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF1D4ED8), fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}

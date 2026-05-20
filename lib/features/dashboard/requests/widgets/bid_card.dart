@@ -473,138 +473,196 @@ class _ProposedDateRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final proposedByCustomer = dateProposedBy == 'customer';
 
-    // Customer proposed → waiting for provider to respond
-    if (proposedByCustomer) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFBEB),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: const Color(0xFFFDE68A)),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.schedule_outlined, size: 16, color: Color(0xFFD97706)),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Önerdiğiniz Tarih',
-                    style: TextStyle(fontSize: 11, color: Color(0xFFD97706), fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    _fmt(proposedDate),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF92400E),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Text(
-              'Usta yanıt bekliyor',
-              style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Provider proposed → customer can accept or counter
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFFF5F3FF),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFDDD6FE)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          // Header
+          const Row(
             children: [
-              const Icon(Icons.calendar_month_outlined, size: 16, color: Color(0xFF7C3AED)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Ustanın Önerdiği Tarih',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF7C3AED), fontWeight: FontWeight.w500),
-                    ),
-                    Text(
-                      _fmt(proposedDate),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF4C1D95),
-                      ),
-                    ),
-                  ],
+              Icon(Icons.swap_vert_rounded, size: 15, color: Color(0xFF7C3AED)),
+              SizedBox(width: 6),
+              Text(
+                'Tarih Görüşmesi',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF7C3AED),
                 ),
               ),
             ],
           ),
-          if (canCounter) ...[
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _pickCounterDate(context),
-                    child: Container(
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFDDD6FE)),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Farklı Tarih Öner',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF7C3AED),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+          const SizedBox(height: 12),
+
+          // Adım 1 – Müşterinin önerisi
+          if (proposedByCustomer) ...[
+            _DateStep(
+              icon: Icons.person_outline,
+              iconColor: const Color(0xFFD97706),
+              bgColor: const Color(0xFFFEF3C7),
+              label: 'Önerdiğiniz Tarih',
+              labelColor: const Color(0xFFD97706),
+              date: _fmt(proposedDate),
+              dateColor: const Color(0xFF92400E),
+              trailing: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFDE68A),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => onAcceptDate?.call(),
-                    child: Container(
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF7C3AED),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(
-                        child: Text(
-                          'Tarihi Kabul Et',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                child: const Text(
+                  'Yanıt Bekleniyor',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF92400E)),
                 ),
-              ],
+              ),
             ),
+          ] else ...[
+            // Adım 1 – Ustanın önerisi
+            _DateStep(
+              icon: Icons.build_outlined,
+              iconColor: const Color(0xFF7C3AED),
+              bgColor: const Color(0xFFEDE9FE),
+              label: 'Ustanın Önerdiği Tarih',
+              labelColor: const Color(0xFF7C3AED),
+              date: _fmt(proposedDate),
+              dateColor: const Color(0xFF4C1D95),
+            ),
+            if (canCounter) ...[
+              // Bağlantı çizgisi
+              Padding(
+                padding: const EdgeInsets.only(left: 17),
+                child: Container(
+                  width: 1.5,
+                  height: 14,
+                  color: const Color(0xFFDDD6FE),
+                ),
+              ),
+              // Adım 2 – Aksiyon
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _pickCounterDate(context),
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFDDD6FE)),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Farklı Tarih Öner',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF7C3AED),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => onAcceptDate?.call(),
+                      child: Container(
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF7C3AED),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            'Tarihi Kabul Et',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ],
       ),
+    );
+  }
+}
+
+class _DateStep extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final Color bgColor;
+  final String label;
+  final Color labelColor;
+  final String date;
+  final Color dateColor;
+  final Widget? trailing;
+
+  const _DateStep({
+    required this.icon,
+    required this.iconColor,
+    required this.bgColor,
+    required this.label,
+    required this.labelColor,
+    required this.date,
+    required this.dateColor,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 17, color: iconColor),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: labelColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 1),
+              Text(
+                date,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: dateColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
     );
   }
 }
