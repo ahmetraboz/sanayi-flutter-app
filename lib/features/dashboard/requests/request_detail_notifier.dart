@@ -49,7 +49,7 @@ class RequestDetailState {
 
   String? get status => request?.status;
   bool get isInfoRequested => status == 'info_requested';
-  bool get canComplete => status == 'accepted' || status == 'in_progress';
+  bool get canComplete => false;
   bool get isPendingReview => status == 'pending_review';
   bool get canCancel => status != null && status != 'cancelled' && status != 'completed' && status != 'rejected';
 

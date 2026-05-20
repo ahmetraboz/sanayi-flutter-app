@@ -19,7 +19,6 @@ class RequestDetailScreen extends ConsumerStatefulWidget {
 
 class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
   bool _showInfoForm = false;
-  bool _showReviewForm = false;
 
   @override
   Widget build(BuildContext context) {
@@ -134,23 +133,6 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               const SizedBox(height: 12),
             ],
 
-            // Tamamla butonu
-            if (state.canComplete) ...[
-              _CompleteRequestButton(
-                completing: state.completing,
-                onTap: () async {
-                  final confirm = await _confirmDialog(
-                    context,
-                    title: 'Talebi Tamamla',
-                    message: 'Hizmet tamamlandı olarak işaretlenecek. Devam etmek istiyor musunuz?',
-                    confirmLabel: 'Tamamla',
-                  );
-                  if (confirm == true) notifier.completeRequest();
-                },
-              ),
-              const SizedBox(height: 12),
-            ],
-
             // İptal butonu
             if (state.canCancel) ...[
               _CancelRequestButton(
@@ -169,23 +151,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               const SizedBox(height: 12),
             ],
 
-            // Değerlendirme bölümü
+            // Araç teslim bölümü
             if (state.isPendingReview) ...[
-              if (!_showReviewForm)
-                _PendingReviewCard(
-                  onReview: () => setState(() => _showReviewForm = true),
-                  onSkip: () => notifier.skipReview(),
-                  skipping: state.reviewing,
-                ),
-              if (_showReviewForm)
-                _ReviewForm(
-                  submitting: state.reviewing,
-                  onSubmit: (rating, comment) async {
-                    final ok = await notifier.submitReview(rating: rating, comment: comment);
-                    if (ok && mounted) setState(() => _showReviewForm = false);
-                  },
-                  onCancel: () => setState(() => _showReviewForm = false),
-                ),
+              _HandoverCard(
+                confirming: state.reviewing,
+                onConfirm: () => notifier.skipReview(),
+              ),
               const SizedBox(height: 12),
             ],
 
@@ -650,35 +621,6 @@ class _Dropdown extends StatelessWidget {
   }
 }
 
-// ─── Complete Request Button ──────────────────────────────────────────────────
-
-class _CompleteRequestButton extends StatelessWidget {
-  final bool completing;
-  final VoidCallback onTap;
-
-  const _CompleteRequestButton({required this.completing, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton.icon(
-        onPressed: completing ? null : onTap,
-        icon: completing
-            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : const Icon(Icons.check_circle_outline, size: 18),
-        label: const Text('Hizmeti Tamamla', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary600,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 0,
-        ),
-      ),
-    );
-  }
-}
 
 // ─── Cancel Request Button ────────────────────────────────────────────────────
 
@@ -710,14 +652,13 @@ class _CancelRequestButton extends StatelessWidget {
   }
 }
 
-// ─── Pending Review Card ──────────────────────────────────────────────────────
+// ─── Handover Card ────────────────────────────────────────────────────────────
 
-class _PendingReviewCard extends StatelessWidget {
-  final VoidCallback onReview;
-  final Future<void> Function() onSkip;
-  final bool skipping;
+class _HandoverCard extends StatelessWidget {
+  final bool confirming;
+  final Future<void> Function() onConfirm;
 
-  const _PendingReviewCard({required this.onReview, required this.onSkip, required this.skipping});
+  const _HandoverCard({required this.confirming, required this.onConfirm});
 
   @override
   Widget build(BuildContext context) {
@@ -731,171 +672,59 @@ class _PendingReviewCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.star_outline, color: AppColors.primary600, size: 18),
-              SizedBox(width: 8),
-              Text('Hizmet Tamamlandı!', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.emerald200,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.directions_car_outlined, size: 20, color: Color(0xFF065F46)),
+              ),
+              const SizedBox(width: 10),
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Aracınız Hazır!',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                  ),
+                  Text(
+                    'İşletme servis işlemini tamamladı.',
+                    style: TextStyle(fontSize: 12, color: AppColors.gray500),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           const Text(
-            'Servis sağlayıcıyı değerlendirin. Değerlendirmeniz diğer kullanıcılara yardımcı olacak.',
+            'Aracınızı teslim aldığınızda aşağıdaki butona basın. Süreç tamamlanmış olacak.',
             style: TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.5),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: skipping ? null : onReview,
-              icon: const Icon(Icons.star, size: 16),
-              label: const Text('Değerlendirme Yap'),
+              onPressed: confirming ? null : onConfirm,
+              icon: confirming
+                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : const Icon(Icons.check_circle_outline, size: 18),
+              label: const Text('Arabayı Teslim Aldım', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary600,
+                backgroundColor: const Color(0xFF059669),
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              onPressed: skipping ? null : onSkip,
-              child: skipping
-                  ? const SizedBox(height: 16, width: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Değerlendirmeyi Atla', style: TextStyle(color: AppColors.gray500, fontSize: 13)),
-            ),
-          ),
         ],
       ),
     );
   }
-}
-
-// ─── Review Form ──────────────────────────────────────────────────────────────
-
-class _ReviewForm extends StatefulWidget {
-  final bool submitting;
-  final Future<void> Function(int rating, String? comment) onSubmit;
-  final VoidCallback onCancel;
-
-  const _ReviewForm({required this.submitting, required this.onSubmit, required this.onCancel});
-
-  @override
-  State<_ReviewForm> createState() => _ReviewFormState();
-}
-
-class _ReviewFormState extends State<_ReviewForm> {
-  int _rating = 5;
-  final _commentCtrl = TextEditingController();
-
-  @override
-  void dispose() {
-    _commentCtrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary600, width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Değerlendirme', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900)),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(5, (i) {
-              final star = i + 1;
-              return GestureDetector(
-                onTap: () => setState(() => _rating = star),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Icon(
-                    star <= _rating ? Icons.star_rounded : Icons.star_outline_rounded,
-                    size: 40,
-                    color: star <= _rating ? AppColors.amber600 : AppColors.gray300,
-                  ),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 4),
-          Center(
-            child: Text(
-              _ratingLabel(_rating),
-              style: const TextStyle(fontSize: 13, color: AppColors.gray500),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _commentCtrl,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'Yorumunuzu yazın (opsiyonel)...',
-              hintStyle: const TextStyle(color: AppColors.gray400, fontSize: 13),
-              filled: true,
-              fillColor: AppColors.gray50,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.gray200)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.gray200)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.primary600)),
-              contentPadding: const EdgeInsets.all(12),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: widget.submitting ? null : widget.onCancel,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.gray600,
-                    side: const BorderSide(color: AppColors.gray300),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  child: const Text('Vazgeç'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.submitting
-                      ? null
-                      : () => widget.onSubmit(_rating, _commentCtrl.text.trim().isEmpty ? null : _commentCtrl.text.trim()),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary600,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                    elevation: 0,
-                  ),
-                  child: widget.submitting
-                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Text('Gönder'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _ratingLabel(int rating) => switch (rating) {
-    1 => 'Çok Kötü',
-    2 => 'Kötü',
-    3 => 'Orta',
-    4 => 'İyi',
-    5 => 'Mükemmel',
-    _ => '',
-  };
 }
 
 // ─── Invoice Card ─────────────────────────────────────────────────────────────
