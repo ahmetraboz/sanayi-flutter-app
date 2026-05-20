@@ -306,7 +306,7 @@ class _VehicleFormSheetState extends ConsumerState<VehicleFormSheet> {
                 onSelected: (make) {
                   _brandController.text = make.name;
                   setState(() {
-                    _selectedMakeId = make.id;
+                    _selectedMakeId = make.id == -1 ? null : make.id;
                     _selectedModel = null;
                     _modelController.clear();
                   });
@@ -556,6 +556,53 @@ class _VehicleBrandField extends ConsumerStatefulWidget {
 }
 
 class _VehicleBrandFieldState extends ConsumerState<_VehicleBrandField> {
+  FocusNode? _focusNode;
+  TextEditingController? _controller;
+
+  void _onTextChange(String val) {
+    final makes = ref.read(carMakesProvider).value ?? [];
+    final normalized = val.trim().toLowerCase();
+
+    final matched = makes.firstWhere(
+      (m) => m.name.toLowerCase() == normalized,
+      orElse: () => const CarMake(id: -1, name: ''),
+    );
+
+    if (matched.id != -1) {
+      widget.onSelected(matched);
+    } else {
+      widget.onSelected(CarMake(id: -1, name: val.trim()));
+    }
+  }
+
+  void _onFocusChange() {
+    if (_focusNode == null || _controller == null) return;
+
+    if (!_focusNode!.hasFocus) {
+      final text = _controller!.text.trim();
+      final makes = ref.read(carMakesProvider).value ?? [];
+
+      final normalized = text.toLowerCase();
+      final matched = makes.firstWhere(
+        (m) => m.name.toLowerCase() == normalized,
+        orElse: () => const CarMake(id: -1, name: ''),
+      );
+
+      if (matched.id != -1) {
+        _controller!.text = matched.name;
+        widget.onSelected(matched);
+      } else {
+        widget.onSelected(CarMake(id: -1, name: text));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(carMakesProvider);
@@ -569,16 +616,25 @@ class _VehicleBrandFieldState extends ConsumerState<_VehicleBrandField> {
       },
       displayStringForOption: (make) => make.name,
       fieldViewBuilder:
-          (context, ctrl, focusNode, onSubmit) => TextFormField(
-            controller: ctrl,
-            focusNode: focusNode,
-            onEditingComplete: onSubmit,
-            textInputAction: TextInputAction.next,
-            style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-            decoration: _sheetInputDecoration('Marka (Örn: Renault)'),
-            validator:
-                (v) => v == null || v.isEmpty ? 'Marka zorunludur' : null,
-          ),
+          (context, ctrl, focusNode, onSubmit) {
+            _controller = ctrl;
+            if (_focusNode != focusNode) {
+              _focusNode?.removeListener(_onFocusChange);
+              _focusNode = focusNode;
+              _focusNode?.addListener(_onFocusChange);
+            }
+            return TextFormField(
+              controller: ctrl,
+              focusNode: focusNode,
+              onEditingComplete: onSubmit,
+              textInputAction: TextInputAction.next,
+              style: const TextStyle(color: AppColors.gray900, fontSize: 14),
+              onChanged: _onTextChange,
+              decoration: _sheetInputDecoration('Marka (Örn: Renault)'),
+              validator:
+                  (v) => v == null || v.isEmpty ? 'Marka zorunludur' : null,
+            );
+          },
       optionsViewBuilder:
           (context, onSelected, options) => Align(
             alignment: Alignment.topLeft,
@@ -639,6 +695,35 @@ class _VehicleModelField extends ConsumerStatefulWidget {
 
 class _VehicleModelFieldState extends ConsumerState<_VehicleModelField> {
   FocusNode? _autocompleteFocusNode;
+  TextEditingController? _controller;
+
+  void _onFocusChange() {
+    if (_autocompleteFocusNode == null || _controller == null) return;
+
+    if (!_autocompleteFocusNode!.hasFocus) {
+      final text = _controller!.text.trim();
+      final models = ref.read(carModelsProvider(widget.makeId)).value ?? [];
+
+      final normalized = text.toLowerCase();
+      final matched = models.map((m) => m.name).firstWhere(
+        (name) => name.toLowerCase() == normalized,
+        orElse: () => '',
+      );
+
+      if (matched.isNotEmpty) {
+        _controller!.text = matched;
+        widget.onChanged(matched);
+      } else {
+        widget.onChanged(text);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _autocompleteFocusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -685,11 +770,24 @@ class _VehicleModelFieldState extends ConsumerState<_VehicleModelField> {
                   );
             },
             fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-              _autocompleteFocusNode = focusNode;
+              _controller = ctrl;
+              if (_autocompleteFocusNode != focusNode) {
+                _autocompleteFocusNode?.removeListener(_onFocusChange);
+                _autocompleteFocusNode = focusNode;
+                _autocompleteFocusNode?.addListener(_onFocusChange);
+              }
               return TextFormField(
                 controller: ctrl,
                 focusNode: focusNode,
                 onEditingComplete: onSubmit,
+                onChanged: (v) {
+                  final normalized = v.trim().toLowerCase();
+                  final matched = models.map((m) => m.name).firstWhere(
+                    (name) => name.toLowerCase() == normalized,
+                    orElse: () => '',
+                  );
+                  widget.onChanged(matched.isNotEmpty ? matched : v.trim());
+                },
                 style: const TextStyle(color: AppColors.gray900, fontSize: 14),
                 decoration: _sheetInputDecoration('Model seçin veya yazın'),
                 validator:

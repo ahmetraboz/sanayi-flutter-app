@@ -182,7 +182,7 @@ class _BookingStep2State extends ConsumerState<BookingStep2> {
                     error: errors['brand'],
                     onSelected: (make) {
                       setState(() {
-                        _selectedMakeId = make.id;
+                        _selectedMakeId = make.id == -1 ? null : make.id;
                         _modelCtrl.clear();
                       });
                       notifier.updateBrand(make.name);
@@ -396,6 +396,53 @@ class _BrandAutocomplete extends ConsumerStatefulWidget {
 }
 
 class _BrandAutocompleteState extends ConsumerState<_BrandAutocomplete> {
+  FocusNode? _focusNode;
+  TextEditingController? _controller;
+
+  void _onTextChange(String val) {
+    final makes = ref.read(carMakesProvider).value ?? [];
+    final normalized = val.trim().toLowerCase();
+
+    final matched = makes.firstWhere(
+      (m) => m.name.toLowerCase() == normalized,
+      orElse: () => const CarMake(id: -1, name: ''),
+    );
+
+    if (matched.id != -1) {
+      widget.onSelected(matched);
+    } else {
+      widget.onSelected(CarMake(id: -1, name: val.trim()));
+    }
+  }
+
+  void _onFocusChange() {
+    if (_focusNode == null || _controller == null) return;
+
+    if (!_focusNode!.hasFocus) {
+      final text = _controller!.text.trim();
+      final makes = ref.read(carMakesProvider).value ?? [];
+
+      final normalized = text.toLowerCase();
+      final matched = makes.firstWhere(
+        (m) => m.name.toLowerCase() == normalized,
+        orElse: () => const CarMake(id: -1, name: ''),
+      );
+
+      if (matched.id != -1) {
+        _controller!.text = matched.name;
+        widget.onSelected(matched);
+      } else {
+        widget.onSelected(CarMake(id: -1, name: text));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.watch(carMakesProvider);
@@ -408,13 +455,22 @@ class _BrandAutocompleteState extends ConsumerState<_BrandAutocomplete> {
         return service.filterMakes(value.text);
       },
       displayStringForOption: (make) => make.name,
-      fieldViewBuilder: (context, ctrl, focusNode, onSubmit) => TextField(
-        controller: ctrl,
-        focusNode: focusNode,
-        onEditingComplete: onSubmit,
-        textInputAction: TextInputAction.next,
-        decoration: _inputDecoration(hint: 'Marka ara...', error: widget.error),
-      ),
+      fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
+        _controller = ctrl;
+        if (_focusNode != focusNode) {
+          _focusNode?.removeListener(_onFocusChange);
+          _focusNode = focusNode;
+          _focusNode?.addListener(_onFocusChange);
+        }
+        return TextField(
+          controller: ctrl,
+          focusNode: focusNode,
+          onEditingComplete: onSubmit,
+          textInputAction: TextInputAction.next,
+          onChanged: _onTextChange,
+          decoration: _inputDecoration(hint: 'Marka ara...', error: widget.error),
+        );
+      },
       optionsViewBuilder: (context, onSelected, options) => Align(
         alignment: Alignment.topLeft,
         child: Material(
@@ -464,6 +520,35 @@ class _ModelDropdown extends ConsumerStatefulWidget {
 
 class _ModelDropdownState extends ConsumerState<_ModelDropdown> {
   FocusNode? _focusNode;
+  TextEditingController? _controller;
+
+  void _onFocusChange() {
+    if (_focusNode == null || _controller == null) return;
+
+    if (!_focusNode!.hasFocus) {
+      final text = _controller!.text.trim();
+      final models = ref.read(carModelsProvider(widget.makeId)).value ?? [];
+
+      final normalized = text.toLowerCase();
+      final matched = models.map((m) => m.name).firstWhere(
+        (name) => name.toLowerCase() == normalized,
+        orElse: () => '',
+      );
+
+      if (matched.isNotEmpty) {
+        _controller!.text = matched;
+        widget.onChanged(matched);
+      } else {
+        widget.onChanged(text);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -499,11 +584,24 @@ class _ModelDropdownState extends ConsumerState<_ModelDropdown> {
           );
         },
         fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-          _focusNode = focusNode;
+          _controller = ctrl;
+          if (_focusNode != focusNode) {
+            _focusNode?.removeListener(_onFocusChange);
+            _focusNode = focusNode;
+            _focusNode?.addListener(_onFocusChange);
+          }
           return TextField(
             controller: ctrl,
             focusNode: focusNode,
             onEditingComplete: onSubmit,
+            onChanged: (v) {
+              final normalized = v.trim().toLowerCase();
+              final matched = models.map((m) => m.name).firstWhere(
+                (name) => name.toLowerCase() == normalized,
+                orElse: () => '',
+              );
+              widget.onChanged(matched.isNotEmpty ? matched : v.trim());
+            },
             decoration: _inputDecoration(hint: 'Model seçin veya yazın', error: widget.error),
           );
         },

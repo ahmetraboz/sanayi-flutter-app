@@ -31,6 +31,55 @@ class AppSelectField extends StatefulWidget {
 
 class _AppSelectFieldState extends State<AppSelectField> {
   FocusNode? _focusNode;
+  TextEditingController? _controller;
+
+  String _normalizeTurkish(String input) {
+    return input
+        .replaceAll('İ', 'i')
+        .replaceAll('I', 'ı')
+        .replaceAll('Ş', 'ş')
+        .replaceAll('Ç', 'ç')
+        .replaceAll('Ğ', 'ğ')
+        .replaceAll('Ü', 'ü')
+        .replaceAll('Ö', 'ö')
+        .toLowerCase();
+  }
+
+  void _onFocusChange() {
+    if (_focusNode == null || _controller == null) return;
+
+    if (!_focusNode!.hasFocus) {
+      final text = _controller!.text.trim();
+      if (text.isEmpty) {
+        widget.onChanged(null);
+        return;
+      }
+
+      final normalizedQuery = _normalizeTurkish(text);
+      final matched = widget.options.firstWhere(
+        (o) => _normalizeTurkish(o) == normalizedQuery,
+        orElse: () => '',
+      );
+
+      if (matched.isNotEmpty) {
+        _controller!.text = matched;
+        widget.onChanged(matched);
+      } else {
+        if (widget.value != null && widget.options.contains(widget.value)) {
+          _controller!.text = widget.value!;
+        } else {
+          _controller!.clear();
+          widget.onChanged(null);
+        }
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _focusNode?.removeListener(_onFocusChange);
+    super.dispose();
+  }
 
   InputDecoration get _defaultDecoration => InputDecoration(
     hintText: widget.hintText,
@@ -63,7 +112,12 @@ class _AppSelectFieldState extends State<AppSelectField> {
         );
       },
       fieldViewBuilder: (context, ctrl, focusNode, onSubmit) {
-        _focusNode = focusNode;
+        _controller = ctrl;
+        if (_focusNode != focusNode) {
+          _focusNode?.removeListener(_onFocusChange);
+          _focusNode = focusNode;
+          _focusNode?.addListener(_onFocusChange);
+        }
         return TextFormField(
           controller: ctrl,
           focusNode: focusNode,
@@ -83,7 +137,16 @@ class _AppSelectFieldState extends State<AppSelectField> {
               ? (v) => widget.validator!(v?.isEmpty == true ? null : v)
               : null,
           onChanged: (v) {
-            if (v.isEmpty && widget.allowClear) widget.onChanged(null);
+            if (v.isEmpty) {
+              widget.onChanged(null);
+              return;
+            }
+            final normalizedQuery = _normalizeTurkish(v.trim());
+            final matched = widget.options.firstWhere(
+              (o) => _normalizeTurkish(o) == normalizedQuery,
+              orElse: () => '',
+            );
+            widget.onChanged(matched.isNotEmpty ? matched : null);
           },
         );
       },
@@ -105,8 +168,8 @@ class _AppSelectFieldState extends State<AppSelectField> {
                 return InkWell(
                   onTap: () => onSelected(name),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-                    child: Text(name, style: const TextStyle(fontSize: 14, color: AppColors.gray900)),
+                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                     child: Text(name, style: const TextStyle(fontSize: 14, color: AppColors.gray900)),
                   ),
                 );
               },
