@@ -158,11 +158,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               const SizedBox(height: 12),
             ],
 
-            // Araç teslim bölümü
+            // Araç teslim & değerlendirme bölümü
             if (state.isPendingReview) ...[
-              _HandoverCard(
-                confirming: state.reviewing,
-                onConfirm: () => notifier.skipReview(),
+              _ReviewCard(
+                reviewing: state.reviewing,
+                onSubmit: (rating, comment) => notifier.submitReview(rating: rating, comment: comment),
+                onSkip: () => notifier.skipReview(),
               ),
               const SizedBox(height: 12),
             ],
@@ -665,13 +666,32 @@ class _CancelRequestButton extends StatelessWidget {
   }
 }
 
-// ─── Handover Card ────────────────────────────────────────────────────────────
+// ─── Review Card ──────────────────────────────────────────────────────────────
 
-class _HandoverCard extends StatelessWidget {
-  final bool confirming;
-  final Future<void> Function() onConfirm;
+class _ReviewCard extends StatefulWidget {
+  final bool reviewing;
+  final Future<bool> Function(int rating, String? comment) onSubmit;
+  final Future<bool> Function() onSkip;
 
-  const _HandoverCard({required this.confirming, required this.onConfirm});
+  const _ReviewCard({
+    required this.reviewing,
+    required this.onSubmit,
+    required this.onSkip,
+  });
+
+  @override
+  State<_ReviewCard> createState() => _ReviewCardState();
+}
+
+class _ReviewCardState extends State<_ReviewCard> {
+  int _selectedRating = 0;
+  final _commentController = TextEditingController();
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -685,6 +705,7 @@ class _HandoverCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Başlık
           Row(
             children: [
               Container(
@@ -693,44 +714,120 @@ class _HandoverCard extends StatelessWidget {
                   color: AppColors.emerald200,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.directions_car_outlined, size: 20, color: Color(0xFF065F46)),
+                child: const Icon(Icons.star_outline_rounded, size: 20, color: Color(0xFF065F46)),
               ),
               const SizedBox(width: 10),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Aracınız Hazır!',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900),
-                  ),
-                  Text(
-                    'İşletme servis işlemini tamamladı.',
-                    style: TextStyle(fontSize: 12, color: AppColors.gray500),
-                  ),
-                ],
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Aracınız Hazır! Servis Nasıldı?',
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900),
+                    ),
+                    Text(
+                      'Deneyiminizi değerlendirin, başkalarına yardımcı olun.',
+                      style: TextStyle(fontSize: 12, color: AppColors.gray500),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
-            'Aracınızı teslim aldığınızda aşağıdaki butona basın. Süreç tamamlanmış olacak.',
-            style: TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.5),
+          const SizedBox(height: 16),
+
+          // Yıldız seçici
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(5, (i) {
+                final star = i + 1;
+                return GestureDetector(
+                  onTap: widget.reviewing ? null : () => setState(() => _selectedRating = star),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Icon(
+                      star <= _selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
+                      size: 38,
+                      color: star <= _selectedRating ? const Color(0xFFF59E0B) : AppColors.gray300,
+                    ),
+                  ),
+                );
+              }),
+            ),
           ),
+          if (_selectedRating > 0) ...[
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                _ratingLabel(_selectedRating),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.gray600),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
+
+          // Yorum alanı
+          TextField(
+            controller: _commentController,
+            enabled: !widget.reviewing,
+            maxLines: 3,
+            maxLength: 500,
+            decoration: InputDecoration(
+              hintText: 'Yorumunuzu yazın (isteğe bağlı)...',
+              hintStyle: const TextStyle(fontSize: 13, color: AppColors.gray400),
+              filled: true,
+              fillColor: Colors.white,
+              contentPadding: const EdgeInsets.all(12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.emerald200),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: AppColors.emerald200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5),
+              ),
+              counterStyle: const TextStyle(fontSize: 11, color: AppColors.gray400),
+            ),
+            style: const TextStyle(fontSize: 13, color: AppColors.gray700),
+          ),
+          const SizedBox(height: 12),
+
+          // Gönder butonu
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: confirming ? null : onConfirm,
-              icon: confirming
+              onPressed: (widget.reviewing || _selectedRating == 0)
+                  ? null
+                  : () => widget.onSubmit(_selectedRating, _commentController.text.trim().isEmpty ? null : _commentController.text.trim()),
+              icon: widget.reviewing
                   ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                  : const Icon(Icons.check_circle_outline, size: 18),
-              label: const Text('Arabayı Teslim Aldım', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  : const Icon(Icons.send_rounded, size: 18),
+              label: const Text('Değerlendirmeyi Gönder', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF059669),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.gray200,
+                disabledForegroundColor: AppColors.gray400,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 elevation: 0,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Atla butonu
+          Center(
+            child: TextButton(
+              onPressed: widget.reviewing ? null : () => widget.onSkip(),
+              child: const Text(
+                'Şimdi değil, atla',
+                style: TextStyle(fontSize: 13, color: AppColors.gray400),
               ),
             ),
           ),
@@ -738,6 +835,15 @@ class _HandoverCard extends StatelessWidget {
       ),
     );
   }
+
+  String _ratingLabel(int rating) => switch (rating) {
+    1 => 'Çok Kötü',
+    2 => 'Kötü',
+    3 => 'Orta',
+    4 => 'İyi',
+    5 => 'Mükemmel',
+    _ => '',
+  };
 }
 
 // ─── Invoice Card ─────────────────────────────────────────────────────────────
