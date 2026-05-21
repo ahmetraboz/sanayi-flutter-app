@@ -173,6 +173,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
               const SizedBox(height: 12),
             ],
 
+            // Talebin gönderildiği servisler
+            if (request.targetProviders.isNotEmpty) ...[
+              _TargetProvidersSection(providers: request.targetProviders),
+              const SizedBox(height: 12),
+            ],
+
             // Teklifler
             _buildBidsSection(context, state, notifier, canAccept),
             const SizedBox(height: 24),
@@ -1362,6 +1368,154 @@ class _RequestDetailSkeleton extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Target Providers Section ─────────────────────────────────────────────────
+
+class _TargetProvidersSection extends StatelessWidget {
+  final List<TargetProvider> providers;
+  const _TargetProvidersSection({required this.providers});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.send_outlined,
+                  size: 16,
+                  color: AppColors.primary600,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Talebin Gönderildiği Servisler',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gray900,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary600.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${providers.length} servis',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.gray100),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: providers.map((p) => _ProviderChip(provider: p)).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProviderChip extends StatelessWidget {
+  final TargetProvider provider;
+  const _ProviderChip({required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: provider.logoUrl != null
+                  ? Image.network(
+                      provider.logoUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const _DefaultProviderIcon(),
+                    )
+                  : const _DefaultProviderIcon(),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    provider.companyName,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.gray900,
+                    ),
+                  ),
+                  if (provider.isVerified) ...[
+                    const SizedBox(width: 4),
+                    const Icon(Icons.verified, size: 13, color: AppColors.primary600),
+                  ],
+                ],
+              ),
+              if (provider.district != null || provider.city != null)
+                Text(
+                  [
+                    if (provider.district != null) provider.district!,
+                    if (provider.city != null) provider.city!,
+                  ].join(', '),
+                  style: const TextStyle(fontSize: 11, color: AppColors.gray500),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DefaultProviderIcon extends StatelessWidget {
+  const _DefaultProviderIcon();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.gray100,
+      child: const Icon(Icons.store_outlined, size: 16, color: AppColors.gray400),
     );
   }
 }

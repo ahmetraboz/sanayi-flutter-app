@@ -192,20 +192,40 @@ class _NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    IconData icon;
-    Color iconColor;
-    Color bgColor;
+    final IconData icon;
+    final Color iconColor;
+    final Color bgColor;
 
     switch (notification.type) {
-      case 'bid_received':
+      case 'new_bid':
         icon = Icons.local_offer_outlined;
         iconColor = AppColors.blue600;
         bgColor = AppColors.info50;
         break;
-      case 'request_update':
-        icon = Icons.update;
+      case 'bid.accepted':
+        icon = Icons.check_circle_outline;
+        iconColor = AppColors.primary600;
+        bgColor = AppColors.success50;
+        break;
+      case 'completion':
+        icon = Icons.car_repair_outlined;
+        iconColor = AppColors.green700;
+        bgColor = AppColors.green50;
+        break;
+      case 'update':
+        icon = Icons.update_outlined;
+        iconColor = AppColors.violet700;
+        bgColor = AppColors.violet50;
+        break;
+      case 'info_request':
+        icon = Icons.help_outline;
         iconColor = AppColors.amber600;
-        bgColor = AppColors.warning50;
+        bgColor = AppColors.amber50;
+        break;
+      case 'request.status_changed':
+        icon = Icons.swap_horiz_outlined;
+        iconColor = AppColors.gray500;
+        bgColor = AppColors.gray100;
         break;
       case 'system':
       default:

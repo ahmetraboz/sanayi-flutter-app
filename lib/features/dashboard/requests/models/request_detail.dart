@@ -1,5 +1,36 @@
 import 'dart:convert';
 
+// ─── Target Provider ──────────────────────────────────────────────────────────
+
+class TargetProvider {
+  final int id;
+  final String companyName;
+  final String? city;
+  final String? district;
+  final String? logoUrl;
+  final bool isVerified;
+
+  const TargetProvider({
+    required this.id,
+    required this.companyName,
+    this.city,
+    this.district,
+    this.logoUrl,
+    required this.isVerified,
+  });
+
+  factory TargetProvider.fromJson(Map<String, dynamic> json) => TargetProvider(
+    id: json['id'] as int,
+    companyName: json['companyName'] as String? ?? '',
+    city: json['city'] as String?,
+    district: json['district'] as String?,
+    logoUrl: json['logoUrl'] as String?,
+    isVerified: json['isVerified'] as bool? ?? false,
+  );
+}
+
+// ─── Request Detail ───────────────────────────────────────────────────────────
+
 class RequestDetail {
   final int id;
   final String title;
@@ -24,6 +55,7 @@ class RequestDetail {
   final DateTime createdAt;
   final DateTime? preferredDateFrom;
   final DateTime? preferredDateTo;
+  final List<TargetProvider> targetProviders;
 
   const RequestDetail({
     required this.id,
@@ -49,6 +81,7 @@ class RequestDetail {
     required this.createdAt,
     this.preferredDateFrom,
     this.preferredDateTo,
+    this.targetProviders = const [],
   });
 
   factory RequestDetail.fromJson(Map<String, dynamic> json) => RequestDetail(
@@ -79,6 +112,10 @@ class RequestDetail {
     preferredDateTo: json['preferredDateTo'] != null
         ? DateTime.tryParse(json['preferredDateTo'] as String)
         : null,
+    targetProviders: (json['targetProviders'] as List? ?? [])
+        .whereType<Map<String, dynamic>>()
+        .map(TargetProvider.fromJson)
+        .toList(),
   );
 }
 

@@ -8,7 +8,6 @@ import '../../../shared/models/provider_model.dart';
 import '../../booking/models/booking_form_data.dart';
 import '../../booking/booking_repository.dart';
 import '../../booking/widgets/damage_analysis_widget.dart';
-import '../../booking/models/booking_form_data.dart';
 import '../vehicles/widgets/vehicle_form_sheet.dart';
 import '../../../shared/widgets/date_picker_sheet.dart';
 import 'create_request_providers.dart';
@@ -214,8 +213,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
   int? _vehicleId;
 
   // Step 4
-  String? _selectedCity;
+  List<String> _selectedCities = [];
   List<int> _selectedServiceIds = [];
+  final Map<String, List<ProviderModel>> _cityProviders = {};
 
   bool _submitting = false;
 
@@ -228,7 +228,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     super.initState();
     if (_hasPreselectedService) {
       _selectedServiceIds = [widget.preselectedServiceId!];
-      _selectedCity = widget.preselectedServiceCity;
+      if (widget.preselectedServiceCity != null) {
+        _selectedCities = [widget.preselectedServiceCity!];
+      }
     }
     if (widget.preselectedCategory != null) {
       _category = widget.preselectedCategory;
@@ -283,10 +285,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         return false;
       }
     } else if (_step == 4) {
-      if (!_hasPreselectedService &&
-          (_selectedCity == null || _selectedServiceIds.isEmpty)) {
+      if (!_hasPreselectedService && _selectedServiceIds.isEmpty) {
         setState(
-          () => _errors['services'] = 'İl ve en az bir servis seçmelisiniz',
+          () => _errors['services'] = 'En az bir servis sağlayıcı seçmelisiniz',
         );
         return false;
       }
@@ -448,7 +449,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
         'title': _titleCtrl.text.trim(),
         'description': desc,
         'urgencyLevel': _urgency,
-        'targetCity': _selectedCity,
+        if (_selectedCities.isNotEmpty) 'targetCity': _selectedCities.first,
         'targetServiceIds': _selectedServiceIds,
         if (_imageUrl != null) 'imageUrl': _imageUrl,
         if (_preferredDateFrom != null) 'preferredDateFrom': _preferredDateFrom,
@@ -1597,26 +1598,94 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // İl Ekle
+          _fieldLabel('İl Ekle', required: true),
+          const SizedBox(height: 6),
           LocationPickerField(
-            label: 'İlinizi Seçin *',
-            value: _selectedCity,
-            hint: 'İl seçin',
+            label: 'İl seçin...',
+            value: null,
+            hint: 'İl seçin...',
             onTap: () async {
               final city = await showCityPicker(context);
-              if (city != null) {
+              if (city != null && !_selectedCities.contains(city)) {
                 setState(() {
-                  _selectedCity = city;
-                  _selectedServiceIds = [];
+                  _selectedCities.add(city);
                   _errors.remove('services');
                 });
               }
             },
           ),
-          const SizedBox(height: 16),
-          if (_selectedCity != null) ...[
-            _fieldLabel('Servis Sağlayıcı Seçin', required: true),
-            const SizedBox(height: 8),
-            _buildProviderList(),
+          const SizedBox(height: 6),
+          const Text(
+            'Birden fazla il seçerek farklı şehirlerdeki servislere talep yollayabilirsiniz.',
+            style: TextStyle(fontSize: 12, color: AppColors.gray500),
+          ),
+          if (_selectedCities.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _fieldLabel('Servis Sağlayıcı Seçin', required: true),
+                if (_selectedServiceIds.isNotEmpty)
+                  Text(
+                    '${_selectedServiceIds.length} servis seçildi',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary600,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Amber uyarı: 2+ il seçildiğinde
+            if (_selectedCities.length >= 2) ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFFCD34D)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 16,
+                      color: Color(0xFFD97706),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Farklı illerden servis seçtiniz',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Seçtiğiniz servisler farklı şehirlerde bulunuyor. Her servis ayrı teklif verecek ve aracınızı yalnızca bir servise götürebileceksiniz. Teklif aldıktan sonra size en uygun olanı kabul edin.',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Color(0xFF92400E),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            // Her il için grup
+            ..._selectedCities.map((city) => _buildCityGroup(city)),
           ],
           if (_errors['services'] != null) ...[
             const SizedBox(height: 8),
@@ -1627,54 +1696,140 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     );
   }
 
-  Widget _buildProviderList() {
-    return ref
-        .watch(providersByCityProvider(_selectedCity!))
-        .when(
-          loading:
-              () => const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(24),
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary600,
+  Widget _buildCityGroup(String city) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: AppColors.gray50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // İl başlığı + Kaldır
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 15,
+                  color: AppColors.gray500,
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: ref.watch(providersByCityProvider(city)).when(
+                    loading: () => Text(
+                      city,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gray700,
+                      ),
+                    ),
+                    error: (_, __) => Text(
+                      city,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gray700,
+                      ),
+                    ),
+                    data: (providers) {
+                      final selectedInCity = providers
+                          .where((p) => _selectedServiceIds.contains(p.id))
+                          .length;
+                      return Text(
+                        '$city${selectedInCity > 0 ? '  ($selectedInCity servis)' : ''}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.gray700,
+                        ),
+                      );
+                    },
                   ),
                 ),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedCities.remove(city);
+                      final cityProvs = _cityProviders[city];
+                      if (cityProvs != null) {
+                        for (final p in cityProvs) {
+                          _selectedServiceIds.remove(p.id);
+                        }
+                        _cityProviders.remove(city);
+                      }
+                    });
+                  },
+                  child: Row(
+                    children: const [
+                      Icon(Icons.close, size: 14, color: AppColors.gray500),
+                      SizedBox(width: 3),
+                      Text(
+                        'Kaldır',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.gray500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.gray200),
+          // Provider listesi
+          Padding(
+            padding: const EdgeInsets.all(10),
+            child: _buildProviderList(city),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProviderList(String city) {
+    return ref
+        .watch(providersByCityProvider(city))
+        .when(
+          loading: () => const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary600,
               ),
-          error:
-              (e, _) => Text(
-                'Servisler yüklenemedi: $e',
-                style: const TextStyle(color: AppColors.red700, fontSize: 13),
-              ),
+            ),
+          ),
+          error: (e, _) => Text(
+            'Servisler yüklenemedi: $e',
+            style: const TextStyle(color: AppColors.red700, fontSize: 13),
+          ),
           data: (providers) {
+            // Cache providers for removal logic
+            _cityProviders[city] = providers;
             if (providers.isEmpty) {
               return Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.gray50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.gray200),
-                ),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
                     const Icon(
                       Icons.store_outlined,
-                      size: 32,
+                      size: 28,
                       color: AppColors.gray300,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
-                      '$_selectedCity ilinde henüz kayıtlı doğrulanmış servis sağlayıcı bulunmuyor.',
+                      '$city ilinde henüz kayıtlı doğrulanmış servis sağlayıcı bulunmuyor.',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: AppColors.gray500,
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Başka bir il seçmeyi deneyin.',
-                      style: TextStyle(fontSize: 12, color: AppColors.gray400),
                     ),
                   ],
                 ),
