@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/location_picker_sheet.dart';
 import '../../../shared/models/provider_model.dart';
+import '../../booking/models/booking_form_data.dart';
 import '../../booking/booking_repository.dart';
 import '../../booking/widgets/damage_analysis_widget.dart';
 import '../../booking/models/booking_form_data.dart';
@@ -168,6 +169,7 @@ class CreateRequestScreen extends ConsumerStatefulWidget {
   final List<String>? preselectedServiceAreas;
   final int? preselectedVehicleId;
   final String? preselectedCategory;
+  final List<DamageReport>? initialDamageReports;
 
   const CreateRequestScreen({
     super.key,
@@ -177,6 +179,7 @@ class CreateRequestScreen extends ConsumerStatefulWidget {
     this.preselectedServiceAreas,
     this.preselectedVehicleId,
     this.preselectedCategory,
+    this.initialDamageReports,
   });
 
   @override
@@ -237,6 +240,11 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
     }
     if (widget.preselectedVehicleId != null) {
       _vehicleId = widget.preselectedVehicleId;
+    }
+    if (widget.initialDamageReports != null && widget.initialDamageReports!.isNotEmpty) {
+      _hasDamage = true;
+      _damageReports = List.from(widget.initialDamageReports!);
+      _step = 2;
     }
   }
 

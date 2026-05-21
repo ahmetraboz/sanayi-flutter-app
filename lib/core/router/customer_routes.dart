@@ -10,6 +10,8 @@ import '../../features/dashboard/requests/request_list_screen.dart';
 import '../../features/dashboard/shell/customer_shell.dart';
 import '../../features/dashboard/vehicles/vehicle_detail_screen.dart';
 import '../../features/dashboard/vehicles/vehicles_screen.dart';
+import '../../features/booking/models/booking_form_data.dart';
+import '../../features/dashboard/damage/damage_analysis_screen.dart';
 import '../../features/services/service_directory_screen.dart';
 
 final customerShellRoute = ShellRoute(
@@ -35,6 +37,8 @@ final customerShellRoute = ShellRoute(
               (extra?['serviceAreas'] as List?)?.cast<String>(),
           preselectedVehicleId: extra?['vehicleId'] as int?,
           preselectedCategory: extra?['category'] as String?,
+          initialDamageReports:
+              (extra?['damageReports'] as List?)?.cast<DamageReport>(),
         );
       },
     ),
@@ -75,5 +79,9 @@ final customerStandaloneRoutes = [
   GoRoute(
     path: '/dashboard/notifications',
     builder: (context, state) => const NotificationsScreen(),
+  ),
+  GoRoute(
+    path: '/dashboard/damage-analysis',
+    builder: (context, state) => const DamageAnalysisScreen(),
   ),
 ];

@@ -10,54 +10,89 @@ import 'widgets/action_banner.dart';
 import 'widgets/stat_cards.dart';
 import 'widgets/welcome_banner.dart';
 
-class _NewRequestBanner extends StatelessWidget {
-  const _NewRequestBanner();
+class _ActionBanners extends StatelessWidget {
+  const _ActionBanners();
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/dashboard/requests/new'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.primary600, AppColors.primaryTeal],
-            begin: Alignment.centerLeft,
-            end: Alignment.centerRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.add_circle_outline, color: Colors.white, size: 28),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => context.push('/dashboard/requests/new'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.primary600, AppColors.primaryTeal],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Icon(Icons.add_circle_outline, color: Colors.white, size: 26),
+                  SizedBox(height: 10),
                   Text(
-                    'Yeni Talep Oluştur',
+                    'Yeni Talep\nOluştur',
                     style: TextStyle(
                       color: Colors.white,
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
+                      height: 1.3,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  SizedBox(height: 4),
                   Text(
-                    'Aracınız için servis teklifi alın',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    'Servis teklifi alın',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: GestureDetector(
+            onTap: () => context.push('/dashboard/damage-analysis'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFD97706), Color(0xFFB45309)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.auto_fix_high_outlined, color: Colors.white, size: 26),
+                  SizedBox(height: 10),
+                  Text(
+                    'AI Hasar\nTespiti',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Fotoğrafla analiz et',
+                    style: TextStyle(color: Colors.white70, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -121,7 +156,7 @@ class CustomerDashboardScreen extends ConsumerWidget {
             const SliverToBoxAdapter(child: SizedBox(height: 16)),
             const SliverPadding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverToBoxAdapter(child: _NewRequestBanner()),
+              sliver: SliverToBoxAdapter(child: _ActionBanners()),
             ),
             if (state.stats != null) ...[
               const SliverToBoxAdapter(child: SizedBox(height: 16)),
