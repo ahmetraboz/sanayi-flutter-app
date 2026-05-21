@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme.dart';
@@ -124,6 +125,12 @@ class _RequestDetailScreenState extends ConsumerState<RequestDetailScreen> {
                   },
                   onCancel: () => setState(() => _showInfoForm = false),
                 ),
+              const SizedBox(height: 12),
+            ],
+
+            // İş günlüğü
+            if (state.updates.isNotEmpty) ...[
+              _JobLogSection(updates: state.updates),
               const SizedBox(height: 12),
             ],
 
@@ -927,6 +934,372 @@ class _InvoiceRow extends StatelessWidget {
               color: isTotal ? AppColors.primary600 : AppColors.gray700,
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Job Log Section ──────────────────────────────────────────────────────────
+
+class _JobLogSection extends StatelessWidget {
+  final List<JobUpdate> updates;
+  const _JobLogSection({required this.updates});
+
+  static const _kMonths = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+  String _fmt(DateTime dt) =>
+      '${dt.day} ${_kMonths[dt.month - 1]} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.gray200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Row(
+              children: [
+                const Icon(Icons.list_alt_outlined, size: 18, color: AppColors.gray700),
+                const SizedBox(width: 8),
+                const Text('İş Günlüğü',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.gray900)),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppColors.gray100,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text('${updates.length}',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.gray600)),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.gray100),
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            itemCount: updates.length,
+            separatorBuilder: (_, __) => Padding(
+              padding: const EdgeInsets.only(left: 17),
+              child: Container(width: 1.5, height: 16, color: AppColors.gray200),
+            ),
+            itemBuilder: (context, i) => _JobUpdateItem(update: updates[i], fmt: _fmt),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _JobUpdateItem extends StatelessWidget {
+  final JobUpdate update;
+  final String Function(DateTime) fmt;
+
+  const _JobUpdateItem({required this.update, required this.fmt});
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, iconData, iconColor, iconBg, borderColor, cardBg) = switch (update.updateType) {
+      'completion' => (
+          'Tamamlandı',
+          Icons.check_circle_outline,
+          const Color(0xFF059669),
+          const Color(0xFFD1FAE5),
+          const Color(0xFFA7F3D0),
+          const Color(0xFFF0FDF4),
+        ),
+      'delay' => (
+          'Gecikme',
+          Icons.schedule_outlined,
+          const Color(0xFFD97706),
+          const Color(0xFFFEF3C7),
+          const Color(0xFFFDE68A),
+          const Color(0xFFFFFBEB),
+        ),
+      _ => (
+          'Güncelleme',
+          Icons.sync_outlined,
+          const Color(0xFF2563EB),
+          const Color(0xFFDBEAFE),
+          const Color(0xFFBFDBFE),
+          const Color(0xFFF0F7FF),
+        ),
+    };
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Icon(iconData, size: 17, color: iconColor),
+            ),
+          ],
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: cardBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Başlık + tarih
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(label,
+                        style: TextStyle(
+                            fontSize: 13, fontWeight: FontWeight.w700, color: iconColor)),
+                    Text(fmt(update.createdAt),
+                        style: const TextStyle(fontSize: 11, color: AppColors.gray400)),
+                  ],
+                ),
+                // Açıklama
+                if (update.description.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(update.description,
+                      style: const TextStyle(fontSize: 13, color: AppColors.gray700, height: 1.5)),
+                ],
+                // Gecikme detayı
+                if (update.updateType == 'delay' && update.delayReason != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF9C3),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.warning_amber_outlined, size: 14, color: Color(0xFFD97706)),
+                            const SizedBox(width: 4),
+                            const Text('Gecikme Nedeni',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFD97706))),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(update.delayReason!,
+                            style: const TextStyle(fontSize: 12, color: Color(0xFF92400E), height: 1.4)),
+                        if (update.delayEstimateDays != null) ...[
+                          const SizedBox(height: 4),
+                          Text('Tahmini ek süre: ${update.delayEstimateDays} gün',
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFB45309))),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+                // Kullanılan parçalar
+                if (update.partsUsed != null && update.partsUsed!.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.build_outlined, size: 14, color: AppColors.gray500),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Kullanılan Parçalar',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.gray500)),
+                            const SizedBox(height: 2),
+                            Text(update.partsUsed!,
+                                style: const TextStyle(fontSize: 12, color: AppColors.gray700, height: 1.4)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+                // Maliyet özeti (tamamlandı)
+                if (update.updateType == 'completion' && (update.totalCost != null || update.laborCost != null)) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    ),
+                    child: Column(
+                      children: [
+                        if (update.laborCost != null && update.laborCost! > 0)
+                          _CostRow('İşçilik', update.laborCost!),
+                        if (update.partsCost != null && update.partsCost! > 0)
+                          _CostRow('Parça', update.partsCost!),
+                        if (update.totalCost != null && update.totalCost! > 0) ...[
+                          if (update.laborCost != null || update.partsCost != null)
+                            const Divider(height: 10, color: Color(0xFFA7F3D0)),
+                          _CostRow('Toplam', update.totalCost!, isTotal: true),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+                // Bütçe aşım nedeni
+                if (update.overBudgetReason != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.red50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppColors.red100),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, size: 14, color: AppColors.red700),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('Bütçe Aşım Nedeni',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.red700)),
+                              const SizedBox(height: 2),
+                              Text(update.overBudgetReason!,
+                                  style: const TextStyle(fontSize: 12, color: AppColors.red700, height: 1.4)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                // Fotoğraflar
+                if (update.attachmentUrls.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 90,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: update.attachmentUrls.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 8),
+                      itemBuilder: (context, i) => GestureDetector(
+                        onTap: () => _showImageDialog(context, update.attachmentUrls, i),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: CachedNetworkImage(
+                            imageUrl: update.attachmentUrls[i],
+                            width: 90,
+                            height: 90,
+                            fit: BoxFit.cover,
+                            placeholder: (_, __) => Container(
+                              width: 90,
+                              height: 90,
+                              color: AppColors.gray100,
+                              child: const Icon(Icons.image_outlined, color: AppColors.gray300),
+                            ),
+                            errorWidget: (_, __, ___) => Container(
+                              width: 90,
+                              height: 90,
+                              color: AppColors.gray100,
+                              child: const Icon(Icons.broken_image_outlined, color: AppColors.gray300),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showImageDialog(BuildContext context, List<String> urls, int initial) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initial),
+              itemCount: urls.length,
+              itemBuilder: (_, i) => InteractiveViewer(
+                child: CachedNetworkImage(
+                  imageUrl: urls[i],
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 16,
+              child: GestureDetector(
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CostRow extends StatelessWidget {
+  final String label;
+  final double amount;
+  final bool isTotal;
+  const _CostRow(this.label, this.amount, {this.isTotal = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: TextStyle(
+                  fontSize: isTotal ? 13 : 12,
+                  fontWeight: isTotal ? FontWeight.w700 : FontWeight.w500,
+                  color: isTotal ? AppColors.gray900 : AppColors.gray600)),
+          Text('₺${amount.toStringAsFixed(0)}',
+              style: TextStyle(
+                  fontSize: isTotal ? 14 : 12,
+                  fontWeight: isTotal ? FontWeight.w800 : FontWeight.w600,
+                  color: isTotal ? const Color(0xFF059669) : AppColors.gray700)),
         ],
       ),
     );

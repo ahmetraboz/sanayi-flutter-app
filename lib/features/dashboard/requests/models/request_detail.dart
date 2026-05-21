@@ -103,6 +103,12 @@ class JobUpdate {
   final String updateType;
   final String description;
   final String companyName;
+  final String? partsUsed;
+  final List<String> attachmentUrls;
+  final String? delayReason;
+  final int? delayEstimateDays;
+  final double? laborCost;
+  final double? partsCost;
   final double? totalCost;
   final List<CostItem> costItems;
   final double? kdvRate;
@@ -115,6 +121,12 @@ class JobUpdate {
     required this.updateType,
     required this.description,
     required this.companyName,
+    this.partsUsed,
+    this.attachmentUrls = const [],
+    this.delayReason,
+    this.delayEstimateDays,
+    this.laborCost,
+    this.partsCost,
     this.totalCost,
     this.costItems = const [],
     this.kdvRate,
@@ -134,16 +146,21 @@ class JobUpdate {
       if (raw is String && raw.isNotEmpty) {
         final decoded = jsonDecode(raw);
         if (decoded is List) {
-          items = decoded
-              .whereType<Map<String, dynamic>>()
-              .map(CostItem.fromJson)
-              .toList();
+          items = decoded.whereType<Map<String, dynamic>>().map(CostItem.fromJson).toList();
         }
       } else if (raw is List) {
-        items = raw
-            .whereType<Map<String, dynamic>>()
-            .map(CostItem.fromJson)
-            .toList();
+        items = raw.whereType<Map<String, dynamic>>().map(CostItem.fromJson).toList();
+      }
+    } catch (_) {}
+
+    List<String> attachments = [];
+    final rawAttachments = json['attachmentUrls'];
+    try {
+      if (rawAttachments is String && rawAttachments.isNotEmpty) {
+        final decoded = jsonDecode(rawAttachments);
+        if (decoded is List) attachments = decoded.whereType<String>().toList();
+      } else if (rawAttachments is List) {
+        attachments = rawAttachments.whereType<String>().toList();
       }
     } catch (_) {}
 
@@ -152,6 +169,12 @@ class JobUpdate {
       updateType: json['updateType'] as String? ?? 'progress',
       description: json['description'] as String? ?? '',
       companyName: json['companyName'] as String? ?? '',
+      partsUsed: json['partsUsed'] as String?,
+      attachmentUrls: attachments,
+      delayReason: json['delayReason'] as String?,
+      delayEstimateDays: json['delayEstimateDays'] as int?,
+      laborCost: double.tryParse(json['laborCost']?.toString() ?? ''),
+      partsCost: double.tryParse(json['partsCost']?.toString() ?? ''),
       totalCost: double.tryParse(json['totalCost']?.toString() ?? ''),
       costItems: items,
       kdvRate: double.tryParse(json['kdvRate']?.toString() ?? ''),
