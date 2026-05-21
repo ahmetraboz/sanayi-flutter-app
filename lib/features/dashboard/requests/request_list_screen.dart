@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/providers/notification_polling_provider.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/page_header.dart';
 import '../../../shared/widgets/header_actions.dart';
@@ -17,6 +18,13 @@ class RequestListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(requestListProvider);
     final notifier = ref.read(requestListProvider.notifier);
+
+    ref.listen(
+      notificationPollingProvider.select((s) => s.unreadCount),
+      (prev, next) {
+        if (prev != null && next > prev) notifier.fetchRequests();
+      },
+    );
 
     final bottomInset = MediaQuery.of(context).padding.bottom + 90;
 

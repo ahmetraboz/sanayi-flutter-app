@@ -304,6 +304,24 @@ class _CustomerProfileScreenState extends ConsumerState<CustomerProfileScreen> {
               ),
             ],
           ),
+          if (user.phone != null && user.phone!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.phone_outlined,
+                  size: 14,
+                  color: AppColors.gray500,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  user.phone!,
+                  style: const TextStyle(fontSize: 14, color: AppColors.gray500),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

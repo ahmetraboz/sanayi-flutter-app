@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/auth/auth_notifier.dart';
 import '../../core/theme/theme.dart';
 import 'widgets/step_indicator.dart';
 import 'widgets/vehicle_form_step.dart';
+
+class _TurkishPhoneFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limited = digits.length > 11 ? digits.substring(0, 11) : digits;
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < limited.length; i++) {
+      if (i == 4 || i == 7 || i == 9) buffer.write(' ');
+      buffer.write(limited[i]);
+    }
+
+    final formatted = buffer.toString();
+    return TextEditingValue(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+}
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -209,13 +233,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ),
           const SizedBox(height: 20),
           _labeledField(
-            label: 'Telefon (isteğe bağlı)',
+            label: 'Telefon',
             child: TextFormField(
               controller: _phoneCtrl,
               keyboardType: TextInputType.phone,
               textInputAction: TextInputAction.done,
+              inputFormatters: [_TurkishPhoneFormatter()],
               style: const TextStyle(color: AppColors.gray900, fontSize: 14),
-              decoration: _inputDecoration(hint: '5XX XXX XXXX', prefixIcon: Icons.phone_outlined),
+              decoration: _inputDecoration(hint: '05XX XXX XX XX', prefixIcon: Icons.phone_outlined),
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Telefon numarası zorunludur';
+                final digits = v.replaceAll(RegExp(r'\D'), '');
+                if (digits.length != 11 || !digits.startsWith('0')) {
+                  return 'Geçerli bir numara giriniz (05XX XXX XX XX)';
+                }
+                return null;
+              },
             ),
           ),
         ],
@@ -245,7 +278,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           rows: [
             _SummaryRow('Ad Soyad', _nameCtrl.text),
             _SummaryRow('E-posta', _emailCtrl.text),
-            if (_phoneCtrl.text.isNotEmpty) _SummaryRow('Telefon', _phoneCtrl.text),
+            _SummaryRow('Telefon', _phoneCtrl.text),
           ],
         ),
         const SizedBox(height: 12),

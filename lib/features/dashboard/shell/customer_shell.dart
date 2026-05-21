@@ -76,9 +76,18 @@ class _CustomerShellState extends ConsumerState<CustomerShell> {
   }
 
   (IconData, Color) _bannerStyle(String type) => switch (type) {
-    'bid_received' => (Icons.local_offer_outlined, AppColors.blue600),
-    'request_update' => (Icons.update, AppColors.amber600),
-    _ => (Icons.notifications_outlined, AppColors.primary600),
+    'new_bid'         => (Icons.local_offer_outlined, AppColors.blue600),
+    'bid_received'    => (Icons.local_offer_outlined, AppColors.blue600),
+    'request_update'  => (Icons.update, AppColors.amber600),
+    'info_request'    => (Icons.help_outline, AppColors.amber700),
+    'info_provided'   => (Icons.check_circle_outline, AppColors.primary600),
+    'info_rejected'   => (Icons.cancel_outlined, AppColors.red700),
+    'job_update'      => (Icons.build_outlined, AppColors.blue600),
+    'job_completed'   => (Icons.task_alt, AppColors.primary600),
+    'bid_accepted'    => (Icons.handshake_outlined, AppColors.primary600),
+    'bid_rejected'    => (Icons.gavel, AppColors.red700),
+    'date_proposed'   => (Icons.calendar_today_outlined, AppColors.amber600),
+    _                 => (Icons.notifications_outlined, AppColors.primary600),
   };
 
   int _indexFromPath(String path) {

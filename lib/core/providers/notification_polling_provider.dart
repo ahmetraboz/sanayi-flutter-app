@@ -80,8 +80,13 @@ class NotificationPollingNotifier
 
   void consumeBanner() {
     if (state.pendingBanners.isEmpty) return;
-    state = state.copyWith(
-        pendingBanners: state.pendingBanners.sublist(1));
+    state = state.copyWith(pendingBanners: state.pendingBanners.sublist(1));
+  }
+
+  void reset() {
+    _highWaterMarkId = 0;
+    _initialized = false;
+    state = const NotificationPollingState();
   }
 
   Future<void> refresh() => _poll();
@@ -93,7 +98,7 @@ class NotificationPollingNotifier
   }
 }
 
-final notificationPollingProvider = StateNotifierProvider.autoDispose<
+final notificationPollingProvider = StateNotifierProvider<
     NotificationPollingNotifier, NotificationPollingState>(
   (ref) => NotificationPollingNotifier(ref.read(apiClientProvider)),
 );

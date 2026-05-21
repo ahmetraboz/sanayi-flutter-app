@@ -1,16 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_repository.dart';
 import '../../shared/models/user_model.dart';
+import '../providers/notification_polling_provider.dart';
 
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AsyncValue<UserModel?>>((ref) {
-  return AuthNotifier(ref.read(authRepositoryProvider));
+  return AuthNotifier(ref.read(authRepositoryProvider), ref);
 });
 
 class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
   final AuthRepository _repo;
+  final Ref _ref;
   int _sessionVersion = 0;
 
-  AuthNotifier(this._repo) : super(const AsyncValue.loading()) {
+  AuthNotifier(this._repo, this._ref) : super(const AsyncValue.loading()) {
     _init();
   }
 
@@ -20,6 +22,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     if (!mounted) return;
     if (_sessionVersion == myVersion) {
       state = AsyncValue.data(user);
+      if (user != null) _ref.read(notificationPollingProvider.notifier).refresh();
     }
   }
 
@@ -29,6 +32,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     try {
       final user = await _repo.login(email, password);
       state = AsyncValue.data(user);
+      _ref.read(notificationPollingProvider.notifier).reset();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -68,6 +72,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<UserModel?>> {
     try {
       await _repo.logout();
     } finally {
+      _ref.read(notificationPollingProvider.notifier).reset();
       state = const AsyncValue.data(null);
     }
   }

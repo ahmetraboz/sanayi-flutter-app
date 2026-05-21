@@ -277,7 +277,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     state = state.copyWith(actionError: null);
     try {
       final dateStr = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      await _api.post('/api/bids/$bidId/counter-propose-date', data: {'date': dateStr});
+      await _api.post('/api/bids/$bidId/propose-date', data: {'date': dateStr});
       await loadDetail();
       return true;
     } on DioException catch (e) {
@@ -289,7 +289,7 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
   Future<bool> acceptDate({required int bidId}) async {
     state = state.copyWith(actionError: null);
     try {
-      await _api.post('/api/bids/$bidId/accept-date');
+      await _api.post('/api/bids/$bidId/customer-accept-date');
       await loadDetail();
       return true;
     } on DioException catch (e) {

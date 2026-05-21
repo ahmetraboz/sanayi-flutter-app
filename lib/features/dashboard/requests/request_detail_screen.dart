@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/app_select_field.dart';
 import '../../../shared/widgets/skeleton.dart';
@@ -8,6 +9,8 @@ import 'models/request_detail.dart';
 import 'request_detail_notifier.dart';
 import 'widgets/bid_card.dart';
 import 'widgets/request_info_card.dart';
+
+bool _isPdf(String url) => url.toLowerCase().contains('.pdf') || url.toLowerCase().contains('/pdf');
 
 class RequestDetailScreen extends ConsumerStatefulWidget {
   final int requestId;
@@ -1302,7 +1305,7 @@ class _JobUpdateItem extends StatelessWidget {
                     ),
                   ),
                 ],
-                // Fotoğraflar
+                // Ekler (fotoğraf veya PDF)
                 if (update.attachmentUrls.isNotEmpty) ...[
                   const SizedBox(height: 10),
                   SizedBox(
@@ -1311,30 +1314,61 @@ class _JobUpdateItem extends StatelessWidget {
                       scrollDirection: Axis.horizontal,
                       itemCount: update.attachmentUrls.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 8),
-                      itemBuilder: (context, i) => GestureDetector(
-                        onTap: () => _showImageDialog(context, update.attachmentUrls, i),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: CachedNetworkImage(
-                            imageUrl: update.attachmentUrls[i],
-                            width: 90,
-                            height: 90,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => Container(
+                      itemBuilder: (context, i) {
+                        final url = update.attachmentUrls[i];
+                        if (_isPdf(url)) {
+                          return GestureDetector(
+                            onTap: () async {
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            child: Container(
                               width: 90,
                               height: 90,
-                              color: AppColors.gray100,
-                              child: const Icon(Icons.image_outlined, color: AppColors.gray300),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFEF2F2),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: const Color(0xFFFECACA)),
+                              ),
+                              child: const Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.picture_as_pdf, size: 32, color: Color(0xFFDC2626)),
+                                  SizedBox(height: 4),
+                                  Text('PDF', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFFDC2626))),
+                                  Text('Aç', style: TextStyle(fontSize: 10, color: Color(0xFFDC2626))),
+                                ],
+                              ),
                             ),
-                            errorWidget: (_, __, ___) => Container(
+                          );
+                        }
+                        return GestureDetector(
+                          onTap: () => _showImageDialog(context, update.attachmentUrls.where((u) => !_isPdf(u)).toList(), update.attachmentUrls.where((u) => !_isPdf(u)).toList().indexOf(url)),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: url,
                               width: 90,
                               height: 90,
-                              color: AppColors.gray100,
-                              child: const Icon(Icons.broken_image_outlined, color: AppColors.gray300),
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => Container(
+                                width: 90,
+                                height: 90,
+                                color: AppColors.gray100,
+                                child: const Icon(Icons.image_outlined, color: AppColors.gray300),
+                              ),
+                              errorWidget: (_, __, ___) => Container(
+                                width: 90,
+                                height: 90,
+                                color: AppColors.gray100,
+                                child: const Icon(Icons.broken_image_outlined, color: AppColors.gray300),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                   ),
                 ],

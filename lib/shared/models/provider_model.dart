@@ -78,6 +78,8 @@ class ReviewModel {
   final String? comment;
   final String reviewerName;
   final String createdAt;
+  final String? providerReply;
+  final String? repliedAt;
 
   const ReviewModel({
     required this.id,
@@ -85,14 +87,21 @@ class ReviewModel {
     this.comment,
     required this.reviewerName,
     required this.createdAt,
+    this.providerReply,
+    this.repliedAt,
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) => ReviewModel(
         id: json['id'] as int,
         rating: json['rating'] as int,
         comment: json['comment'] as String?,
-        reviewerName: json['reviewerName'] as String? ?? 'Anonim',
+        reviewerName: json['customerName'] as String?
+            ?? json['reviewerName'] as String?
+            ?? json['userName'] as String?
+            ?? 'Anonim',
         createdAt: json['createdAt'] as String,
+        providerReply: json['providerReply'] as String?,
+        repliedAt: json['repliedAt'] as String?,
       );
 }
 

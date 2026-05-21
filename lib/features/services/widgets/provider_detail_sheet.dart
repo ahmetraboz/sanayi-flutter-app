@@ -371,6 +371,34 @@ class _ReviewCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(review.comment!, style: const TextStyle(fontSize: 13, color: AppColors.gray600, height: 1.4)),
           ],
+          if (review.providerReply != null && review.providerReply!.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.primary600.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border(left: BorderSide(color: AppColors.primary600, width: 3)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.storefront_outlined, size: 13, color: AppColors.primary600),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'İşletme Yanıtı',
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(review.providerReply!, style: const TextStyle(fontSize: 12, color: AppColors.gray700, height: 1.4)),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
