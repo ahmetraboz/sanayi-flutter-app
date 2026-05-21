@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/theme.dart';
-import '../../../core/constants/turkey_cities.dart';
-import '../../../shared/widgets/app_select_field.dart';
+import '../../../shared/widgets/location_picker_sheet.dart';
 import '../../../shared/models/provider_model.dart';
 import '../../booking/booking_repository.dart';
 import '../../booking/widgets/damage_analysis_widget.dart';
@@ -1590,20 +1589,20 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _fieldLabel('İlinizi Seçin', required: true),
-          const SizedBox(height: 8),
-          AppSelectField(
-            options: kTurkeyCities,
+          LocationPickerField(
+            label: 'İlinizi Seçin *',
             value: _selectedCity,
-            hintText: 'İl arayın veya seçin...',
-            decoration: _inputDeco(null, Icons.location_on_outlined),
-            onChanged:
-                (val) => setState(() {
-                  _selectedCity = val;
+            hint: 'İl seçin',
+            onTap: () async {
+              final city = await showCityPicker(context);
+              if (city != null) {
+                setState(() {
+                  _selectedCity = city;
                   _selectedServiceIds = [];
                   _errors.remove('services');
-                }),
-            validator: (v) => (v == null || v.isEmpty) ? 'İl seçin' : null,
+                });
+              }
+            },
           ),
           const SizedBox(height: 16),
           if (_selectedCity != null) ...[
