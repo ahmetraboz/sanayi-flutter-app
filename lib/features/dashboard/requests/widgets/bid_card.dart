@@ -471,7 +471,60 @@ class _ProposedDateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAgreed = dateProposedBy == 'agreed';
     final proposedByCustomer = dateProposedBy == 'customer';
+
+    if (isAgreed) {
+      return Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF0FDF4),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFBBF7D0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.event_available, size: 18, color: Color(0xFF16A34A)),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Tarihte Uzlaşıldı',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _fmt(proposedDate),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF14532D)),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                'Onaylandı ✓',
+                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF16A34A)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -483,24 +536,18 @@ class _ProposedDateRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           const Row(
             children: [
               Icon(Icons.swap_vert_rounded, size: 15, color: Color(0xFF7C3AED)),
               SizedBox(width: 6),
               Text(
                 'Tarih Görüşmesi',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF7C3AED),
-                ),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF7C3AED)),
               ),
             ],
           ),
           const SizedBox(height: 12),
 
-          // Adım 1 – Müşterinin önerisi
           if (proposedByCustomer) ...[
             _DateStep(
               icon: Icons.person_outline,
@@ -523,7 +570,7 @@ class _ProposedDateRow extends StatelessWidget {
               ),
             ),
           ] else ...[
-            // Adım 1 – Ustanın önerisi
+            // dateProposedBy == 'provider'
             _DateStep(
               icon: Icons.build_outlined,
               iconColor: const Color(0xFF7C3AED),
@@ -534,16 +581,10 @@ class _ProposedDateRow extends StatelessWidget {
               dateColor: const Color(0xFF4C1D95),
             ),
             if (canCounter) ...[
-              // Bağlantı çizgisi
               Padding(
                 padding: const EdgeInsets.only(left: 17),
-                child: Container(
-                  width: 1.5,
-                  height: 14,
-                  color: const Color(0xFFDDD6FE),
-                ),
+                child: Container(width: 1.5, height: 14, color: const Color(0xFFDDD6FE)),
               ),
-              // Adım 2 – Aksiyon
               Row(
                 children: [
                   Expanded(
@@ -559,11 +600,7 @@ class _ProposedDateRow extends StatelessWidget {
                         child: const Center(
                           child: Text(
                             'Farklı Tarih Öner',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF7C3AED),
-                            ),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF7C3AED)),
                           ),
                         ),
                       ),
@@ -582,11 +619,7 @@ class _ProposedDateRow extends StatelessWidget {
                         child: const Center(
                           child: Text(
                             'Tarihi Kabul Et',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
+                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.white),
                           ),
                         ),
                       ),
