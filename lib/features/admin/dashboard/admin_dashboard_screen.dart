@@ -139,7 +139,7 @@ class AdminDashboardScreen extends ConsumerWidget {
               ),
               SizedBox(height: 4),
               Text(
-                'Sanayi Platformu',
+                'OtoSanayiRandevu',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 20,
