@@ -20,7 +20,7 @@ class SanayiApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Sanayi',
+      title: 'OSR',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeMode,

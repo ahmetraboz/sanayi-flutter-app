@@ -392,7 +392,7 @@ class _FeaturesSection extends StatelessWidget {
         children: [
           const Text('ÖZELLİKLER', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary600, letterSpacing: 1.2)),
           const SizedBox(height: 8),
-          const Text('Neden Sanayi?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.gray900)),
+          const Text('Neden OSR?', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.gray900)),
           const SizedBox(height: 4),
           const Text('Araç sahiplerinin güvendiği platform.', style: TextStyle(fontSize: 14, color: AppColors.gray500), textAlign: TextAlign.center),
           const SizedBox(height: 28),
@@ -675,17 +675,12 @@ class _AuthPage extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Spacer(),
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [AppColors.primary600, AppColors.primaryTeal]),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [BoxShadow(color: AppColors.primary600.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8))],
-            ),
-            child: const Icon(Icons.build_outlined, size: 36, color: Colors.white),
+          Image.asset(
+            'assets/images/app_icon.png',
+            height: 120,
+            fit: BoxFit.contain,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           const Text(
             'Hemen Başlayın',
             style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: AppColors.gray900),
