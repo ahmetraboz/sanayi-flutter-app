@@ -51,7 +51,7 @@ class RequestDetailState {
   bool get isInfoRequested => status == 'info_requested';
   bool get canComplete => false;
   bool get isPendingReview => status == 'pending_review';
-  bool get canCancel => status != null && status != 'cancelled' && status != 'completed' && status != 'rejected';
+  bool get canCancel => status == 'open' || status == 'bidding' || status == 'info_requested' || status == 'info_provided';
 
   JobUpdate? get completionUpdate {
     try {
