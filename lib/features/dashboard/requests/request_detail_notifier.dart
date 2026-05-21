@@ -286,14 +286,17 @@ class RequestDetailNotifier extends StateNotifier<RequestDetailState> {
     }
   }
 
-  Future<bool> acceptDate({required int bidId}) async {
-    state = state.copyWith(actionError: null);
+  Future<bool> acceptDateAndBid({required int bidId}) async {
+    state = state.copyWith(accepting: true, actionError: null);
     try {
       await _api.post('/api/bids/$bidId/customer-accept-date');
+      await _api.post('/api/bids/$bidId/accept');
+      state = state.copyWith(accepting: false, acceptedBidId: bidId);
+      _invalidateStats();
       await loadDetail();
       return true;
     } on DioException catch (e) {
-      state = state.copyWith(actionError: e.message ?? 'Tarih kabul edilemedi');
+      state = state.copyWith(accepting: false, actionError: e.message ?? 'İşlem başarısız');
       return false;
     }
   }

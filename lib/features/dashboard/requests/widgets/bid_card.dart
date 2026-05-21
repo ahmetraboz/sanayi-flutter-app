@@ -12,7 +12,7 @@ class BidCard extends StatelessWidget {
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final Future<bool> Function(DateTime date)? onCounterDate;
-  final Future<bool> Function()? onAcceptDate;
+  final Future<bool> Function()? onAcceptDateAndBid;
 
   const BidCard({
     super.key,
@@ -23,7 +23,7 @@ class BidCard extends StatelessWidget {
     this.onAccept,
     this.onReject,
     this.onCounterDate,
-    this.onAcceptDate,
+    this.onAcceptDateAndBid,
   });
 
   @override
@@ -48,7 +48,8 @@ class BidCard extends StatelessWidget {
           _buildHeader(isAccepted),
           const Divider(height: 1, thickness: 1, color: AppColors.gray100),
           _buildBody(context),
-          if (canAccept && (bid.status == 'quoted' || bid.status == 'pending')) ...[
+          if (canAccept && (bid.status == 'quoted' || bid.status == 'pending') &&
+              (bid.proposedDate == null || bid.dateProposedBy == 'agreed')) ...[
             const Divider(height: 1, thickness: 1, color: AppColors.gray100),
             _buildActions(context),
           ],
@@ -187,7 +188,7 @@ class BidCard extends StatelessWidget {
               dateProposedBy: bid.dateProposedBy,
               canCounter: canAccept,
               onCounterDate: onCounterDate,
-              onAcceptDate: onAcceptDate,
+              onAcceptDateAndBid: onAcceptDateAndBid,
             ),
           ],
         ],
@@ -418,14 +419,14 @@ class _ProposedDateRow extends StatelessWidget {
   final String? dateProposedBy;
   final bool canCounter;
   final Future<bool> Function(DateTime date)? onCounterDate;
-  final Future<bool> Function()? onAcceptDate;
+  final Future<bool> Function()? onAcceptDateAndBid;
 
   const _ProposedDateRow({
     required this.proposedDate,
     required this.canCounter,
     this.dateProposedBy,
     this.onCounterDate,
-    this.onAcceptDate,
+    this.onAcceptDateAndBid,
   });
 
   static const _kMonths = [
@@ -609,7 +610,7 @@ class _ProposedDateRow extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => onAcceptDate?.call(),
+                      onTap: () => onAcceptDateAndBid?.call(),
                       child: Container(
                         height: 40,
                         decoration: BoxDecoration(
